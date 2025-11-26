@@ -51,3 +51,4 @@ Quero gerar a tela completa usando apenas prompts, deixando o fluxo de desenvolv
 
 <img width="350" alt="snackbar de exclusão" src="https://github.com/user-attachments/assets/1fcb0862-d5f6-4532-a32a-93fc0e662c80" />
 
+## Resultados
