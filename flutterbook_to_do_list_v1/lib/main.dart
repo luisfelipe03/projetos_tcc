@@ -53,46 +53,67 @@ class _FlutterBookHomeState extends State<FlutterBookHome> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.grey.shade300, width: 0.5),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(60),
+          child: Container(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: Colors.grey.shade300, width: 0.5),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildTabItem(0, Icons.calendar_today, 'Appointm'),
+                _buildTabItem(1, Icons.contacts, 'Contacts'),
+                _buildTabItem(2, Icons.note, 'Notes'),
+                _buildTabItem(3, Icons.check_box, 'Tasks'),
+              ],
+            ),
           ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _selectedIndex,
-          onTap: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFF7C4DFF),
-          unselectedItemColor: Colors.black54,
-          selectedFontSize: 12,
-          unselectedFontSize: 12,
-          showUnselectedLabels: true,
-          elevation: 0,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today, size: 24),
-              label: 'Appointm',
+      ),
+      body: _pages[_selectedIndex],
+    );
+  }
+
+  Widget _buildTabItem(int index, IconData icon, String label) {
+    final isSelected = _selectedIndex == index;
+    return Expanded(
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: isSelected ? const Color(0xFF7C4DFF) : Colors.transparent,
+                width: 3,
+              ),
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.contacts, size: 24),
-              label: 'Contacts',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.note, size: 24),
-              label: 'Notes',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.check_box, size: 24),
-              label: 'Tasks',
-            ),
-          ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 24,
+                color: isSelected ? const Color(0xFF7C4DFF) : Colors.black54,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isSelected ? const Color(0xFF7C4DFF) : Colors.black54,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
