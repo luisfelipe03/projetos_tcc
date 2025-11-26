@@ -83,20 +83,109 @@ Made changes.
 ```
 
 ### Resultado:
-Nessa iteração, a AI conseguiu criar a tela de cadastro de tarefas com todos os elementos visuais, inputs e botões necessários, seguindo o design original. A navegação entre a tela de lista de tarefas e a tela de cadastro também foi implementada corretamente. As função de salvar e cancelar apenas fecham a tela por enquanto, mas isso é esperado para essa etapa. O problema é que a AI ainda manteve todo o código em um único arquivo main.dart, o que já está ficando confuso. Na próxima iteração, vamos pedir para ela separar o código em múltiplos arquivos para melhorar a organização e pedir para implementar a funcionalidade de salvar as tarefas.
+Nessa iteração, a AI conseguiu criar a tela de cadastro de tarefas com todos os elementos visuais, inputs e botões necessários, seguindo o design original. A navegação entre a tela de lista de tarefas e a tela de cadastro também foi implementada corretamente. As função de salvar e cancelar apenas fecham a tela por enquanto, mas isso é esperado para essa etapa. O problema é que a AI ainda manteve todo o código em um único arquivo main.dart, o que já está ficando confuso. Na próxima iteração, vamos pedir para ela separar o código em múltiplos arquivos para melhorar a organização.
 
 ## Iteração 4
 ### Promt usado:
 ```plaintext
-
+Show, o resultado da tela de cadastro ficou muito bacana, mas o código está ficando muito verboso e vai acabar dificultando a manutenção. Vamos melhorar o código e separar o projeto em arquivos menores respeitando os padrões de desenvolvimento mvvm
 ```
 
 ### Output recebido:
 ```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/main.dart#1-1), lines 1 to 50
+
+Created 7 todos
+
+Starting: *Criar estrutura de diretórios MVVM* (1/7)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/models/task_model.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/core/constants.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/core/theme.dart)
+
+Starting: *Criar widgets compartilhados* (4/7)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/widgets/custom_app_bar.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/widgets/navigation_tabs.dart)
+
+Starting: *Criar TasksViewModel* (5/7)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/viewmodels/tasks_viewmodel.dart)
+
+Starting: *Refatorar screens para views* (6/7)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/tasks_screen.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/task_entry_screen.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/appointments_screen.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/contacts_screen.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/notes_screen.dart)
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/pubspec.yaml#1-1), lines 1 to 30
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/pubspec.yaml#30-30), lines 30 to 50
+
+
+
+Ran terminal command: flutter pub get
+
+Starting: *Atualizar main.dart* (7/7)
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/main.dart#1-1), lines 1 to 100
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/main_new.dart)
+
+Ran terminal command: rm lib/main.dart && mv lib/main_new.dart lib/main.dart
+
+Completed: *Atualizar main.dart* (7/7)
+
+Checked workspace, no problems found
+
+Pronto! Refatorei completamente o projeto seguindo o padrão MVVM:
+
+**Estrutura criada:**
+
+
+lib/
+├── core/
+│   ├── constants.dart    # Cores, tamanhos e strings
+│   └── theme.dart        # Tema e estilos reutilizáveis
+├── models/
+│   └── task_model.dart   # Modelo de dados Task
+├── viewmodels/
+│   └── tasks_viewmodel.dart  # Lógica de negócio com ChangeNotifier
+├── views/
+│   ├── appointments_screen.dart
+│   ├── contacts_screen.dart
+│   ├── notes_screen.dart
+│   ├── task_entry_screen.dart
+│   └── tasks_screen.dart
+├── widgets/
+│   ├── custom_app_bar.dart      # AppBar reutilizável
+│   └── navigation_tabs.dart     # Abas de navegação
+└── main.dart            # Apenas 67 linhas com Provider setup
+
+
+**Melhorias implementadas:**
+
+✅ **Separação de responsabilidades** - Cada arquivo tem uma função específica
+✅ **Reutilização** - Widgets compartilhados (AppBar, Tabs)
+✅ **Gerenciamento de estado** - Provider com TasksViewModel
+✅ **Manutenibilidade** - Código organizado e fácil de modificar
+✅ **Escalabilidade** - Fácil adicionar novas features
+
+O app mantém a mesma aparência visual, mas agora está muito mais organizado e pronto para evoluir com novas funcionalidades!
 
 ```
 
 ### Resultado:
+Nessa iteração, a AI conseguiu refatorar o código do projeto para seguir o padrão MVVM, criando múltiplos arquivos e organizando o código em diretórios específicos para modelos, visualizações, viewmodels, widgets e constantes. Isso melhorou significativamente a organização e manutenibilidade do código. A AI também criou widgets reutilizáveis para a AppBar e as abas de navegação, além de implementar o gerenciamento de estado usando Provider. O resultado final é um código mais limpo, modular e fácil de entender, mantendo a mesma aparência visual do app original. Agora podemos avançar para adicionar mais funcionalidades específicas.
 
 ## Iteração 5
 ### Promt usado:
