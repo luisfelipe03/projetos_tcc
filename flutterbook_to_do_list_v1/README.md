@@ -22,20 +22,32 @@ Quero gerar a tela completa usando apenas prompts, deixando o fluxo de desenvolv
   O processo deve ser rápido, aproveitando ao máximo a automação proporcionada pelos prompts.
 * **Esforço de refatoração:**
   O código gerado deve demandar o mínimo de ajustes manuais para atingir os objetivos acima.
-  
+
 ---
 
 # **Screenshots da Aplicação Original**
 
+* <h3>Tela inicial vazia</h3>
+  
 <img width="350" alt="home vazia" src="https://github.com/user-attachments/assets/92b14c71-090c-4a9b-a8eb-545dcbbb24ab" />
+
+* <h3>Tela de cadastro de task</h3>
 
 <img width="350" alt="cadastro de task" src="https://github.com/user-attachments/assets/12de4437-ed7c-4402-8005-2648a96551eb" />
 
+* <h3>Tela com task cadastrada e mensagem de sucesso</h3>
+
 <img width="350" alt="snackbar de cadastro" src="https://github.com/user-attachments/assets/de02d3a5-4b3c-4a77-a2f9-7b7429c3dd28" />
+
+* <h3>Tela com task concluída</h3>
 
 <img width="350" alt="task concluida" src="https://github.com/user-attachments/assets/aa6e6826-d1bb-403d-bac6-7af818ed61f8" />
 
+* <h3>Tela de remoção de task</h3>
+
 <img width="350" alt="remover task" src="https://github.com/user-attachments/assets/54740249-ddd2-4115-8d4c-9459c437e098" />
+
+* <h3>Tela com mensagem de sucesso na exclusão</h3>
 
 <img width="350" alt="snackbar de exclusão" src="https://github.com/user-attachments/assets/1fcb0862-d5f6-4532-a32a-93fc0e662c80" />
 
