@@ -58,15 +58,32 @@ Made changes.
 ## Iteração 3
 ### Promt usado:
 ```plaintext
-
+Ficou bacana. Agora vamos criar a próxima página de cadastro de task, e essa tela deve seguir os mesmos padrões da screenshot
 ```
 
 ### Output recebido:
 ```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/main.dart#1-1), lines 1 to 160
 
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/main.dart#160-160), lines 160 to 172
+
+Pronto! Criei a tela de cadastro de task seguindo o design do print:
+
+**Elementos implementados:**
+
+1. **AppBar** com título "FlutterBook" e barra de navegação com Tasks selecionado
+2. **Campo Description** com ícone de documento e campo de texto
+3. **Due Date** com ícone de calendário, data formatada ("November 28, 2025") e botão de editar (lápis azul)
+4. **Botões Cancel e Save** na parte inferior em roxo
+5. **Date Picker** funcional ao clicar no botão de editar
+
+A navegação já está conectada - ao clicar no botão flutuante "+" na tela de Tasks, a tela de cadastro será aberta. Os botões Cancel e Save fecham a tela e retornam para a lista.
+
+Made changes.
 ```
 
 ### Resultado:
+Nessa iteração, a AI conseguiu criar a tela de cadastro de tarefas com todos os elementos visuais, inputs e botões necessários, seguindo o design original. A navegação entre a tela de lista de tarefas e a tela de cadastro também foi implementada corretamente. As função de salvar e cancelar apenas fecham a tela por enquanto, mas isso é esperado para essa etapa. O problema é que a AI ainda manteve todo o código em um único arquivo main.dart, o que já está ficando confuso. Na próxima iteração, vamos pedir para ela separar o código em múltiplos arquivos para melhorar a organização e pedir para implementar a funcionalidade de salvar as tarefas.
 
 ## Iteração 4
 ### Promt usado:
