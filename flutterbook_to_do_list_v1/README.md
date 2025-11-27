@@ -52,5 +52,8 @@ Quero gerar a tela completa usando apenas prompts, deixando o fluxo de desenvolv
 <img width="350" alt="snackbar de exclusão" src="https://github.com/user-attachments/assets/1fcb0862-d5f6-4532-a32a-93fc0e662c80" />
 
 ## Resultados
+Os resultados abotidos foram muito positivos, atendendo a todas as métricas estabelecidas. A tela de ToDo List foi implementada com sucesso, permitindo ao usuário adicionar, visualizar, editar e remover tarefas de maneira intuitiva. O código gerado seguiu as boas práticas do Flutter, passando sem problemas pelas verificações do analisador oficial, conforme evidenciado na imagem abaixo:
 
 <img width="665" height="93" alt="No issues found" src="https://github.com/user-attachments/assets/68624901-3ed1-48ec-91c9-5432f16b482c" />
+
+A fidelidade ao design original do FlutterBook foi mantida, garantindo uma experiência visual consistente. O tempo de desenvolvimento foi significativamente reduzido graças à automação proporcionada pelos prompts, demandando apenas 7 iterações para alcançar o resultado final. O esforço de refatoração foi mínimo, sem necessidade de ajustes manuais. [Veja os resultados completos aqui.](./iterações.md)
