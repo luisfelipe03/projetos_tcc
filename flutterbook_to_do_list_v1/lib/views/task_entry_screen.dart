@@ -75,6 +75,18 @@ class _TaskEntryScreenState extends State<TaskEntryScreen> {
 
     context.read<TasksViewModel>().addTask(task);
     Navigator.pop(context);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Task saved',
+          style: TextStyle(color: Colors.white, fontSize: 16),
+        ),
+        backgroundColor: Color(0xFF4CAF50),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.fixed,
+      ),
+    );
   }
 
   @override

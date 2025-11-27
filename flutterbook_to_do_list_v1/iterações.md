@@ -185,20 +185,30 @@ O app mantém a mesma aparência visual, mas agora está muito mais organizado e
 ```
 
 ### Resultado:
-Nessa iteração, a AI conseguiu refatorar o código do projeto para seguir o padrão MVVM, criando múltiplos arquivos e organizando o código em diretórios específicos para modelos, visualizações, viewmodels, widgets e constantes. Isso melhorou significativamente a organização e manutenibilidade do código. A AI também criou widgets reutilizáveis para a AppBar e as abas de navegação, além de implementar o gerenciamento de estado usando Provider. O resultado final é um código mais limpo, modular e fácil de entender, mantendo a mesma aparência visual do app original. Agora podemos avançar para adicionar mais funcionalidades específicas.
+Nessa iteração, a AI conseguiu refatorar o código do projeto para seguir o padrão MVVM, criando múltiplos arquivos e organizando o código em diretórios específicos para modelos, visualizações, viewmodels, widgets e constantes. Isso melhorou significativamente a organização e manutenibilidade do código. A AI também criou widgets reutilizáveis para a AppBar e as abas de navegação, além de implementar o gerenciamento de estado usando Provider. O resultado final é um código mais limpo, modular e fácil de entender, mantendo a mesma aparência visual do app original. E mesmo sem ser solicitado, a AI criou a lógica de gerenciamento de tarefas em um ViewModel, o que é um bônus adicional, então já é possivel criar e salvar uma nova atividade. Agora o projeto está bem estruturado para futuras iterações.
 
 ## Iteração 5
 ### Promt usado:
 ```plaintext
-
+Boa, agora sim o projeto está organizado, e com isso podemos prosseguir com o desenvolvimento. Como já conseguimos criar as tasks com a implementação que você fez no ViewModel, vamos apenas adicionar o snackbar de sucesso que está faltando, e ele deve ser igual ao do screenshot anexado
 ```
 
 ### Output recebido:
 ```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/task_entry_screen.dart#1-1), lines 1 to 100
 
+Pronto! Adicionei o SnackBar verde com a mensagem "Task saved" que aparece após salvar uma task, exatamente como no screenshot. O SnackBar tem:
+
+- Fundo verde (#4CAF50)
+- Texto branco
+- Duração de 2 segundos
+- Comportamento fixo na parte inferior da tela
+
+Made changes.
 ```
 
 ### Resultado:
+Nessa iteração, a AI conseguiu adicionar o SnackBar de sucesso que aparece após salvar uma nova tarefa, seguindo exatamente o design do screenshot fornecido. A implementação foi feita no arquivo task_entry_screen.dart, mantendo a organização do código conforme o padrão MVVM já estabelecido. Agora podemos prosseguir para a próxima iteração.
 
 ## Iteração 6
 ### Promt usado:
