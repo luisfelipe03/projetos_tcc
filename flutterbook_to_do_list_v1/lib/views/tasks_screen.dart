@@ -20,9 +20,50 @@ class TasksScreen extends StatelessWidget {
             itemCount: viewModel.tasks.length,
             itemBuilder: (context, index) {
               final task = viewModel.tasks[index];
-              return ListTile(
-                title: Text(task.description),
-                subtitle: Text(_formatDate(task.dueDate)),
+              return Container(
+                color: Colors.grey.shade200,
+                margin: const EdgeInsets.only(bottom: 1),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Checkbox(
+                    value: task.isCompleted,
+                    onChanged: (value) {
+                      if (value != null) {
+                        final updatedTask = task.copyWith(isCompleted: value);
+                        viewModel.updateTask(task.id, updatedTask);
+                      }
+                    },
+                    activeColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  title: Text(
+                    task.description,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: AppColors.textPrimary,
+                      decoration:
+                          task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                    ),
+                  ),
+                  subtitle: Text(
+                    _formatDate(task.dueDate),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                      decoration:
+                          task.isCompleted
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                    ),
+                  ),
+                ),
               );
             },
           );

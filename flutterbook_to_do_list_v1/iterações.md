@@ -213,20 +213,38 @@ Nessa iteração, a AI conseguiu adicionar o SnackBar de sucesso que aparece ap�
 ## Iteração 6
 ### Promt usado:
 ```plaintext
-
+Funcionou legal o snackbar. Agora vamos transformar as tasks cadastradas em uma to-do list de verdade, com um checkbox. Quando o checkbox estiver selecionado, o texto deve ficar rasurado, igual no screenshot em anexo
 ```
 
 ### Output recebido:
 ```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/models/task_model.dart)
 
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/tasks_screen.dart)
+
+Pronto! Implementei o sistema de checkbox para as tasks:
+
+**Alterações realizadas:**
+
+1. **Task Model** - Adicionei campo `isCompleted` (padrão false)
+2. **Tasks Screen** - Implementei:
+   - Checkbox roxo que marca/desmarca a task
+   - Texto rasurado (lineThrough) quando completado
+   - Estilo visual com fundo cinza claro igual ao screenshot
+   - Atualização automática via ViewModel
+
+Agora você pode marcar as tasks como concluídas e elas ficam riscadas, exatamente como no FlutterBook original!
+
+Made changes.
 ```
 
 ### Resultado:
+Nessa iteração, a AI conseguiu implementar o sistema de checkbox para as tarefas na tela de lista de tarefas. Ela adicionou um campo `isCompleted` ao modelo de tarefa para rastrear o status de conclusão, e atualizou a tela de tarefas para exibir um checkbox ao lado de cada tarefa. Quando o checkbox é marcado, o texto da tarefa fica riscado, seguindo o design do screenshot fornecido. A AI também garantiu que a interface visual corresponda ao estilo do FlutterBook original. Com isso, agora é possível marcar as tarefas como concluídas diretamente na lista. Agora na próxima iteração, vamos adicionar a funcionalidade de deletar tarefas.
 
 ## Iteração 7
 ### Promt usado:
 ```plaintext
-
+Ficou muito boa a implementação do sistema de checkbox. Agora precisamos criar o sistema de deleção dessas tasks. No Flutterbook original, para excluir uma task é necessário deslizar sobre ela da direita para a esquerda, fazendo aparecer o botão, igual no screenshot em anexo. Depois de clicar no botão de excluir, a task deve ser removida da lista e um snackbar vermelho com uma mensagem de confirmação deve aparecer
 ```
 
 ### Output recebido:
