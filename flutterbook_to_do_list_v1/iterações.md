@@ -37,6 +37,8 @@ Execute o app para ver a tela funcionando. Quando estiver pronto, podemos avanç
 
 Para uma primeira iteração, o código gerado foi bem satisfatório, ou um erro no design onde a barra com as ferramentas foi colocada no canto inferior da tela, mas originalmente estava no topo. Mas o restante do design foi bem capturado, cores, botões, tipografia, etc. E assim como no projeto base que já vem ao criar um projeto Flutter, a AI mante todo o código em um único arquivo main.dart, o que não é o ideal para projetos maiores, mas para uma primeira iteração está aceitável. Agora vamos para a próxima iteração, onde faremos adição de mais funcionalidades.
 
+<img width="350" alt="iteração 1" src="https://github.com/user-attachments/assets/c4ef03a4-eec3-446f-b732-87f118b796c3" />
+
 ## Iteração 2
 ### Promt usado:
 ```plaintext
@@ -53,7 +55,7 @@ Made changes.
 ```
 
 ### Resultado:
-
+<img width="350" alt="iteração 2" src="https://github.com/user-attachments/assets/f0dfc2d5-49b4-433a-aaac-b1d76bcc5b17" />
 
 ## Iteração 3
 ### Promt usado:
@@ -84,6 +86,9 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a AI conseguiu criar a tela de cadastro de tarefas com todos os elementos visuais, inputs e botões necessários, seguindo o design original. A navegação entre a tela de lista de tarefas e a tela de cadastro também foi implementada corretamente. As função de salvar e cancelar apenas fecham a tela por enquanto, mas isso é esperado para essa etapa. O problema é que a AI ainda manteve todo o código em um único arquivo main.dart, o que já está ficando confuso. Na próxima iteração, vamos pedir para ela separar o código em múltiplos arquivos para melhorar a organização.
+
+<img width="350" alt="iteração 3" src="https://github.com/user-attachments/assets/08808e61-030b-440f-bf1f-a1ea159c9488" />
+
 
 ## Iteração 4
 ### Promt usado:
@@ -187,6 +192,9 @@ O app mantém a mesma aparência visual, mas agora está muito mais organizado e
 ### Resultado:
 Nessa iteração, a AI conseguiu refatorar o código do projeto para seguir o padrão MVVM, criando múltiplos arquivos e organizando o código em diretórios específicos para modelos, visualizações, viewmodels, widgets e constantes. Isso melhorou significativamente a organização e manutenibilidade do código. A AI também criou widgets reutilizáveis para a AppBar e as abas de navegação, além de implementar o gerenciamento de estado usando Provider. O resultado final é um código mais limpo, modular e fácil de entender, mantendo a mesma aparência visual do app original. E mesmo sem ser solicitado, a AI criou a lógica de gerenciamento de tarefas em um ViewModel, o que é um bônus adicional, então já é possivel criar e salvar uma nova atividade. Agora o projeto está bem estruturado para futuras iterações.
 
+<img width="350" alt="iteração 4" src="https://github.com/user-attachments/assets/67c76ada-a922-42db-a6a9-89123378efda" />
+
+
 ## Iteração 5
 ### Promt usado:
 ```plaintext
@@ -209,6 +217,8 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a AI conseguiu adicionar o SnackBar de sucesso que aparece após salvar uma nova tarefa, seguindo exatamente o design do screenshot fornecido. A implementação foi feita no arquivo task_entry_screen.dart, mantendo a organização do código conforme o padrão MVVM já estabelecido. Agora podemos prosseguir para a próxima iteração.
+
+<img width="350" alt="iteração 5" src="https://github.com/user-attachments/assets/d10ea440-17ec-45a8-a8d2-5fd28333265f" />
 
 ## Iteração 6
 ### Promt usado:
@@ -241,6 +251,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a AI conseguiu implementar o sistema de checkbox para as tarefas na tela de lista de tarefas. Ela adicionou um campo `isCompleted` ao modelo de tarefa para rastrear o status de conclusão, e atualizou a tela de tarefas para exibir um checkbox ao lado de cada tarefa. Quando o checkbox é marcado, o texto da tarefa fica riscado, seguindo o design do screenshot fornecido. A AI também garantiu que a interface visual corresponda ao estilo do FlutterBook original. Com isso, agora é possível marcar as tarefas como concluídas diretamente na lista. Agora na próxima iteração, vamos adicionar a funcionalidade de deletar tarefas.
 
+<img width="350" alt="iteração 6_2" src="https://github.com/user-attachments/assets/a7850715-7202-4bd8-8c95-f390fed779b2" />
+<img width="350" alt="iteração 6_1" src="https://github.com/user-attachments/assets/23fe732a-39d2-41a8-ab41-0798a63e661f" />
+
+
 ## Iteração 7
 ### Promt usado:
 ```plaintext
@@ -267,3 +281,6 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a AI conseguiu implementar o sistema de deleção de tarefas usando o widget Dismissible do Flutter, mas acredito que não especifiquei perfeitamente o comportamento desejado, então a AI implementou a funcionalidade de deslizar para deletar, mas não criou o botão de deletar que aparece ao deslizar, como no design original. No entanto, a funcionalidade principal de deslizar para excluir a tarefa e exibir um SnackBar de confirmação foi implementada corretamente.
+
+<img width="350" alt="iteração 7_1" src="https://github.com/user-attachments/assets/89cd274b-cf27-44e2-a24d-4270a347a887" />
+<img width="350" alt="iteração 7_2" src="https://github.com/user-attachments/assets/23d71b3b-065c-4e35-827b-af96c37b2b12" />
