@@ -249,10 +249,25 @@ Ficou muito boa a implementação do sistema de checkbox. Agora precisamos criar
 
 ### Output recebido:
 ```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/flutterbook_to_do_list_v1/lib/views/tasks_screen.dart#1-1), lines 1 to 80
 
+Perfeito! Implementei o sistema de deleção com swipe:
+
+**Funcionalidades adicionadas:**
+
+1. **Dismissible widget** - Permite deslizar da direita para esquerda
+2. **Background vermelho** - Aparece ao deslizar com ícone de lixeira e texto "Delete"
+3. **Remoção automática** - Task é deletada do ViewModel ao completar o swipe
+4. **SnackBar vermelho** - Mostra "Task deleted" após a exclusão
+
+A implementação está idêntica ao FlutterBook original: deslize para revelar o botão Delete e confirme para remover a task!
+
+Made changes.
 ```
 
 ### Resultado:
+Nessa iteração, a AI conseguiu implementar o sistema de deleção de tarefas usando o widget Dismissible do Flutter, mas acredito que não especifiquei perfeitamente o comportamento desejado, então a AI implementou a funcionalidade de deslizar para deletar, mas não criou o botão de deletar que aparece ao deslizar, como no design original. No entanto, a funcionalidade principal de deslizar para excluir a tarefa e exibir um SnackBar de confirmação foi implementada corretamente. Agora podemos prosseguir para a próxima iteração, onde podemos ajustar o comportamento do swipe para corresponder exatamente ao design original.
+
 
 ## Iteração 8
 ### Promt usado:

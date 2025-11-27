@@ -20,47 +20,85 @@ class TasksScreen extends StatelessWidget {
             itemCount: viewModel.tasks.length,
             itemBuilder: (context, index) {
               final task = viewModel.tasks[index];
-              return Container(
-                color: Colors.grey.shade200,
-                margin: const EdgeInsets.only(bottom: 1),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+              return Dismissible(
+                key: Key(task.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: const Color(0xFFF44336),
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.delete, color: Colors.white, size: 32),
+                      SizedBox(height: 4),
+                      Text(
+                        'Delete',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  leading: Checkbox(
-                    value: task.isCompleted,
-                    onChanged: (value) {
-                      if (value != null) {
-                        final updatedTask = task.copyWith(isCompleted: value);
-                        viewModel.updateTask(task.id, updatedTask);
-                      }
-                    },
-                    activeColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                ),
+                onDismissed: (direction) {
+                  viewModel.deleteTask(task.id);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Task deleted',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      backgroundColor: Color(0xFFF44336),
+                      duration: Duration(seconds: 2),
+                      behavior: SnackBarBehavior.fixed,
                     ),
-                  ),
-                  title: Text(
-                    task.description,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.textPrimary,
-                      decoration:
-                          task.isCompleted
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                  );
+                },
+                child: Container(
+                  color: Colors.grey.shade200,
+                  margin: const EdgeInsets.only(bottom: 1),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
                     ),
-                  ),
-                  subtitle: Text(
-                    _formatDate(task.dueDate),
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                      decoration:
-                          task.isCompleted
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                    leading: Checkbox(
+                      value: task.isCompleted,
+                      onChanged: (value) {
+                        if (value != null) {
+                          final updatedTask = task.copyWith(isCompleted: value);
+                          viewModel.updateTask(task.id, updatedTask);
+                        }
+                      },
+                      activeColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    title: Text(
+                      task.description,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                        decoration:
+                            task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                      ),
+                    ),
+                    subtitle: Text(
+                      _formatDate(task.dueDate),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                        decoration:
+                            task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
+                      ),
                     ),
                   ),
                 ),
