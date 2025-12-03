@@ -351,4 +351,5 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a AI conseguiu finalmente implementar o comportamento correto para o botão de deletar usando o pacote `flutter_slidable`. Agora, ao deslizar uma tarefa, o botão de deletar aparece e permanece fixo, e a tarefa só é removida quando o usuário clica explicitamente no botão. Isso corresponde exatamente ao comportamento desejado e ao design do FlutterBook original. A AI também atualizou o arquivo pubspec.yaml para incluir o pacote necessário, garantindo que a funcionalidade fosse implementada corretamente. Com isso, o sistema de deleção de tarefas está agora funcionando conforme o esperado.
+
 <img width="350" alt="iteração 9" src="https://github.com/user-attachments/assets/72a56e82-7dcf-4ce0-be11-5d971f589fc3" />
