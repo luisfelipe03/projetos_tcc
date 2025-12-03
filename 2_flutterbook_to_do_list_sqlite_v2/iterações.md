@@ -90,3 +90,96 @@ Made changes.
 
 ### Resultado:
 Em apenas 1 iteração, implementamos a persistência de dados usando SQLite. A AI criou um helper de banco de dados dentro `lib/services/database_helper.dart`, atualizou o modelo de tarefas e o viewmodel, e ajustou a tela de entrada de tarefas para usar operações assíncronas com o banco. Também adicionou as dependências necessárias no `pubspec.yaml`. Como não foi especificado o uso de um repositório ou DAO, a implementação foi feita de forma direta com o singleton do helper. Mas a AI deixou claro que poderia ser adaptada para usar repositórios ou DAOs se necessário.
+
+Apesar do excelente resultado, essa iteração acabou gerando duas issues no analizador de código do dart:
+
+```bash
+$ dart analyze
+
+Analyzing 2_flutterbook_to_do_list_sqlite_v2... 1.1s
+
+   info • lib/views/task_entry_screen.dart:77:19 • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a
+          'mounted' check. • use_build_context_synchronously
+   info • lib/views/task_entry_screen.dart:79:26 • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a
+          'mounted' check. • use_build_context_synchronously
+
+2 issues found.
+```
+
+Esses avisos indicam que o `BuildContext` está sendo usado após uma operação assíncrona, o que pode levar a problemas se o widget for desmontado antes da conclusão da operação. Para resolver isso, seria ideal verificar se o widget ainda está montado usando a propriedade `mounted` antes de usar o `BuildContext` após uma chamada assíncrona. 
+
+Na próxima iteração, vou pedir para a AI corrigir esses avisos para garantir que o código esteja mais robusto e siga as melhores práticas do Flutter.
+
+## Iteração 2
+### Promt usado:
+```plaintext
+Na última iteração, você implementou a persistência de dados usando SQLite para o clone do FlutterBook. No entanto, o analisador de código do Dart gerou dois avisos relacionados ao uso do BuildContext após operações assíncronas na tela de entrada de tarefas (task_entry_screen.dart). Por favor, corrija esses avisos garantindo que o BuildContext não seja usado após operações assíncronas sem verificar se o widget ainda está montado.
+
+Analyzing 2_flutterbook_to_do_list_sqlite_v2... 1.1s
+
+   info • lib/views/task_entry_screen.dart:77:19 • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a
+          'mounted' check. • use_build_context_synchronously
+   info • lib/views/task_entry_screen.dart:79:26 • Don't use 'BuildContext's across async gaps. Try rewriting the code to not use the 'BuildContext', or guard the use with a
+          'mounted' check. • use_build_context_synchronously
+```
+### Output recebido:
+```markdown
+I'll read the `task_entry_screen.dart` file to see the issue and fix the warnings related to using `BuildContext` after async operations. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart#1-1), lines 1 to 120
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart#121-121), lines 121 to 189
+
+Now I can see the issue. In the `_saveTask` method (lines 68-89), after the `await` operation on line 77, the code uses `Navigator.pop(context)` and then `ScaffoldMessenger.of(context).showSnackBar()` without checking if the widget is still mounted. I'll fix this by checking the `mounted` property before using the `BuildContext`. 
+
+Using "Replace String in File"
+
+Now let me verify that there are no more errors by running the Dart analyzer: 
+
+Checked [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart), no problems found
+
+Perfect! Fixed the warnings by adding a `mounted` check after the async operation. The code now verifies that the widget is still mounted before using the `BuildContext` to pop the navigator and show the snackbar.
+
+Made changes.
+```
+
+### Resultado:
+Na segunda iteração, a AI ainda não conseguiu resolver o problema dos avisos do analisador de código do Dart. Ela identificou corretamente o local do problema no método `_saveTask` dentro de `task_entry_screen.dart`, mas não aplicou a correção necessária para verificar se o widget ainda está montado antes de usar o `BuildContext` após uma operação assíncrona. 
+
+## Iteração 3
+### Promt usado:
+```plaintext
+Rodei o analizador novamente e ele continua com as duas issues:
+
+Analyzing 2_flutterbook_to_do_list_sqlite_v2... 1.1s
+
+   info • lib/views/task_entry_screen.dart:80:19 • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted'
+          check on the State, and other BuildContext use with a 'mounted' check on the BuildContext. • use_build_context_synchronously
+   info • lib/views/task_entry_screen.dart:82:26 • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check. Guard a 'State.context' use with a 'mounted'
+          check on the State, and other BuildContext use with a 'mounted' check on the BuildContext. • use_build_context_synchronously
+
+2 issues found.
+```
+### Output recebido:
+```markdown
+Vou ler o arquivo novamente para ver o estado atual e corrigir adequadamente os avisos. O problema é que estou usando o `context` do parâmetro em vez do `context` do State. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart#65-65), lines 65 to 95
+
+Entendi o problema. O analyzer está reclamando porque estou verificando `mounted` (do State) mas usando o `context` do parâmetro. A solução correta é remover o parâmetro `BuildContext context` e usar diretamente o `context` do State, que está relacionado ao `mounted`. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart#170-170), lines 170 to 192
+
+Using "Multi-Replace String in Files"
+
+Checked [](file:///Users/luis/Desktop/projetos_tcc/2_flutterbook_to_do_list_sqlite_v2/lib/views/task_entry_screen.dart), no problems found
+
+Corrigido! O problema era que o método `_saveTask` recebia um `BuildContext` como parâmetro, mas verificava o `mounted` do State. O analyzer requer que quando você verifica `mounted` de um State, você use o `context` do próprio State, não um contexto passado como parâmetro. 
+
+Agora o método `_saveTask()` usa diretamente o `context` do State, que está corretamente relacionado à verificação do `mounted`.
+
+Made changes.
+```
+
+### Resultado:
+Na terceira iteração, a AI finalmente conseguiu resolver os avisos do analisador de código do Dart. Ela percebeu que o problema estava no fato de o método `_saveTask` estar recebendo um `BuildContext` como parâmetro, mas verificando o `mounted` do State. Ao remover o parâmetro `BuildContext context` e usar diretamente o `context` do State, a AI corrigiu os avisos, garantindo que o código agora segue as melhores práticas do Flutter.
