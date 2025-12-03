@@ -64,7 +64,7 @@ class _TaskEntryScreenState extends State<TaskEntryScreen> {
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  Future<void> _saveTask(BuildContext context) async {
+  Future<void> _saveTask() async {
     if (_descriptionController.text.isEmpty) return;
 
     final task = Task(
@@ -74,6 +74,9 @@ class _TaskEntryScreenState extends State<TaskEntryScreen> {
     );
 
     await context.read<TasksViewModel>().addTask(task);
+
+    if (!mounted) return;
+
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -177,7 +180,7 @@ class _TaskEntryScreenState extends State<TaskEntryScreen> {
               child: Text(AppStrings.cancel, style: AppTheme.buttonStyle),
             ),
             TextButton(
-              onPressed: () async => await _saveTask(context),
+              onPressed: _saveTask,
               child: Text(AppStrings.save, style: AppTheme.buttonStyle),
             ),
           ],
