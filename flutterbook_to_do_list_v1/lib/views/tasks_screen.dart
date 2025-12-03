@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import '../core/constants.dart';
 import '../viewmodels/tasks_viewmodel.dart';
 import 'task_entry_screen.dart';
@@ -20,43 +21,37 @@ class TasksScreen extends StatelessWidget {
             itemCount: viewModel.tasks.length,
             itemBuilder: (context, index) {
               final task = viewModel.tasks[index];
-              return Dismissible(
+              return Slidable(
                 key: Key(task.id),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: const Color(0xFFF44336),
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  child: const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.delete, color: Colors.white, size: 32),
-                      SizedBox(height: 4),
-                      Text(
-                        'Delete',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                onDismissed: (direction) {
-                  viewModel.deleteTask(task.id);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Task deleted',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                      backgroundColor: Color(0xFFF44336),
-                      duration: Duration(seconds: 2),
-                      behavior: SnackBarBehavior.fixed,
+                endActionPane: ActionPane(
+                  motion: const DrawerMotion(),
+                  extentRatio: 0.25,
+                  children: [
+                    SlidableAction(
+                      onPressed: (context) {
+                        viewModel.deleteTask(task.id);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Task deleted',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                            backgroundColor: Color(0xFFF44336),
+                            duration: Duration(seconds: 2),
+                            behavior: SnackBarBehavior.fixed,
+                          ),
+                        );
+                      },
+                      backgroundColor: const Color(0xFFF44336),
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete,
+                      label: 'Delete',
                     ),
-                  );
-                },
+                  ],
+                ),
                 child: Container(
                   color: Colors.grey.shade200,
                   margin: const EdgeInsets.only(bottom: 1),

@@ -16,7 +16,7 @@ class TaskEntryScreen extends StatefulWidget {
 
 class _TaskEntryScreenState extends State<TaskEntryScreen> {
   final _descriptionController = TextEditingController();
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 2));
+  DateTime _selectedDate = DateTime.now();
 
   @override
   void dispose() {
