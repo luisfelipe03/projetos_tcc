@@ -1,25 +1,41 @@
 import 'package:flutter/material.dart';
 import '../models/task_model.dart';
+import '../services/database_helper.dart';
 
 class TasksViewModel extends ChangeNotifier {
   final List<Task> _tasks = [];
+  final DatabaseHelper _dbHelper = DatabaseHelper.instance;
+
+  TasksViewModel() {
+    _loadFromDb();
+  }
 
   List<Task> get tasks => List.unmodifiable(_tasks);
 
-  void addTask(Task task) {
+  Future<void> _loadFromDb() async {
+    final items = await _dbHelper.getAllTasks();
+    _tasks.clear();
+    _tasks.addAll(items);
+    notifyListeners();
+  }
+
+  Future<void> addTask(Task task) async {
+    await _dbHelper.insertTask(task);
     _tasks.add(task);
     notifyListeners();
   }
 
-  void updateTask(String id, Task updatedTask) {
+  Future<void> updateTask(String id, Task updatedTask) async {
     final index = _tasks.indexWhere((task) => task.id == id);
     if (index != -1) {
+      await _dbHelper.updateTask(updatedTask);
       _tasks[index] = updatedTask;
       notifyListeners();
     }
   }
 
-  void deleteTask(String id) {
+  Future<void> deleteTask(String id) async {
+    await _dbHelper.deleteTask(id);
     _tasks.removeWhere((task) => task.id == id);
     notifyListeners();
   }

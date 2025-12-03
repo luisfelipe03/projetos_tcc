@@ -24,4 +24,22 @@ class Task {
       isCompleted: isCompleted ?? this.isCompleted,
     );
   }
+
+  Map<String, Object?> toMap() {
+    return {
+      'id': id,
+      'description': description,
+      'dueDate': dueDate.millisecondsSinceEpoch,
+      'isCompleted': isCompleted ? 1 : 0,
+    };
+  }
+
+  factory Task.fromMap(Map<String, Object?> map) {
+    return Task(
+      id: map['id'] as String,
+      description: map['description'] as String,
+      dueDate: DateTime.fromMillisecondsSinceEpoch(map['dueDate'] as int),
+      isCompleted: (map['isCompleted'] as int) == 1,
+    );
+  }
 }
