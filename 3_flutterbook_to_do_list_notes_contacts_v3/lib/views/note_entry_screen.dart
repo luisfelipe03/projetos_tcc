@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/constants.dart';
 import '../core/theme.dart';
+import '../models/note_model.dart';
+import '../viewmodels/notes_viewmodel.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/navigation_tabs.dart';
 
@@ -35,7 +38,15 @@ class _NoteEntryScreenState extends State<NoteEntryScreen> {
   Future<void> _saveNote() async {
     if (_titleController.text.isEmpty) return;
 
-    // TODO: Implementar lógica de salvar nota no banco de dados
+    final note = Note(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: _titleController.text,
+      content: _contentController.text,
+      color: _selectedColor,
+      createdAt: DateTime.now(),
+    );
+
+    await context.read<NotesViewModel>().addNote(note);
 
     if (!mounted) return;
 

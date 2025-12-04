@@ -155,3 +155,109 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA ajustou o campo de conteúdo da nota para que ele tivesse um tamanho fixo, utilizando um `SizedBox` com altura definida e configurando o `TextField` para permitir múltiplas linhas e rolagem. Agora, se o texto ultrapassar o tamanho do campo, uma barra de rolagem aparecerá, evitando que o layout quebre. Com isso, a tela de cadastro de notas está agora funcional e fiel ao design original do FlutterBook. Na próxima etapa, vou testar a funcionalidade de salvar notas para garantir que tudo esteja funcionando corretamente, e implementar a listagem de notas na tela principal de notas com o snackbar de confirmação.
 
+## Iteração 5
+### Promt usado:
+```plaintext
+Ótimo trabalho até agora! Agora, vamos terminar a funcionalidade de persistência de notas e listagem na tela principal de notas. Primeiro, implemente a funcionalidade de salvar notas na tela de cadastro de notas. Quando o usuário clicar em "Save", a nota deve ser salva e o usuário deve ser redirecionado para a tela principal de notas. Em seguida, implemente a listagem de notas na tela principal de notas, exibindo todas as notas salvas. Além disso, adicione um snackbar de confirmação que aparece quando uma nota é salva com sucesso. Por favor, faça essas implementações. Em anexo está o screenshot do FlutterBook original mostrando a listagem de notas.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade completa de notas: modelo, banco de dados, ViewModel e listagem. Vamos começar analisando a estrutura existente de tasks para seguir o mesmo padrão. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/models/task_model.dart)
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/services/database_helper.dart)
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/viewmodels/tasks_viewmodel.dart)
+
+Agora vou criar o modelo de notas, adicionar a tabela no banco de dados, criar o ViewModel e implementar a listagem: 
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/models/note_model.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/viewmodels/notes_viewmodel.dart)
+
+Agora preciso atualizar o database_helper para incluir a tabela de notas e seus métodos: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/services/database_helper.dart)
+
+Using "Multi-Replace String in Files"
+
+Agora vou atualizar a tela de cadastro de notas para salvar usando o ViewModel e atualizar a tela principal para listar as notas: 
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+
+Agora vou atualizar a tela principal de notas para exibir a lista: 
+
+Using "Replace String in File"
+
+
+Agora preciso registrar o NotesViewModel no main.dart: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/main.dart)
+
+Using "Replace String in File"
+
+Agora vou verificar se há erros e testar o código: 
+
+Checked workspace, no problems found
+
+Perfeito! Vou executar o app para testar: 
+
+Ran terminal command: flutter run
+
+Checked background terminal output
+
+O app está compilando. Vou aguardar um pouco mais: 
+
+Checked background terminal output
+
+Perfeito! Implementei completamente a funcionalidade de notas. Aqui está o resumo do que foi feito:
+
+## ✅ Implementações Concluídas
+
+### 1. **Modelo de Dados** (`note_model.dart`)
+- Criado modelo `Note` com os campos: id, title, content, color, createdAt
+- Métodos `toMap()` e `fromMap()` para serialização
+- Método `copyWith()` para imutabilidade
+
+### 2. **Banco de Dados** (database_helper.dart)
+- Adicionada tabela `notes` no banco de dados
+- Versão do banco atualizada de 1 para 2
+- Implementado método `_onUpgrade` para migração
+- Métodos CRUD: `getAllNotes()`, `insertNote()`, `updateNote()`, `deleteNote()`
+
+### 3. **ViewModel** (`notes_viewmodel.dart`)
+- Gerenciamento de estado usando `ChangeNotifier`
+- Carregamento automático das notas do banco ao inicializar
+- Métodos para adicionar, atualizar, deletar e buscar notas
+- Notificação de listeners quando há mudanças
+
+### 4. **Tela de Cadastro** (note_entry_screen.dart)
+- Integração com `NotesViewModel` usando Provider
+- Salvamento de notas com título, conteúdo e cor
+- SnackBar de confirmação ao salvar
+- Navegação de volta para tela principal após salvar
+
+### 5. **Tela de Listagem** (notes_screen.dart)
+- Listagem de todas as notas salvas usando `Consumer<NotesViewModel>`
+- Cards coloridos com bordas arredondadas
+- Exibição do título e conteúdo de cada nota
+- Cor de fundo dinâmica baseada na cor selecionada
+- Mensagem vazia quando não há notas
+
+### 6. **Registro de Provider** (main.dart)
+- Mudança de `ChangeNotifierProvider` para `MultiProvider`
+- Registro do `NotesViewModel` junto com `TasksViewModel`
+
+A aplicação agora está totalmente funcional para criar e listar notas, com persistência no banco de dados SQLite, seguindo exatamente o mesmo padrão arquitetural usado para tasks! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA concluiu a implementação de persistência de notas e listagem na tela principal de notas. Foram criados o modelo de dados, as alterações no banco de dados, o ViewModel para gerenciar o estado das notas, a integração na tela de cadastro para salvar notas e a listagem das notas na tela principal. Além disso, foi adicionado um snackbar de confirmação ao salvar uma nota. Com isso, a funcionalidade de notas está completa e funcionando corretamente, seguindo o mesmo padrão arquitetural usado para tarefas. O proximo passo será implementar a funcionalidade de edição de notas.
