@@ -594,3 +594,42 @@ Made changes.
 ```
 ### Resultado:
 Nessa iteração, a IA implementou o formulário completo de cadastro de contatos, incluindo a funcionalidade de escolha de foto (avatar) que permite ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera, utilizando o pacote `image_picker`. Além disso, foram adicionados campos para nome, telefone, email e aniversário, seguindo o design do FlutterBook original. O seletor de foto ainda não está visualmente igual ao do FlutterBook, mas a funcionalidade está implementada. Na próxima etapa, vou solicitar que a IA ajuste o design do seletor de foto para que fique mais parecido com o do FlutterBook original.
+
+## Iteração 12
+### Promt usado:
+```plaintext
+Ótimo trabalho! Agora, por favor, ajuste o design do seletor de foto (avatar) na tela de cadastro de contatos para que fique mais parecido com o do FlutterBook original. No design original, tem apenas um texto e um icone de um lapis sem nenhum campo de previsualização de imagem. Só deve aparecer a imagem do avatar depois que o usuário selecionar uma foto. Por favor, faça esses ajustes. Em anexo está o screenshot do FlutterBook original mostrando o design correto do seletor de foto.
+```
+
+### Output recebido:
+```markdown
+Vou ajustar o design do seletor de foto para ficar igual ao FlutterBook original, mostrando apenas o texto e o ícone de lápis quando não há imagem, e a imagem completa quando selecionada. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart#1-1), lines 1 to 200
+
+Using "Replace String in File"
+
+Perfeito! Ajustei o design do seletor de foto para ficar igual ao FlutterBook original:
+
+## ✅ Ajustes Realizados
+
+### **Antes da Seleção (Sem Foto):**
+- ✅ Apenas texto "No avatar image for this contact" e ícone de lápis azul
+- ✅ Layout horizontal simples, sem container cinza
+- ✅ Design minimalista seguindo o padrão original
+
+### **Depois da Seleção (Com Foto):**
+- ✅ Imagem ocupando toda a largura (width: double.infinity)
+- ✅ Altura de 200px para melhor visualização
+- ✅ Ícone de editar posicionado no canto superior direito da imagem
+- ✅ Ícone com fundo branco arredondado para contraste
+- ✅ Bordas arredondadas na imagem
+
+Agora o design está idêntico ao FlutterBook original! O usuário vê apenas o texto e o ícone quando não há foto, e uma prévia completa da imagem quando seleciona uma foto. 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA ajustou o design do seletor de foto (avatar) na tela de cadastro de contatos para que ficasse mais parecido com o do FlutterBook original. No design ajustado, quando não há imagem selecionada, apenas o texto "No avatar image for this contact" e o ícone de lápis azul são exibidos, sem nenhum campo de pré-visualização de imagem. Quando o usuário seleciona uma foto, a imagem é exibida ocupando toda a largura disponível, com o ícone de editar posicionado no canto superior direito. Com isso, o design do seletor de foto está agora idêntico ao do FlutterBook original. Na próxima etapa, vou solicitar que a IA implemente a funcionalidade de listagem de contatos na tela principal de contatos, exibindo todos os contatos salvos.
+

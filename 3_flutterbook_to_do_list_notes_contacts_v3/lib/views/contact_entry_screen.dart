@@ -168,48 +168,66 @@ class _ContactEntryScreenState extends State<ContactEntryScreen> {
               // Avatar section
               GestureDetector(
                 onTap: _showImageSourceDialog,
-                child: Row(
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child:
-                          _avatarImage != null
-                              ? ClipRRect(
+                child:
+                    _avatarImage != null
+                        ? Container(
+                          width: double.infinity,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Stack(
+                            children: [
+                              ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
                                 child: Image.file(
                                   _avatarImage!,
+                                  width: double.infinity,
+                                  height: 200,
                                   fit: BoxFit.cover,
                                 ),
-                              )
-                              : Center(
-                                child: Text(
-                                  'No avatar image for this contact',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
+                              ),
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: AppColors.accent,
+                                      size: AppSizes.iconSize,
+                                    ),
+                                    onPressed: _showImageSourceDialog,
                                   ),
                                 ),
                               ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: IconButton(
-                        icon: Icon(
-                          Icons.edit,
-                          color: AppColors.accent,
-                          size: AppSizes.iconSize,
+                            ],
+                          ),
+                        )
+                        : Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'No avatar image for this contact',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 16,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(
+                                Icons.edit,
+                                color: AppColors.accent,
+                                size: AppSizes.iconSize,
+                              ),
+                              onPressed: _showImageSourceDialog,
+                            ),
+                          ],
                         ),
-                        onPressed: _showImageSourceDialog,
-                      ),
-                    ),
-                  ],
-                ),
               ),
               const SizedBox(height: 32),
 
