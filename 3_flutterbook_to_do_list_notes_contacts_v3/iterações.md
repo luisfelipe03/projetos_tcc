@@ -323,3 +323,57 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de edição de notas. A tela de cadastro foi modificada para aceitar uma nota existente como parâmetro, preenchendo os campos com os dados da nota selecionada. A tela de listagem foi atualizada para tornar os cards clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em uma nota. A lógica de salvamento foi ajustada para diferenciar entre criar e editar notas, e um snackbar de confirmação foi adicionado para quando uma nota é editada com sucesso. Com isso, a funcionalidade de edição de notas está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de notas.
 
+## Iteração 7
+### Promt usado:
+```plaintext
+Excelente trabalho! Agora, por favor, implemente a funcionalidade de exclusão de notas. A funcionalidade deve permitir que o usuário exclua uma nota diretamente da tela principal de notas igual ao que acontece na tela de tarefas. Utilize o gesto de deslizar para a esquerda para revelar o botão de exclusão. Ao clicar no botão de exclusão, a nota deve ser removida do banco de dados e a lista de notas deve ser atualizada automaticamente. Além disso, adicione um snackbar de confirmação que aparece quando uma nota é excluída com sucesso. Use o screenshot em anexo como referência.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade de exclusão de notas usando o Slidable, seguindo o mesmo padrão da tela de tasks. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart#1-1), lines 1 to 100
+
+Agora vou atualizar a tela de notas para incluir o Slidable: 
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+Vou verificar se há erros de compilação: 
+
+Checked workspace, no problems found
+
+Perfeito! A funcionalidade de exclusão de notas foi implementada com sucesso! 🎉
+
+## ✅ Funcionalidade de Exclusão Implementada
+
+### **Tela de Listagem de Notas** (notes_screen.dart)
+
+1. ✅ **Importado `flutter_slidable`** - Mesmo pacote usado nas tasks
+2. ✅ **Envolvido cada nota com `Slidable`** - Permite o gesto de deslizar
+3. ✅ **Configurado `endActionPane`** com:
+   - `DrawerMotion()` - Animação de gaveta
+   - `extentRatio: 0.25` - 25% da largura para o botão
+4. ✅ **Botão de Delete vermelho** - Com ícone de lixeira e label "Delete"
+5. ✅ **Exclusão do banco de dados** - Chama `viewModel.deleteNote(note.id)`
+6. ✅ **SnackBar de confirmação** - "Note deleted" em vermelho (#F44336)
+7. ✅ **Atualização automática** - A lista é atualizada via `notifyListeners()`
+
+### **Comportamento**
+- Usuário desliza a nota para a esquerda
+- Aparece o botão vermelho "Delete"
+- Ao clicar, a nota é removida do banco de dados
+- Snackbar vermelho aparece com "Note deleted"
+- Lista é atualizada automaticamente
+
+Exatamente como no screenshot e seguindo o mesmo padrão das tasks! ✨
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a funcionalidade de exclusão de notas utilizando o pacote `flutter_slidable`, seguindo o mesmo padrão da tela de tarefas. Cada nota na lista agora pode ser deslizada para a esquerda para revelar um botão de exclusão. Ao clicar no botão, a nota é removida do banco de dados, a lista é atualizada automaticamente e um snackbar de confirmação aparece. Mas essa implementação acabou gerando um bug no tamanho dos cards das notas, que ficaram com a largura menor do que o esperado. Vou pedir para corrigir esse bug na próxima iteração pedindo para definir um tamanho fixo de largura para os cards das notas.
+
