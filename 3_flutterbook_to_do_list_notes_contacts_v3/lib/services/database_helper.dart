@@ -4,13 +4,15 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/task_model.dart';
 import '../models/note_model.dart';
+import '../models/contact_model.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'flutterbook.db';
-  static const _databaseVersion = 2;
+  static const _databaseVersion = 3;
 
   static const tableTasks = 'tasks';
   static const tableNotes = 'notes';
+  static const tableContacts = 'contacts';
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -54,6 +56,17 @@ class DatabaseHelper {
         createdAt INTEGER NOT NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE $tableContacts (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        email TEXT NOT NULL,
+        avatarPath TEXT,
+        birthday INTEGER
+      )
+    ''');
   }
 
   FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -65,6 +78,18 @@ class DatabaseHelper {
           content TEXT NOT NULL,
           color TEXT NOT NULL,
           createdAt INTEGER NOT NULL
+        )
+      ''');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE $tableContacts (
+          id TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          phone TEXT NOT NULL,
+          email TEXT NOT NULL,
+          avatarPath TEXT,
+          birthday INTEGER
         )
       ''');
     }
@@ -129,5 +154,36 @@ class DatabaseHelper {
   Future<void> deleteNote(String id) async {
     final db = await database;
     await db.delete(tableNotes, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Contacts CRUD operations
+  Future<List<Contact>> getAllContacts() async {
+    final db = await database;
+    final maps = await db.query(tableContacts, orderBy: 'name ASC');
+    return maps.map((m) => Contact.fromMap(m)).toList();
+  }
+
+  Future<void> insertContact(Contact contact) async {
+    final db = await database;
+    await db.insert(
+      tableContacts,
+      contact.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateContact(Contact contact) async {
+    final db = await database;
+    await db.update(
+      tableContacts,
+      contact.toMap(),
+      where: 'id = ?',
+      whereArgs: [contact.id],
+    );
+  }
+
+  Future<void> deleteContact(String id) async {
+    final db = await database;
+    await db.delete(tableContacts, where: 'id = ?', whereArgs: [id]);
   }
 }

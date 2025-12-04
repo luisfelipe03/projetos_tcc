@@ -631,5 +631,98 @@ Made changes.
 ```
 
 ### Resultado:
-Nessa iteração, a IA ajustou o design do seletor de foto (avatar) na tela de cadastro de contatos para que ficasse mais parecido com o do FlutterBook original. No design ajustado, quando não há imagem selecionada, apenas o texto "No avatar image for this contact" e o ícone de lápis azul são exibidos, sem nenhum campo de pré-visualização de imagem. Quando o usuário seleciona uma foto, a imagem é exibida ocupando toda a largura disponível, com o ícone de editar posicionado no canto superior direito. Com isso, o design do seletor de foto está agora idêntico ao do FlutterBook original. Na próxima etapa, vou solicitar que a IA implemente a funcionalidade de listagem de contatos na tela principal de contatos, exibindo todos os contatos salvos.
+Nessa iteração, a IA ajustou o design do seletor de foto (avatar) na tela de cadastro de contatos para que ficasse mais parecido com o do FlutterBook original. No design ajustado, quando não há imagem selecionada, apenas o texto "No avatar image for this contact" e o ícone de lápis azul são exibidos, sem nenhum campo de pré-visualização de imagem. Quando o usuário seleciona uma foto, a imagem é exibida ocupando toda a largura disponível, com o ícone de editar posicionado no canto superior direito. Com isso, o design do seletor de foto está agora idêntico ao do FlutterBook original. Na próxima etapa, vou solicitar que a IA implemente a funcionalidade de salvar contatos no banco de dados.
+
+## Iteração 13
+### Promt usado:
+```plaintext
+Ótimo trabalho! Agora, por favor, implemente a funcionalidade de salvar contatos no banco de dados. Quando o usuário clicar em "Save" na tela de cadastro de contatos, o contato deve ser salvo no banco de dados SQLite, incluindo a foto (avatar) se o usuário tiver selecionado uma. Após salvar, o usuário deve ser redirecionado para a tela principal de contatos, onde o novo contato deve aparecer na lista. Além disso, adicione um snackbar de confirmação que aparece quando um contato é salvo com sucesso. Por favor, faça essa implementação.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade completa de persistência de contatos, incluindo modelo, banco de dados, ViewModel e listagem. Vamos seguir o mesmo padrão usado para tasks e notes. 
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/models/contact_model.dart)
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/viewmodels/contacts_viewmodel.dart)
+
+Agora vou atualizar o database_helper para adicionar a tabela de contatos: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/services/database_helper.dart)
+
+Using "Multi-Replace String in Files"
+
+Agora vou atualizar o main.dart para registrar o ContactsViewModel: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/main.dart#1-1), lines 1 to 30
+
+Using "Replace String in File"
+
+Agora vou atualizar a tela de cadastro de contatos para salvar no banco: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart#1-1), lines 1 to 170
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+Agora vou atualizar a tela de listagem de contatos: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart)
+
+Using "Replace String in File"
+
+Agora vou verificar se há erros: 
+
+Checked workspace, no problems found
+
+Perfeito! ✅ Implementei a funcionalidade completa de persistência de contatos.
+
+## ✅ Implementações Concluídas
+
+### 1. **Modelo de Dados** (`contact_model.dart`)
+- Criado modelo `Contact` com campos: id, name, phone, email, avatarPath, birthday
+- Métodos `toMap()` e `fromMap()` para serialização
+- Método `copyWith()` para imutabilidade
+
+### 2. **Banco de Dados** (database_helper.dart)
+- Adicionada tabela `contacts` no banco de dados
+- Versão do banco atualizada de 2 para 3
+- Implementado método `_onUpgrade` para migração
+- Métodos CRUD: `getAllContacts()`, `insertContact()`, `updateContact()`, `deleteContact()`
+
+### 3. **ViewModel** (`contacts_viewmodel.dart`)
+- Gerenciamento de estado usando `ChangeNotifier`
+- Carregamento automático dos contatos do banco ao inicializar
+- Métodos para adicionar, atualizar, deletar e buscar contatos
+- Notificação de listeners quando há mudanças
+
+### 4. **Tela de Cadastro** (contact_entry_screen.dart)
+- Integração com `ContactsViewModel` usando Provider
+- Salvamento de contatos com nome, telefone, email, foto e aniversário
+- Caminho da foto salvo no banco de dados
+- SnackBar de confirmação "Contact saved" ao salvar
+- Navegação de volta para tela principal após salvar
+
+### 5. **Tela de Listagem** (contacts_screen.dart)
+- Listagem de todos os contatos salvos usando `Consumer<ContactsViewModel>`
+- CircleAvatar com foto do contato ou inicial do nome
+- Exibição de nome e telefone em cada item
+- Lista ordenada por nome (ASC)
+- Mensagem vazia quando não há contatos
+
+### 6. **Registro de Provider** (main.dart)
+- Adicionado `ContactsViewModel` ao `MultiProvider`
+
+A aplicação agora está totalmente funcional para criar e listar contatos, com persistência no banco de dados SQLite incluindo fotos! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a funcionalidade completa de persistência de contatos, incluindo o modelo de dados, as alterações no banco de dados, o ViewModel para gerenciar o estado dos contatos, a integração na tela de cadastro para salvar contatos e a listagem dos contatos na tela principal. A foto (avatar) do contato também é salva no banco de dados. Além disso, foi adicionado um snackbar de confirmação ao salvar um contato. Com isso, a funcionalidade de contatos está completa e funcionando corretamente, seguindo o mesmo padrão arquitetural usado para tarefas e notas. O próximo passo será implementar a funcionalidade de edição de contatos.
+
+> Disclaimer: Até agora a aplicação continua sem issues segundo o comando `dart analyze`.
 

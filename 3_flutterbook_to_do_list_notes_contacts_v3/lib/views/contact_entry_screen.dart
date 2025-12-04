@@ -1,8 +1,11 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import '../core/constants.dart';
 import '../core/theme.dart';
+import '../models/contact_model.dart';
+import '../viewmodels/contacts_viewmodel.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/navigation_tabs.dart';
 
@@ -135,7 +138,16 @@ class _ContactEntryScreenState extends State<ContactEntryScreen> {
   Future<void> _saveContact() async {
     if (_nameController.text.isEmpty) return;
 
-    // TODO: Implementar lógica de salvar contato no banco de dados
+    final contact = Contact(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      name: _nameController.text,
+      phone: _phoneController.text,
+      email: _emailController.text,
+      avatarPath: _avatarImage?.path,
+      birthday: _selectedBirthday,
+    );
+
+    await context.read<ContactsViewModel>().addContact(contact);
 
     if (!mounted) return;
 
