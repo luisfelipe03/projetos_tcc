@@ -377,3 +377,51 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de exclusão de notas utilizando o pacote `flutter_slidable`, seguindo o mesmo padrão da tela de tarefas. Cada nota na lista agora pode ser deslizada para a esquerda para revelar um botão de exclusão. Ao clicar no botão, a nota é removida do banco de dados, a lista é atualizada automaticamente e um snackbar de confirmação aparece. Mas essa implementação acabou gerando um bug no tamanho dos cards das notas, que ficaram com a largura menor do que o esperado. Vou pedir para corrigir esse bug na próxima iteração pedindo para definir um tamanho fixo de largura para os cards das notas.
 
+## Iteração 8
+### Promt usado:
+```plaintext
+Ótimo trabalho! No entanto, os cards das notas ficaram com a largura menor do que o esperado após a implementação da funcionalidade de exclusão. Por favor, corrija esse bug definindo um tamanho fixo de largura para os cards das notas, garantindo que eles ocupem toda a largura disponível na tela, menos as margens padrão do app. Certifique-se de que o layout fique consistente e alinhado com o design original do FlutterBook.
+```
+
+### Output recebido:
+```markdown
+Vou corrigir o bug de largura dos cards das notas. O problema ocorre porque o Slidable não está expandindo corretamente. Vou garantir que os cards ocupem toda a largura disponível. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart#1-1), lines 1 to 100
+
+Using "Replace String in File"
+
+Vou verificar o restante do arquivo para fechar corretamente: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart#95-95), lines 95 to 137
+
+Using "Replace String in File"
+
+Agora vou verificar se há erros: 
+
+Checked workspace, no problems found
+
+Perfeito! Corrigi o bug de largura dos cards das notas. 
+
+## ✅ Correção Aplicada
+
+### **Mudanças Realizadas:**
+
+1. **Movido o `margin` para fora do `Slidable`** - O margin agora envolve todo o componente Slidable, não apenas o Container interno
+2. **Adicionado `width: double.infinity`** - Garante que o Container interno do card ocupe toda a largura disponível
+3. **Estrutura reorganizada**:
+   
+   Container (com margin) 
+   └── Slidable
+       └── GestureDetector
+           └── Container (com width: double.infinity)
+   
+
+Agora os cards das notas ocupam toda a largura disponível na tela, menos as margens de 16px de cada lado (conforme o padding do ListView), mantendo o layout consistente e alinhado com o design original do FlutterBook! ✨
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA corrigiu o bug de largura dos cards das notas. O problema foi resolvido movendo o `margin` para fora do `Slidable` e adicionando `width: double.infinity` ao Container interno do card. Agora os cards ocupam toda a largura disponível na tela, menos as margens padrão do app, garantindo que o layout fique consistente e alinhado com o design original do FlutterBook. Com isso, todas as funcionalidades de notas estão completas e funcionando corretamente. Agora vou revisar todo o código para garantir que está tudo em ordem antes de finalizar o módulo de notas.
+

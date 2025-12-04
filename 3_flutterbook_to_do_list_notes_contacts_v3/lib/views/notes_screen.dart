@@ -35,82 +35,85 @@ class NotesScreen extends StatelessWidget {
               itemCount: viewModel.notes.length,
               itemBuilder: (context, index) {
                 final note = viewModel.notes[index];
-                return Slidable(
-                  key: Key(note.id),
-                  endActionPane: ActionPane(
-                    motion: const DrawerMotion(),
-                    extentRatio: 0.25,
-                    children: [
-                      SlidableAction(
-                        onPressed: (context) {
-                          viewModel.deleteNote(note.id);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                'Note deleted',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  child: Slidable(
+                    key: Key(note.id),
+                    endActionPane: ActionPane(
+                      motion: const DrawerMotion(),
+                      extentRatio: 0.25,
+                      children: [
+                        SlidableAction(
+                          onPressed: (context) {
+                            viewModel.deleteNote(note.id);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Note deleted',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
                                 ),
+                                backgroundColor: Color(0xFFF44336),
+                                duration: Duration(seconds: 2),
+                                behavior: SnackBarBehavior.fixed,
                               ),
-                              backgroundColor: Color(0xFFF44336),
-                              duration: Duration(seconds: 2),
-                              behavior: SnackBarBehavior.fixed,
-                            ),
-                          );
-                        },
-                        backgroundColor: const Color(0xFFF44336),
-                        foregroundColor: Colors.white,
-                        icon: Icons.delete,
-                        label: 'Delete',
-                      ),
-                    ],
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => NoteEntryScreen(note: note),
+                            );
+                          },
+                          backgroundColor: const Color(0xFFF44336),
+                          foregroundColor: Colors.white,
+                          icon: Icons.delete,
+                          label: 'Delete',
                         ),
-                      );
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _getColorFromString(note.color),
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                      ],
+                    ),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => NoteEntryScreen(note: note),
                           ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            note.title,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          if (note.content.isNotEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              note.content,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
+                        );
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _getColorFromString(note.color),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
                           ],
-                        ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              note.title,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            if (note.content.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                note.content,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
