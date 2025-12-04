@@ -33,6 +33,9 @@ Quero integrar o SQLite ao projeto atual, tornando a tela de tarefas totalmente 
 
 ---
 
-# **Resultados esperados**
+# **Resultados**
 
-A expectativa é que, ao final da v2, o projeto tenha persistente na base de dados.
+Em apenas uma iteração a IA conseguiu implementar a persistência dos dados no SQLite. Como eu não especifiquei o método de implementação, ela própria optou por criar um singleton de um helper para fazer a comunicação com o arquivo SQLite — e funcionou muito bem. Essa nova implementação gerou duas issues no analisador de código do Dart, mas em mais duas pequenas iterações a IA conseguiu resolver tudo com sucesso.
+
+<img width="1408" height="198" alt="Captura de Tela 2025-12-03 às 20 26 00" src="https://github.com/user-attachments/assets/73232e41-b8d2-4bbf-a6af-15611d1d6dd5" />
+
