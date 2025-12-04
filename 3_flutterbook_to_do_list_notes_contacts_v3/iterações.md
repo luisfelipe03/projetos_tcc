@@ -425,3 +425,42 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA corrigiu o bug de largura dos cards das notas. O problema foi resolvido movendo o `margin` para fora do `Slidable` e adicionando `width: double.infinity` ao Container interno do card. Agora os cards ocupam toda a largura disponível na tela, menos as margens padrão do app, garantindo que o layout fique consistente e alinhado com o design original do FlutterBook. Com isso, todas as funcionalidades de notas estão completas e funcionando corretamente. Agora vou revisar todo o código para garantir que está tudo em ordem antes de finalizar o módulo de notas.
 
+## Iteração 9
+### Promt usado:
+```plaintext
+Rodei o comando `dart analyze` e foi encontrado apenas uma issue, informando um método foi depreciado e deve ser substituído por outro. Por favor, faça essa substituição para garantir que o código esteja atualizado e siga as melhores práticas do Dart.
+
+dart analyze
+
+Analyzing 3_flutterbook_to_do_list_notes_contacts_v3... 2.2s
+
+   info • lib/views/notes_screen.dart:88:51 • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss.
+          Try replacing the use of the deprecated member with the replacement. • deprecated_member_use
+
+1 issue found.
+```
+
+### Output recebido:
+```markdown
+Vou corrigir o uso do método depreciado `withOpacity` substituindo por `withValues`. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart#80-80), lines 80 to 95
+
+Using "Replace String in File"
+
+Agora vou verificar se ainda há erros: 
+
+Ran terminal command: dart analyze
+
+Perfeito! ✅
+
+A issue foi corrigida com sucesso. Substituí `Colors.black.withOpacity(0.1)` por `Colors.black.withValues(alpha: 0.1)`, seguindo as melhores práticas e recomendações mais recentes do Dart.
+
+**O que mudou:**
+- ❌ `withOpacity(0.1)` - Método depreciado
+- ✅ `withValues(alpha: 0.1)` - Método recomendado que evita perda de precisão
+
+Agora o código está atualizado e o `dart analyze` não reporta mais nenhum problema! 🎉
+
+Made changes.
+```
