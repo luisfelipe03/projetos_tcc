@@ -77,3 +77,49 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA reformulou completamente a tela de cadastro de notas para que ficasse mais parecida com a do FlutterBook original, conforme o screenshot fornecido. Mas ainda não ficou parecida o suficiente, então vou pedir para fazer mais ajustes na próxima iteração.
+
+## Iteração 3
+### Promt usado:
+```plaintext
+Não ficou muito parecido não. Usa como referência a tela de criação de tasks e o screenshot original do FlutterBook. Do jeito que você gerou, faltou a navigation bar, os ícones ficaram grandes demais e os botões de cancelar e salvar não seguem o padrão do app. Dá uma olhada no screenshot de novo e ajusta tudo para ficar o mais fiel possível ao design original.
+```
+
+### Output recebido:
+```markdown
+Vou analisar a tela de tasks e o screenshot para recriar a tela de notas seguindo exatamente o mesmo padrão. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/task_entry_screen.dart)
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/note_entry_screen.dart#1-1), lines 1 to 250
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/core/theme.dart)
+
+Agora vou recriar a tela de notas seguindo exatamente o mesmo padrão da tela de tasks: 
+
+Using "Replace String in File"
+
+O arquivo ficou com código incompleto. Vou recriar o arquivo completo: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/note_entry_screen.dart)
+
+Vejo que há código duplicado no final. Vou limpar o arquivo: 
+
+Using "Replace String in File"
+
+Perfeito! Agora a tela de cadastro de notas está seguindo exatamente o mesmo padrão da tela de tasks:
+
+✅ **Navigation bar** - Adicionado `CustomAppBar` com `NavigationTabs` (selectedIndex: 2 para Notes)
+✅ **Ícones no tamanho correto** - Usando `AppSizes.iconSizeLarge` (mesmo da tela de tasks)
+✅ **Botões padronizados** - Usando `TextButton` com `AppTheme.buttonStyle` e `AppStrings` (Cancel e Save)
+✅ **Layout idêntico** - Mesma estrutura com ícones à esquerda, dividers entre seções, e bottomNavigationBar
+✅ **Espaçamentos consistentes** - Usando as constantes `AppSizes` do app
+✅ **Paleta de cores** - 6 cores quadradas (50x50) com borda preta quando selecionada
+
+A tela agora está completamente alinhada com o design do FlutterBook original mostrado no screenshot!
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA fez ajustes adicionais para que a tela de cadastro de notas ficasse mais parecida com a do FlutterBook original, utilizando como referência a tela de criação de tasks. Agora a tela possui a navigation bar, os ícones estão no tamanho correto, menos a paleta de cores que ainda está com quadrados grandes demais, e os botões de cancelar e salvar seguem o padrão do app. A tela está bem mais fiel ao design original agora. Mas o input text do conteúdo da nota não tem um tamanho fixo, consequentemente se o texto for muito grande, o layout quebra. Vou pedir para corrigir isso na próxima iteração.
+
