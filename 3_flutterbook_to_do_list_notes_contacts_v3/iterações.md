@@ -467,3 +467,61 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA corrigiu o uso do método depreciado `withOpacity` substituindo-o por `withValues`, conforme recomendado. Após a alteração, o comando `dart analyze` não reportou mais nenhum problema, indicando que o código está atualizado e segue as melhores práticas do Dart. Com isso, todas as funcionalidades de notas estão completas e o código está revisado e em ordem. Agora vou implementar a tela de contatos, seguindo o mesmo padrão da aplicação original e das funcionalidades já implementadas.
+
+## Iteração 10
+### Promt usado:
+```plaintext
+Agora que terminamos o módulo de notas, vamos começar o módulo de contatos. Por favor, implemente a tela principal de contatos seguindo o mesmo padrão da aplicação original e das funcionalidades já implementadas. A tela deve exibir uma lista de contatos com nome, telefone e foto (avatar) se o contato tiver uma foto associada. Mas primeiro vamos nos concentrar em criar o FAB (Floating Action Button) na tela principal de contatos, igual ao que já existe nas telas de tarefas e notas. Quando o usuário clicar no FAB, ele deve ser redirecionado para a tela de cadastro de contatos. Por favor, faça essa implementação. Não precisa fazer a tela de cadastro de contatos ainda, apenas o FAB na tela principal de contatos redirecionando para a tela de cadastro vazia. Em anexo está o screenshot do FlutterBook original mostrando a tela principal de contatos vazia.
+```
+
+### Output recebido:
+```markdown
+Vou implementar o FAB na tela de contatos e criar uma tela de cadastro de contatos básica, seguindo o mesmo padrão das outras funcionalidades. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart)
+
+Agora vou criar a tela de cadastro de contatos e adicionar o FAB na tela principal: 
+
+Created [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart)
+
+Using "Replace String in File"
+
+Agora vou verificar se há erros: 
+
+Checked workspace, no problems found
+
+Perfeito! ✅ Implementei o FAB na tela de contatos seguindo o mesmo padrão das outras funcionalidades.
+
+## ✅ Implementações Concluídas
+
+### 1. **Tela de Cadastro de Contatos** (`contact_entry_screen.dart`)
+- Criada estrutura básica seguindo o padrão de tasks e notes
+- Campos para Nome, Telefone e Email
+- Ícones representativos para cada campo (person, phone, email)
+- Layout consistente com dividers e espaçamentos padrão
+- Botões Cancel e Save no bottomNavigationBar
+- NavigationTabs com selectedIndex: 1 (Contacts)
+
+### 2. **Tela Principal de Contatos** (contacts_screen.dart)
+- Adicionado `Scaffold` com `backgroundColor`
+- Implementado FAB (Floating Action Button)
+- Navegação para `ContactEntryScreen` ao clicar no FAB
+- Mesmo estilo visual dos FABs de tasks e notes
+- Cor secundária, elevação 4, ícone branco de adicionar
+
+### **Estrutura da Tela de Cadastro:**
+- ✅ CustomAppBar com NavigationTabs
+- ✅ Campos: Nome, Telefone, Email
+- ✅ Ícones no tamanho correto (AppSizes.iconSizeLarge)
+- ✅ Dividers separando as seções
+- ✅ Botões padronizados no bottomNavigationBar
+- ✅ Preparada para futuras implementações (salvar no banco)
+
+Agora o usuário pode clicar no FAB na tela de contatos e será redirecionado para a tela de cadastro básica! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou o Floating Action Button (FAB) na tela principal de contatos, seguindo o mesmo padrão das telas de tarefas e notas. Além disso, foi criada uma tela de cadastro de contatos básica, com campos para nome, telefone e email, mas sem funcionalidade completa ainda. O FAB na tela de contatos redireciona para essa tela de cadastro. Com isso, a estrutura inicial para o módulo de contatos está pronta. Na próxima etapa, vou solicitar que a IA implemente o formulário completo de cadastro de contatos por enquanto sem persistência no banco de dados. Quero focar na funcionalidade de escolha de foto (avatar) para o contato, que deve permitir ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera. Acredito que essa funcionalidade será um pouco mais complexa, então vou pedir para a IA fazer isso na próxima iteração.
+
