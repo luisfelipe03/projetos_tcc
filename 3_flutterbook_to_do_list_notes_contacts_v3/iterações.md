@@ -123,3 +123,35 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA fez ajustes adicionais para que a tela de cadastro de notas ficasse mais parecida com a do FlutterBook original, utilizando como referência a tela de criação de tasks. Agora a tela possui a navigation bar, os ícones estão no tamanho correto, menos a paleta de cores que ainda está com quadrados grandes demais, e os botões de cancelar e salvar seguem o padrão do app. A tela está bem mais fiel ao design original agora. Mas o input text do conteúdo da nota não tem um tamanho fixo, consequentemente se o texto for muito grande, o layout quebra. Vou pedir para corrigir isso na próxima iteração.
 
+## Iteração 4
+
+### Promt usado:
+```plaintext
+Quase lá! Agora só falta corrigir o input text do conteúdo da nota. Atualmente ele não tem um tamanho fixo, então se o texto for muito grande o layout quebra. Por favor, ajuste o input text do conteúdo da nota para que ele tenha um tamanho fixo, com uma barra de rolagem caso o texto ultrapasse esse tamanho. Em anexo está o screenshot com a mensagem de erro que aparece quando o layout quebra.
+```
+
+### Output recebido:
+```markdown
+Vou corrigir o campo de conteúdo para ter um tamanho fixo e permitir rolagem: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/note_entry_screen.dart)
+
+Agora vou corrigir o campo de conteúdo para ter um tamanho fixo com scroll: 
+
+Using "Replace String in File"
+
+Pronto! Corrigi o campo de conteúdo com as seguintes mudanças:
+
+1. **`SizedBox(height: 150)`** - Envolvi o TextField em um SizedBox com altura fixa de 150 pixels
+2. **`expands: true`** - Faz o TextField preencher toda a altura disponível do SizedBox
+3. **`maxLines: null`** - Permite múltiplas linhas
+4. **`textAlignVertical: TextAlignVertical.top`** - Alinha o texto no topo do campo
+
+Agora o campo de conteúdo tem um tamanho fixo e, quando o texto ultrapassar esse tamanho, automaticamente aparecerá uma barra de rolagem, evitando o overflow e a quebra do layout!
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA ajustou o campo de conteúdo da nota para que ele tivesse um tamanho fixo, utilizando um `SizedBox` com altura definida e configurando o `TextField` para permitir múltiplas linhas e rolagem. Agora, se o texto ultrapassar o tamanho do campo, uma barra de rolagem aparecerá, evitando que o layout quebre. Com isso, a tela de cadastro de notas está agora funcional e fiel ao design original do FlutterBook. Na próxima etapa, vou testar a funcionalidade de salvar notas para garantir que tudo esteja funcionando corretamente, e implementar a listagem de notas na tela principal de notas com o snackbar de confirmação.
+

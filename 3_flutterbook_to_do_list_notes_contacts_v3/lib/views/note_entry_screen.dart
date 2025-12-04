@@ -104,14 +104,19 @@ class _NoteEntryScreenState extends State<NoteEntryScreen> {
                     children: [
                       Text('Content', style: AppTheme.bodyStyle),
                       const SizedBox(height: 4),
-                      TextField(
-                        controller: _contentController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          hintText: '',
+                      SizedBox(
+                        height: 150,
+                        child: TextField(
+                          controller: _contentController,
+                          decoration: const InputDecoration(
+                            border: InputBorder.none,
+                            hintText: '',
+                          ),
+                          style: AppTheme.bodySecondaryStyle,
+                          maxLines: null,
+                          expands: true,
+                          textAlignVertical: TextAlignVertical.top,
                         ),
-                        style: AppTheme.bodySecondaryStyle,
-                        maxLines: null,
                       ),
                     ],
                   ),
