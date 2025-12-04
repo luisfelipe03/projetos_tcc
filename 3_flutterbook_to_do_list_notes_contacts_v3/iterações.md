@@ -525,3 +525,72 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou o Floating Action Button (FAB) na tela principal de contatos, seguindo o mesmo padrão das telas de tarefas e notas. Além disso, foi criada uma tela de cadastro de contatos básica, com campos para nome, telefone e email, mas sem funcionalidade completa ainda. O FAB na tela de contatos redireciona para essa tela de cadastro. Com isso, a estrutura inicial para o módulo de contatos está pronta. Na próxima etapa, vou solicitar que a IA implemente o formulário completo de cadastro de contatos por enquanto sem persistência no banco de dados. Quero focar na funcionalidade de escolha de foto (avatar) para o contato, que deve permitir ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera. Acredito que essa funcionalidade será um pouco mais complexa, então vou pedir para a IA fazer isso na próxima iteração.
 
+## Iteração 11
+### Promt usado:
+```plaintext
+Ótimo trabalho! Agora, vamos focar na tela de cadastro de contatos. Por favor, implemente o formulário completo de cadastro de contatos na tela que você criou anteriormente. O formulário deve incluir campos para o foto (avatar), nome, telefone e email. A funcionalidade de escolha de foto deve permitir ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera. Por enquanto, não é necessário implementar a persistência no banco de dados, apenas o formulário e a funcionalidade de escolha de foto. Em anexo está o screenshot do FlutterBook original mostrando a tela de cadastro de contatos.
+```
+
+#### Output recebido:
+```markdown
+Vou implementar o formulário completo de cadastro de contatos com a funcionalidade de escolha de foto. Primeiro, vou verificar o arquivo atual e depois implementar as mudanças necessárias. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart)
+
+Agora vou reimplementar a tela com a funcionalidade de foto, campo de aniversário e layout correto seguindo o screenshot: 
+
+Using "Replace String in File"
+
+Preciso adicionar a dependência `image_picker` ao pubspec.yaml: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/pubspec.yaml#1-1), lines 1 to 50
+
+Using "Replace String in File"
+
+Agora vou executar o flutter pub get para instalar a dependência: 
+
+Ran terminal command: flutter pub get
+
+Agora vou verificar se há erros: 
+
+Checked workspace, no problems found
+
+Perfeito! ✅ Implementei o formulário completo de cadastro de contatos com todas as funcionalidades solicitadas.
+
+## ✅ Implementações Concluídas
+
+### **Funcionalidades Implementadas:**
+
+1. **Seleção de Foto/Avatar**
+   - ✅ Área de exibição da foto (120x120px)
+   - ✅ Placeholder "No avatar image for this contact" quando sem foto
+   - ✅ Botão de editar (ícone azul) ao lado da foto
+   - ✅ Dialog com opções: "Take a picture" e "Select From Gallery"
+   - ✅ Integração com câmera e galeria usando `image_picker`
+   - ✅ Redimensionamento automático (512x512, quality 85%)
+
+2. **Campos do Formulário**
+   - ✅ **Name**: Campo de texto com ícone de pessoa
+   - ✅ **Phone**: Campo de texto com teclado numérico
+   - ✅ **Email**: Campo de texto com teclado de email
+   - ✅ **Birthday**: Seletor de data com ícone de calendário
+   - ✅ Botão de editar para selecionar data de aniversário
+   - ✅ Formatação de data (ex: "December 3, 1995")
+
+3. **Layout e Design**
+   - ✅ Seguindo o padrão visual do FlutterBook original
+   - ✅ CustomAppBar com NavigationTabs
+   - ✅ Ícones no tamanho correto (AppSizes.iconSizeLarge)
+   - ✅ Dividers entre campos
+   - ✅ ScrollView para evitar overflow
+   - ✅ Botões Cancel e Save no bottomNavigationBar
+
+4. **Dependências Adicionadas**
+   - ✅ `image_picker: ^1.0.7` instalado via pubspec.yaml
+
+A tela está completamente funcional e pronta para a próxima etapa de persistência no banco de dados! 🎉
+
+Made changes.
+```
+### Resultado:
+Nessa iteração, a IA implementou o formulário completo de cadastro de contatos, incluindo a funcionalidade de escolha de foto (avatar) que permite ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera, utilizando o pacote `image_picker`. Além disso, foram adicionados campos para nome, telefone, email e aniversário, seguindo o design do FlutterBook original. O seletor de foto ainda não está visualmente igual ao do FlutterBook, mas a funcionalidade está implementada. Na próxima etapa, vou solicitar que a IA ajuste o design do seletor de foto para que fique mais parecido com o do FlutterBook original.

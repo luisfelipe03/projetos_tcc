@@ -14,9 +14,7 @@ class ContactsScreen extends StatelessWidget {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const ContactEntryScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const ContactEntryScreen()),
           );
         },
         backgroundColor: AppColors.secondary,

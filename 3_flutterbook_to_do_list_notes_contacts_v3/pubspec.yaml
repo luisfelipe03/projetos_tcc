@@ -38,6 +38,7 @@ dependencies:
   flutter_slidable: ^3.0.1
   sqflite: ^2.2.8
   path: ^1.8.3
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:
