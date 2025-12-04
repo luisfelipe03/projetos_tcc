@@ -10,7 +10,9 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/navigation_tabs.dart';
 
 class ContactEntryScreen extends StatefulWidget {
-  const ContactEntryScreen({super.key});
+  final Contact? contact;
+
+  const ContactEntryScreen({super.key, this.contact});
 
   @override
   State<ContactEntryScreen> createState() => _ContactEntryScreenState();
@@ -23,6 +25,20 @@ class _ContactEntryScreenState extends State<ContactEntryScreen> {
   final ImagePicker _picker = ImagePicker();
   File? _avatarImage;
   DateTime? _selectedBirthday;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.contact != null) {
+      _nameController.text = widget.contact!.name;
+      _phoneController.text = widget.contact!.phone;
+      _emailController.text = widget.contact!.email;
+      if (widget.contact!.avatarPath != null) {
+        _avatarImage = File(widget.contact!.avatarPath!);
+      }
+      _selectedBirthday = widget.contact!.birthday;
+    }
+  }
 
   @override
   void dispose() {
@@ -138,8 +154,12 @@ class _ContactEntryScreenState extends State<ContactEntryScreen> {
   Future<void> _saveContact() async {
     if (_nameController.text.isEmpty) return;
 
+    final isEditing = widget.contact != null;
+
     final contact = Contact(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.contact?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       name: _nameController.text,
       phone: _phoneController.text,
       email: _emailController.text,
@@ -147,20 +167,27 @@ class _ContactEntryScreenState extends State<ContactEntryScreen> {
       birthday: _selectedBirthday,
     );
 
-    await context.read<ContactsViewModel>().addContact(contact);
+    if (isEditing) {
+      await context.read<ContactsViewModel>().updateContact(
+        contact.id,
+        contact,
+      );
+    } else {
+      await context.read<ContactsViewModel>().addContact(contact);
+    }
 
     if (!mounted) return;
 
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Contact saved',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          isEditing ? 'Contact updated' : 'Contact saved',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
-        backgroundColor: Color(0xFF4CAF50),
-        duration: Duration(seconds: 2),
+        backgroundColor: const Color(0xFF4CAF50),
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.fixed,
       ),
     );

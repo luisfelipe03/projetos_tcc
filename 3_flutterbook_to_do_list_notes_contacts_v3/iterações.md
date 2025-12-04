@@ -726,3 +726,50 @@ Nessa iteração, a IA implementou a funcionalidade completa de persistência de
 
 > Disclaimer: Até agora a aplicação continua sem issues segundo o comando `dart analyze`.
 
+## Iteração 14
+### Promt usado:
+```plaintext
+Ótimo trabalho! Agora, por favor, implemente a funcionalidade de edição de contatos. Quando o usuário clicar em um contato na tela principal de contatos, ele deve ser redirecionado para a tela de cadastro de contatos, mas com os campos preenchidos com os dados do contato selecionado. O usuário deve poder editar o nome, telefone, email, foto (avatar) e aniversário do contato, e ao clicar em "Save", as alterações devem ser salvas no banco de dados e o usuário deve ser redirecionado para a tela principal de contatos. Além disso, adicione um snackbar de confirmação que aparece quando um contato é editado com sucesso.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade de edição de contatos seguindo o mesmo padrão usado em notas e tasks. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart#1-1), lines 1 to 50
+
+Using "Multi-Replace String in Files"
+
+Preciso corrigir o erro de sintaxe: 
+
+Using "Replace String in File"
+
+
+Agora vou atualizar o método _saveContact para diferenciar entre criar e editar: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contact_entry_screen.dart#130-130), lines 130 to 180
+
+Using "Replace String in File"
+
+Summarized conversation historyNow I'll update the contacts screen to make contacts clickable for editing: Optimizing tool selection...
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart#40-40), lines 40 to 88
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart#1-1), lines 1 to 40
+
+Using "Replace String in File"
+
+Contact editing is now complete! The implementation includes:
+
+1. ✅ Pre-filled form fields when editing a contact
+2. ✅ Differentiation between create and update operations
+3. ✅ Proper ID preservation when editing
+4. ✅ Different snackbar messages ("Contact updated" vs "Contact saved")
+5. ✅ Clickable contacts that navigate to the edit screen
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a funcionalidade de edição de contatos. A tela de cadastro foi modificada para aceitar um contato existente como parâmetro, preenchendo os campos com os dados do contato selecionado. A tela de listagem foi atualizada para tornar os contatos clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em um contato. A lógica de salvamento foi ajustada para diferenciar entre criar e editar contatos, e um snackbar de confirmação foi adicionado para quando um contato é editado com sucesso. Com isso, a funcionalidade de edição de contatos está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de contatos.
+

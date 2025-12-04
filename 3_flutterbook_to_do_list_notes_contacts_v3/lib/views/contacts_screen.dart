@@ -25,6 +25,15 @@ class ContactsScreen extends StatelessWidget {
                 color: Colors.grey.shade200,
                 margin: const EdgeInsets.only(bottom: 1),
                 child: ListTile(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => ContactEntryScreen(contact: contact),
+                      ),
+                    );
+                  },
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
