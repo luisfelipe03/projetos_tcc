@@ -261,3 +261,65 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA concluiu a implementação de persistência de notas e listagem na tela principal de notas. Foram criados o modelo de dados, as alterações no banco de dados, o ViewModel para gerenciar o estado das notas, a integração na tela de cadastro para salvar notas e a listagem das notas na tela principal. Além disso, foi adicionado um snackbar de confirmação ao salvar uma nota. Com isso, a funcionalidade de notas está completa e funcionando corretamente, seguindo o mesmo padrão arquitetural usado para tarefas. O proximo passo será implementar a funcionalidade de edição de notas.
+
+## Iteração 6
+### Promt usado:
+```plaintext
+Ótimo trabalho! Agora, por favor, implemente a funcionalidade de edição de notas. Quando o usuário clicar em uma nota na tela principal de notas, ele deve ser redirecionado para a tela de cadastro de notas, mas com os campos preenchidos com os dados da nota selecionada. O usuário deve poder editar o título, o conteúdo e a cor da nota, e ao clicar em "Save", as alterações devem ser salvas no banco de dados e o usuário deve ser redirecionado para a tela principal de notas. Além disso, adicione um snackbar de confirmação que aparece quando uma nota é editada com sucesso.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade de edição de notas. Primeiro, vou modificar a tela de cadastro para aceitar uma nota existente como parâmetro, e depois atualizar a tela de listagem para navegar com a nota selecionada. 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/note_entry_screen.dart#1-1), lines 1 to 80
+
+Agora vou modificar a tela de cadastro para aceitar uma nota opcional e preencher os campos: 
+
+Using "Replace String in File"
+
+
+Agora vou atualizar a tela de listagem de notas para tornar os cards clicáveis e navegar para a tela de edição: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart)
+
+Using "Replace String in File"
+
+Perfeito! Agora vou verificar se há erros: 
+
+Checked workspace, no problems found
+
+Excelente! Implementei completamente a funcionalidade de edição de notas. Aqui está o resumo das mudanças:
+
+## ✅ Funcionalidade de Edição Implementada
+
+### 1. **Tela de Cadastro/Edição** (note_entry_screen.dart)
+- ✅ Adicionado parâmetro opcional `note` ao construtor
+- ✅ Método `initState()` para preencher os campos quando uma nota é passada
+- ✅ Lógica condicional no `_saveNote()` para diferenciar entre criar e editar
+- ✅ Usa `updateNote()` quando está editando e `addNote()` quando está criando
+- ✅ Snackbar diferenciado: "Note updated" para edição e "Note saved" para criação
+- ✅ Preserva o `id` e `createdAt` originais ao editar
+
+### 2. **Tela de Listagem** (notes_screen.dart)
+- ✅ Envolvido cada card de nota com `GestureDetector`
+- ✅ Ao clicar em uma nota, navega para `NoteEntryScreen` passando a nota selecionada
+- ✅ Usuário pode editar título, conteúdo e cor
+
+### 3. **Fluxo Completo**
+1. Usuário clica em uma nota existente
+2. É redirecionado para a tela de cadastro com os campos preenchidos
+3. Pode editar qualquer campo (título, conteúdo, cor)
+4. Ao clicar em "Save", as alterações são salvas no banco de dados
+5. Aparece snackbar de confirmação "Note updated"
+6. Usuário é redirecionado de volta para a tela principal
+7. Lista é atualizada automaticamente via `notifyListeners()`
+
+A funcionalidade está completa e seguindo o mesmo padrão da aplicação! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a funcionalidade de edição de notas. A tela de cadastro foi modificada para aceitar uma nota existente como parâmetro, preenchendo os campos com os dados da nota selecionada. A tela de listagem foi atualizada para tornar os cards clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em uma nota. A lógica de salvamento foi ajustada para diferenciar entre criar e editar notas, e um snackbar de confirmação foi adicionado para quando uma nota é editada com sucesso. Com isso, a funcionalidade de edição de notas está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de notas.
+

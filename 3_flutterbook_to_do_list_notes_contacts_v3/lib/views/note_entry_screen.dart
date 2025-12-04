@@ -8,7 +8,9 @@ import '../widgets/custom_app_bar.dart';
 import '../widgets/navigation_tabs.dart';
 
 class NoteEntryScreen extends StatefulWidget {
-  const NoteEntryScreen({super.key});
+  final Note? note;
+
+  const NoteEntryScreen({super.key, this.note});
 
   @override
   State<NoteEntryScreen> createState() => _NoteEntryScreenState();
@@ -29,6 +31,16 @@ class _NoteEntryScreenState extends State<NoteEntryScreen> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.note != null) {
+      _titleController.text = widget.note!.title;
+      _contentController.text = widget.note!.content;
+      _selectedColor = widget.note!.color;
+    }
+  }
+
+  @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
@@ -38,28 +50,34 @@ class _NoteEntryScreenState extends State<NoteEntryScreen> {
   Future<void> _saveNote() async {
     if (_titleController.text.isEmpty) return;
 
+    final isEditing = widget.note != null;
+
     final note = Note(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: widget.note?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text,
       content: _contentController.text,
       color: _selectedColor,
-      createdAt: DateTime.now(),
+      createdAt: widget.note?.createdAt ?? DateTime.now(),
     );
 
-    await context.read<NotesViewModel>().addNote(note);
+    if (isEditing) {
+      await context.read<NotesViewModel>().updateNote(note.id, note);
+    } else {
+      await context.read<NotesViewModel>().addNote(note);
+    }
 
     if (!mounted) return;
 
     Navigator.pop(context);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Note saved',
-          style: TextStyle(color: Colors.white, fontSize: 16),
+          isEditing ? 'Note updated' : 'Note saved',
+          style: const TextStyle(color: Colors.white, fontSize: 16),
         ),
-        backgroundColor: Color(0xFF4CAF50),
-        duration: Duration(seconds: 2),
+        backgroundColor: const Color(0xFF4CAF50),
+        duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.fixed,
       ),
     );
