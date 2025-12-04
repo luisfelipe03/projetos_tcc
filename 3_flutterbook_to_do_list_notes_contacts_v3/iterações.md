@@ -773,3 +773,40 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de edição de contatos. A tela de cadastro foi modificada para aceitar um contato existente como parâmetro, preenchendo os campos com os dados do contato selecionado. A tela de listagem foi atualizada para tornar os contatos clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em um contato. A lógica de salvamento foi ajustada para diferenciar entre criar e editar contatos, e um snackbar de confirmação foi adicionado para quando um contato é editado com sucesso. Com isso, a funcionalidade de edição de contatos está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de contatos.
 
+## Iteração 15
+### Promt usado:
+```plaintext
+Excelente trabalho! Agora, por favor, implemente a funcionalidade de exclusão de contatos. A funcionalidade deve permitir que o usuário exclua um contato diretamente da tela principal de contatos, igual ao que acontece na tela de tarefas e notas. Utilize o gesto de deslizar para a esquerda para revelar o botão de exclusão. Ao clicar no botão de exclusão, o contato deve ser removido do banco de dados e a lista de contatos deve ser atualizada automaticamente. Além disso, adicione um snackbar de confirmação que aparece quando um contato é excluído com sucesso. Use o screenshot em anexo como referência.
+```
+
+### Output recebido:
+```markdown
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart)
+
+Searched for regex `flutter_slidable|Slidable` (`**/lib/views/notes_screen.dart`), 4 results
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/notes_screen.dart#35-35), lines 35 to 120
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+
+Checked [](file:///Users/luis/Desktop/projetos_tcc/3_flutterbook_to_do_list_notes_contacts_v3/lib/views/contacts_screen.dart), no problems found
+
+Funcionalidade de exclusão de contatos implementada! ✅
+
+**Implementações concluídas:**
+1. ✅ Integração com `flutter_slidable` para gesto de deslizar
+2. ✅ Botão Delete vermelho que aparece ao deslizar para a esquerda
+3. ✅ Remoção do contato do banco de dados ao clicar em Delete
+4. ✅ Atualização automática da lista via ViewModel
+5. ✅ Snackbar de confirmação "Contact deleted"
+6. ✅ Mesma estrutura e comportamento das telas de Tasks e Notes
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a funcionalidade de exclusão de contatos utilizando o pacote `flutter_slidable`, seguindo o mesmo padrão da tela de tarefas e notas. Cada contato na lista agora pode ser deslizado para a esquerda para revelar um botão de exclusão. Ao clicar no botão, o contato é removido do banco de dados, a lista é atualizada automaticamente e um snackbar de confirmação aparece. Com isso, a funcionalidade de exclusão de contatos está completa e funcionando corretamente. Agora vou revisar todo o código para garantir que está tudo em ordem antes de finalizar o módulo de contatos.
