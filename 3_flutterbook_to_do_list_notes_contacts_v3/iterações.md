@@ -41,6 +41,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, foi adicionado um botão de cadastro (Floating Action Button - FAB) na tela de notas, similar ao que já existia na tela de tarefas. Além disso, por conta própria a IA criou uma nova tela de entrada de notas (`note_entry_screen.dart`) para permitir o cadastro de novas notas, mas obviamente essa tela ainda não possui funcionalidade completa, e nem está igual à tela do FlutterBook original. Na próxima iteração, vou solicitar que reformule a tela de cadastro de notas para que fique mais parecida com a do FlutterBook.
 
+<img width="300" alt="Iteração 1_1" src="https://github.com/user-attachments/assets/e877e533-03cd-4b4d-8686-838fa955f601" />
+<img width="300" alt="Iteração 1_2" src="https://github.com/user-attachments/assets/9c3ec01d-05a1-4c48-9918-67f818bfcab1" />
+
+
 ## Iteração 2
 ### Promt usado:
 ```plaintext
@@ -77,6 +81,9 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA reformulou completamente a tela de cadastro de notas para que ficasse mais parecida com a do FlutterBook original, conforme o screenshot fornecido. Mas ainda não ficou parecida o suficiente, então vou pedir para fazer mais ajustes na próxima iteração.
+
+<img width="1170" height="2532" alt="Iteração 2" src="https://github.com/user-attachments/assets/b68d776e-22e1-4396-8d13-0847ff9f59fc" />
+
 
 ## Iteração 3
 ### Promt usado:
@@ -123,6 +130,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA fez ajustes adicionais para que a tela de cadastro de notas ficasse mais parecida com a do FlutterBook original, utilizando como referência a tela de criação de tasks. Agora a tela possui a navigation bar, os ícones estão no tamanho correto, menos a paleta de cores que ainda está com quadrados grandes demais, e os botões de cancelar e salvar seguem o padrão do app. A tela está bem mais fiel ao design original agora. Mas o input text do conteúdo da nota não tem um tamanho fixo, consequentemente se o texto for muito grande, o layout quebra. Vou pedir para corrigir isso na próxima iteração.
 
+<img width="1170" height="2532" alt="Iteração 3_1" src="https://github.com/user-attachments/assets/edd10a1a-9a3d-4d0d-a639-57743ec72962" />
+<img width="1170" height="2532" alt="Iteração 3_2" src="https://github.com/user-attachments/assets/a264d18c-f6a5-486b-8266-b84f86b5e381" />
+
+
 ## Iteração 4
 
 ### Promt usado:
@@ -154,6 +165,9 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA ajustou o campo de conteúdo da nota para que ele tivesse um tamanho fixo, utilizando um `SizedBox` com altura definida e configurando o `TextField` para permitir múltiplas linhas e rolagem. Agora, se o texto ultrapassar o tamanho do campo, uma barra de rolagem aparecerá, evitando que o layout quebre. Com isso, a tela de cadastro de notas está agora funcional e fiel ao design original do FlutterBook. Na próxima etapa, vou testar a funcionalidade de salvar notas para garantir que tudo esteja funcionando corretamente, e implementar a listagem de notas na tela principal de notas com o snackbar de confirmação.
+
+<img width="1170" height="2532" alt="Iteração 4" src="https://github.com/user-attachments/assets/d3631dc5-76a9-4282-9c5f-d154325f50e0" />
+
 
 ## Iteração 5
 ### Promt usado:
@@ -262,6 +276,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA concluiu a implementação de persistência de notas e listagem na tela principal de notas. Foram criados o modelo de dados, as alterações no banco de dados, o ViewModel para gerenciar o estado das notas, a integração na tela de cadastro para salvar notas e a listagem das notas na tela principal. Além disso, foi adicionado um snackbar de confirmação ao salvar uma nota. Com isso, a funcionalidade de notas está completa e funcionando corretamente, seguindo o mesmo padrão arquitetural usado para tarefas. O proximo passo será implementar a funcionalidade de edição de notas.
 
+<img width="1170" height="2532" alt="Itereção 5_1" src="https://github.com/user-attachments/assets/cb8751ff-7e93-4920-ad6d-84ee0b8b04c3" />
+<img width="1170" height="2532" alt="Iteração 5_2" src="https://github.com/user-attachments/assets/e7612e8a-1546-4a56-89dc-b7d6e9ea7d88" />
+
+
 ## Iteração 6
 ### Promt usado:
 ```plaintext
@@ -323,6 +341,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de edição de notas. A tela de cadastro foi modificada para aceitar uma nota existente como parâmetro, preenchendo os campos com os dados da nota selecionada. A tela de listagem foi atualizada para tornar os cards clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em uma nota. A lógica de salvamento foi ajustada para diferenciar entre criar e editar notas, e um snackbar de confirmação foi adicionado para quando uma nota é editada com sucesso. Com isso, a funcionalidade de edição de notas está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de notas.
 
+<img width="1170" height="2532" alt="Iteração 6_1" src="https://github.com/user-attachments/assets/731bb436-934b-4e17-9b7d-7d8fa18cc1f7" />
+<img width="1170" height="2532" alt="Iteração 6_2" src="https://github.com/user-attachments/assets/47584f39-0ef5-4049-a9b1-a8539c14c730" />
+
+
 ## Iteração 7
 ### Promt usado:
 ```plaintext
@@ -377,6 +399,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de exclusão de notas utilizando o pacote `flutter_slidable`, seguindo o mesmo padrão da tela de tarefas. Cada nota na lista agora pode ser deslizada para a esquerda para revelar um botão de exclusão. Ao clicar no botão, a nota é removida do banco de dados, a lista é atualizada automaticamente e um snackbar de confirmação aparece. Mas essa implementação acabou gerando um bug no tamanho dos cards das notas, que ficaram com a largura menor do que o esperado. Vou pedir para corrigir esse bug na próxima iteração pedindo para definir um tamanho fixo de largura para os cards das notas.
 
+<img width="1170" height="2532" alt="Iteração 7_1" src="https://github.com/user-attachments/assets/2013f801-2036-4b68-9fa1-d8cca5412137" />
+<img width="1170" height="2532" alt="Iteração 7_2" src="https://github.com/user-attachments/assets/a65447e3-667c-4d9b-aeba-267bcbbd65ea" />
+
+
 ## Iteração 8
 ### Promt usado:
 ```plaintext
@@ -425,6 +451,9 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA corrigiu o bug de largura dos cards das notas. O problema foi resolvido movendo o `margin` para fora do `Slidable` e adicionando `width: double.infinity` ao Container interno do card. Agora os cards ocupam toda a largura disponível na tela, menos as margens padrão do app, garantindo que o layout fique consistente e alinhado com o design original do FlutterBook. Com isso, todas as funcionalidades de notas estão completas e funcionando corretamente. Agora vou revisar todo o código para garantir que está tudo em ordem antes de finalizar o módulo de notas.
 
+<img width="1170" height="2532" alt="Iteração 8" src="https://github.com/user-attachments/assets/e4693c7a-42ba-4b1a-89b6-c44fb719cc33" />
+
+
 ## Iteração 9
 ### Promt usado:
 ```plaintext
@@ -467,6 +496,9 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA corrigiu o uso do método depreciado `withOpacity` substituindo-o por `withValues`, conforme recomendado. Após a alteração, o comando `dart analyze` não reportou mais nenhum problema, indicando que o código está atualizado e segue as melhores práticas do Dart. Com isso, todas as funcionalidades de notas estão completas e o código está revisado e em ordem. Agora vou implementar a tela de contatos, seguindo o mesmo padrão da aplicação original e das funcionalidades já implementadas.
+
+<img width="494" height="59" alt="Iteração 9" src="https://github.com/user-attachments/assets/f249dae1-1ca1-4ddc-a8c7-dbdea78a2202" />
+
 
 ## Iteração 10
 ### Promt usado:
@@ -524,6 +556,10 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA implementou o Floating Action Button (FAB) na tela principal de contatos, seguindo o mesmo padrão das telas de tarefas e notas. Além disso, foi criada uma tela de cadastro de contatos básica, com campos para nome, telefone e email, mas sem funcionalidade completa ainda. O FAB na tela de contatos redireciona para essa tela de cadastro. Com isso, a estrutura inicial para o módulo de contatos está pronta. Na próxima etapa, vou solicitar que a IA implemente o formulário completo de cadastro de contatos por enquanto sem persistência no banco de dados. Quero focar na funcionalidade de escolha de foto (avatar) para o contato, que deve permitir ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera. Acredito que essa funcionalidade será um pouco mais complexa, então vou pedir para a IA fazer isso na próxima iteração.
+
+<img width="1170" height="2532" alt="Iteração 10_1" src="https://github.com/user-attachments/assets/a85cc388-49df-492e-b50e-d567da0cc049" />
+<img width="1170" height="2532" alt="Iteração 10_2" src="https://github.com/user-attachments/assets/57c5e619-c8be-4a72-a940-4fb54ddbf981" />
+
 
 ## Iteração 11
 ### Promt usado:
@@ -595,6 +631,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou o formulário completo de cadastro de contatos, incluindo a funcionalidade de escolha de foto (avatar) que permite ao usuário selecionar uma imagem da galeria do dispositivo ou tirar uma foto com a câmera, utilizando o pacote `image_picker`. Além disso, foram adicionados campos para nome, telefone, email e aniversário, seguindo o design do FlutterBook original. O seletor de foto ainda não está visualmente igual ao do FlutterBook, mas a funcionalidade está implementada. Na próxima etapa, vou solicitar que a IA ajuste o design do seletor de foto para que fique mais parecido com o do FlutterBook original.
 
+<img width="1170" height="2532" alt="Iteração 11_1" src="https://github.com/user-attachments/assets/0e075602-3b26-47fd-9f7e-4dfaeb4a09f4" />
+<img width="1170" height="2532" alt="Iteração 11_2" src="https://github.com/user-attachments/assets/9849f45c-4b37-4246-89cd-f6ce29c6a260" />
+
+
 ## Iteração 12
 ### Promt usado:
 ```plaintext
@@ -632,6 +672,10 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA ajustou o design do seletor de foto (avatar) na tela de cadastro de contatos para que ficasse mais parecido com o do FlutterBook original. No design ajustado, quando não há imagem selecionada, apenas o texto "No avatar image for this contact" e o ícone de lápis azul são exibidos, sem nenhum campo de pré-visualização de imagem. Quando o usuário seleciona uma foto, a imagem é exibida ocupando toda a largura disponível, com o ícone de editar posicionado no canto superior direito. Com isso, o design do seletor de foto está agora idêntico ao do FlutterBook original. Na próxima etapa, vou solicitar que a IA implemente a funcionalidade de salvar contatos no banco de dados.
+
+<img width="1170" height="2532" alt="Iteração 12_1" src="https://github.com/user-attachments/assets/55eaedc1-c291-4ab6-b21f-0b727db62c34" />
+<img width="1170" height="2532" alt="Iteração 12_2" src="https://github.com/user-attachments/assets/bee8dfeb-6a0b-47af-a1db-2f6912344a06" />
+
 
 ## Iteração 13
 ### Promt usado:
@@ -724,6 +768,9 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade completa de persistência de contatos, incluindo o modelo de dados, as alterações no banco de dados, o ViewModel para gerenciar o estado dos contatos, a integração na tela de cadastro para salvar contatos e a listagem dos contatos na tela principal. A foto (avatar) do contato também é salva no banco de dados. Além disso, foi adicionado um snackbar de confirmação ao salvar um contato. Com isso, a funcionalidade de contatos está completa e funcionando corretamente, seguindo o mesmo padrão arquitetural usado para tarefas e notas. O próximo passo será implementar a funcionalidade de edição de contatos.
 
+<img width="1170" height="2532" alt="Iteração 13_1" src="https://github.com/user-attachments/assets/577b05e9-0ae6-41b6-ad21-2f4f5e0eae02" />
+<img width="1170" height="2532" alt="Iteração 13_2" src="https://github.com/user-attachments/assets/b7177a40-6012-4bee-be4f-c004422b97ea" />
+
 > Disclaimer: Até agora a aplicação continua sem issues segundo o comando `dart analyze`.
 
 ## Iteração 14
@@ -773,6 +820,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de edição de contatos. A tela de cadastro foi modificada para aceitar um contato existente como parâmetro, preenchendo os campos com os dados do contato selecionado. A tela de listagem foi atualizada para tornar os contatos clicáveis, permitindo que o usuário navegue para a tela de edição ao clicar em um contato. A lógica de salvamento foi ajustada para diferenciar entre criar e editar contatos, e um snackbar de confirmação foi adicionado para quando um contato é editado com sucesso. Com isso, a funcionalidade de edição de contatos está completa e funcionando corretamente. O próximo passo será implementar a funcionalidade de exclusão de contatos.
 
+<img width="1170" height="2532" alt="Iteração 14_1" src="https://github.com/user-attachments/assets/ce83e4ef-3b46-443d-aa86-d5e02886013e" />
+<img width="1170" height="2532" alt="Iteração 14_2" src="https://github.com/user-attachments/assets/aa71d888-f4d7-4eb0-95ac-8411a239de6d" />
+
+
 ## Iteração 15
 ### Promt usado:
 ```plaintext
@@ -810,3 +861,6 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA implementou a funcionalidade de exclusão de contatos utilizando o pacote `flutter_slidable`, seguindo o mesmo padrão da tela de tarefas e notas. Cada contato na lista agora pode ser deslizado para a esquerda para revelar um botão de exclusão. Ao clicar no botão, o contato é removido do banco de dados, a lista é atualizada automaticamente e um snackbar de confirmação aparece. Com isso, a funcionalidade de exclusão de contatos está completa e funcionando corretamente. Agora vou revisar todo o código para garantir que está tudo em ordem antes de finalizar o módulo de contatos.
+
+<img width="1170" height="2532" alt="Iteração 15_1" src="https://github.com/user-attachments/assets/69b6ca12-b72c-461c-ae9f-b46a1da1d3f2" />
+<img width="1170" height="2532" alt="Iteração 15_2" src="https://github.com/user-attachments/assets/a4f125b7-4f20-4234-9ad2-8f0f811a4d50" />
