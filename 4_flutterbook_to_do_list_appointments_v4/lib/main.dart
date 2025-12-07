@@ -46,7 +46,7 @@ class FlutterBookHome extends StatefulWidget {
 }
 
 class _FlutterBookHomeState extends State<FlutterBookHome> {
-  int _selectedIndex = 3;
+  int _selectedIndex = 0;
 
   final List<Widget> _pages = const [
     AppointmentsScreen(),
