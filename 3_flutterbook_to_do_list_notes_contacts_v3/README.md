@@ -82,3 +82,4 @@ Os objetivos principais são:
 
 # **Resultados**
 
+Os resultados até aqui têm sido bastante consistentes. Não houve necessidade de realizar ajustes manuais: sempre que surgiram erros ou issues identificados pelo dart analyze, solicitei as correções via prompt e a IA resolveu cada ponto mantendo o padrão estabelecido. Em aproximadamente quinze iterações, foi possível implementar completamente as funcionalidades de Notas e Contatos, preservando a estrutura, o estilo e a fidelidade visual do FlutterBook. No geral, o fluxo segue técnico, preciso e totalmente guiado por prompts, exatamente como planejado.
