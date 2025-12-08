@@ -59,3 +59,8 @@ Made changes.
 ### Resultado:
 Nessa primeira iteração, a IA conseguiu implementar as mudanças solicitadas sem dificuldades. Ela alterou o índice selecionado para definir a tela de appointments como inicial e adicionou o botão de cadastro (FAB) na tela de appointments, seguindo o padrão das outras telas. As mudanças foram feitas diretamente no arquivo `main.dart`, e a IA confirmou que o botão está pronto para ser conectado à funcionalidade de cadastro quando essa for implementada.
 
+## Iteração 2
+### Promt usado:
+```plaintext
+Agora, crie a tela inicial de appointments, nela deve ter um calendário na parte central da tela e ao clicar em um dia do calendário deve abrir uma lista de appointments daquele dia. No calendário, os dias que tiverem appointments devem estar destacados com uma pontinho azul embaixo do número do dia. O dia atual também deve estar destacado em vermelho. Pode usar qualquer biblioteca de calendário que preferir, como o flutter_calendar_carousel. Em anexo está os screenshots da aplicação FlutterBook original, deve seguir o máximo possível o design dela.
+```
