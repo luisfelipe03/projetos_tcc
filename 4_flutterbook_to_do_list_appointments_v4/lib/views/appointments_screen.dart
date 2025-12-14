@@ -28,13 +28,13 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
         Event(
           date: date,
           dot: Container(
-            margin: const EdgeInsets.only(top: 2),
+            margin: const EdgeInsets.only(top: 35),
             decoration: const BoxDecoration(
               color: Colors.blue,
               shape: BoxShape.circle,
             ),
-            width: 4.0,
-            height: 4.0,
+            width: 5.0,
+            height: 5.0,
           ),
         ),
       );
@@ -62,66 +62,67 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Date header
-            Container(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                DateFormat('MMMM d, yyyy').format(date),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.blue,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Date header
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Text(
+                    DateFormat('MMMM d, yyyy').format(date),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.blue,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            // Appointments list
-            Flexible(
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: appointments.length,
-                itemBuilder: (context, index) {
-                  final appointment = appointments[index];
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.backgroundLight,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${appointment.title} (${DateFormat('h:mm a').format(appointment.date)})',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                // Appointments list
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: appointments.length,
+                    itemBuilder: (context, index) {
+                      final appointment = appointments[index];
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.backgroundLight,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        if (appointment.description.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            appointment.description,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${appointment.title} (${DateFormat('h:mm a').format(appointment.date)})',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  );
-                },
-              ),
+                            if (appointment.description.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                appointment.description,
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
     );
   }
 
@@ -185,10 +186,7 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               ),
               iconColor: Colors.blue,
               headerMargin: const EdgeInsets.symmetric(vertical: 16.0),
-              daysTextStyle: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-              ),
+              daysTextStyle: const TextStyle(color: Colors.black, fontSize: 16),
               inactiveDaysTextStyle: const TextStyle(
                 color: Colors.grey,
                 fontSize: 16,
@@ -203,9 +201,9 @@ class _AppointmentsScreenState extends State<AppointmentsScreen> {
               final result = await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => AppointmentEntryScreen(
-                    initialDate: _selectedDate,
-                  ),
+                  builder:
+                      (context) =>
+                          AppointmentEntryScreen(initialDate: _selectedDate),
                 ),
               );
               if (result == true && mounted) {
