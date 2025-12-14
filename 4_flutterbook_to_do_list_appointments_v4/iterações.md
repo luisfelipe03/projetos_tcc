@@ -112,3 +112,78 @@ O aplicativo está rodando perfeitamente no simulador! A tela segue o design ori
 ```
 ### Resultado:
 Nessa segunda iteração, a IA conseguiu implementar a tela de appointments mas não manteve o design original do FlutterBook conforme solicitado. Mas em compensação, a IA implementou todas as funcionalidades do crud mesmo sem ter sido solicitado. Foi criada a tela de cadastro de appointments, o calendário interativo com os destaques necessários, e a lista de appointments para o dia selecionado. A IA também criou os arquivos necessários para o modelo, viewmodel e banco de dados. No entanto, o design visual da tela não seguiu o padrão do FlutterBook conforme os screenshots fornecidos, o que era um requisito importante. Na próxima iteração, será necessário focar mais na parte visual para garantir que o design esteja alinhado com o original.
+
+## Iteração 3
+### Promt usado:
+```plaintext
+A tela de appointments que você criou está funcional, mas o design não está parecido com o do FlutterBook original. Por favor, ajuste o design da tela de appointments para que fique o mais parecido possível com o design original do FlutterBook, conforme os screenshots que te enviei anteriormente. Preste atenção especial aos detalhes visuais, os dias do calendário estão envoltos em quadrados e não circulos, o dia atual está com o fundo vermelho em todo os momentos e não só quando selecionamos outro dia, a lista de appointments deve aparecer apenas quando clicamos em um dia e ela deve aparecer como um modal na tela igual na imagem em anexo. O ponto azul deve ser pequeno e centralizado embaixo do número do dia, entre outros detalhes visuais. Faça as alterações necessárias no código para que o design fique o mais fiel possível ao original. Em anexo estão os screenshots da aplicação FlutterBook original, deve seguir o máximo possível o design dela.
+```
+
+### Output recebido:
+```markdown
+Vou ajustar o design da tela de appointments para ficar mais fiel ao FlutterBook original. Vou analisar o arquivo atual primeiro: 
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/4_flutterbook_to_do_list_appointments_v4/lib/views/appointments_screen.dart#1-1), lines 1 to 250
+
+Read [](file:///Users/luis/Desktop/projetos_tcc/4_flutterbook_to_do_list_appointments_v4/lib/views/appointments_screen.dart#250-250), lines 250 to 274
+
+Agora vou reescrever o arquivo para ficar mais fiel ao design original do FlutterBook: 
+
+Using "Replace String in File"
+
+Using "Replace String in File"
+
+Agora vou verificar se há erros: 
+
+Checked [](file:///Users/luis/Desktop/projetos_tcc/4_flutterbook_to_do_list_appointments_v4/lib/views/appointments_screen.dart), 2 problems found
+
+Using "Multi-Replace String in Files"
+
+
+Checked [](file:///Users/luis/Desktop/projetos_tcc/4_flutterbook_to_do_list_appointments_v4/lib/views/appointments_screen.dart), no problems found
+
+Perfeito! Agora vou fazer hot reload para ver as mudanças: 
+
+Ran terminal command: echo "r" | nc -N localhost 56646 2>/dev/null || echo "r"
+
+Vou verificar o estado do terminal flutter: 
+
+Got last terminal command
+
+Excelente! Implementei as seguintes melhorias no design da tela de appointments para ficar mais fiel ao FlutterBook original:
+
+## 🎨 Ajustes de Design Implementados:
+
+### 1. **Calendário com Bordas Quadradas**
+   - Alterado `daysHaveCircularBorder: false` para que os dias tenham bordas quadradas em vez de circulares
+
+### 2. **Dia Atual Sempre Vermelho**
+   - O dia atual (14) agora sempre aparece com fundo vermelho, não apenas quando não está selecionado
+   - Configurado `todayButtonColor: Colors.red` e `todayBorderColor: Colors.red`
+
+### 3. **Modal para Lista de Appointments**
+   - Removida a lista de appointments sempre visível na parte inferior
+   - Implementado `showModalBottomSheet` que aparece apenas quando você clica em um dia que tem appointments
+   - O modal aparece com o título da data em azul no topo
+
+### 4. **Pontinho Azul Melhorado**
+   - Reduzido o tamanho do ponto azul para `4.0 x 4.0` (era 5.0 x 5.0)
+   - Adicionado `margin: const EdgeInsets.only(top: 2)` para centralizar melhor o ponto embaixo do número
+
+### 5. **Melhorias Visuais Gerais**
+   - Tamanhos de fonte ajustados para ficarem consistentes
+   - Dia selecionado (que não é o dia atual) tem borda azul sem fundo
+   - Calendário ocupa toda a tela quando não há modal aberto
+
+### 📱 Comportamento:
+- **Toque em um dia sem appointments**: Nada acontece
+- **Toque em um dia com appointments**: Abre um modal na parte inferior mostrando os appointments daquele dia
+- **Botão flutuante (+)**: Adiciona novo appointment para o dia selecionado
+
+O design agora está muito mais próximo do FlutterBook original conforme os screenshots fornecidos!
+
+Made changes.
+```
+
+### Resultado:
+Nessa terceira iteração, a IA conseguiu ajustar o design da tela de appointments para ficar mais parecido com o FlutterBook original. Mas ainda tem alguns pontos que poderiam ser melhorados, como o tamanho do ponto azul que ainda está muito grande e substituindo valor do dia clicado. E no dia atual o fundo não está vermelho em todos os momentos, apenas quando outro dia está selecionado. A IA implementou o modal para a lista de appointments, mas vai ser necessario difinir um tamanho fixo para o modal igual ao do FlutterBook original. No geral, a IA fez um bom trabalho em ajustar o design, mas ainda há espaço para melhorias para alcançar uma fidelidade total com o design original.

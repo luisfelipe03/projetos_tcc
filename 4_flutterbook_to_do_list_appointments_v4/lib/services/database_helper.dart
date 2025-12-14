@@ -219,11 +219,14 @@ class DatabaseHelper {
     final db = await database;
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-    
+
     final maps = await db.query(
       tableAppointments,
       where: 'date >= ? AND date <= ?',
-      whereArgs: [startOfDay.millisecondsSinceEpoch, endOfDay.millisecondsSinceEpoch],
+      whereArgs: [
+        startOfDay.millisecondsSinceEpoch,
+        endOfDay.millisecondsSinceEpoch,
+      ],
       orderBy: 'date ASC',
     );
     return maps.map((m) => Appointment.fromMap(m)).toList();

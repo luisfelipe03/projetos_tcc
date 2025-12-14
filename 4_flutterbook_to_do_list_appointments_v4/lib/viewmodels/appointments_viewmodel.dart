@@ -4,7 +4,7 @@ import '../services/database_helper.dart';
 
 class AppointmentsViewModel extends ChangeNotifier {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
-  
+
   List<Appointment> _appointments = [];
   bool _isLoading = false;
 
@@ -46,10 +46,10 @@ class AppointmentsViewModel extends ChangeNotifier {
         appointment.date.month,
         appointment.date.day,
       );
-      if (!dates.any((d) =>
-          d.year == date.year &&
-          d.month == date.month &&
-          d.day == date.day)) {
+      if (!dates.any(
+        (d) =>
+            d.year == date.year && d.month == date.month && d.day == date.day,
+      )) {
         dates.add(date);
       }
     }

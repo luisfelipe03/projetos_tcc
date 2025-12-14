@@ -9,11 +9,7 @@ class AppointmentEntryScreen extends StatefulWidget {
   final Appointment? appointment;
   final DateTime? initialDate;
 
-  const AppointmentEntryScreen({
-    super.key,
-    this.appointment,
-    this.initialDate,
-  });
+  const AppointmentEntryScreen({super.key, this.appointment, this.initialDate});
 
   @override
   State<AppointmentEntryScreen> createState() => _AppointmentEntryScreenState();
@@ -23,7 +19,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   late DateTime _selectedDate;
   late TimeOfDay _selectedTime;
 
@@ -89,7 +85,9 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
     );
 
     final appointment = Appointment(
-      id: widget.appointment?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.appointment?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       date: dateTime,
@@ -149,7 +147,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             // Description field
             TextFormField(
               controller: _descriptionController,
@@ -162,7 +160,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
               maxLines: 3,
             ),
             const SizedBox(height: 16),
-            
+
             // Date picker
             InkWell(
               onTap: () => _selectDate(context),
@@ -176,10 +174,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Date',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    const Text('Date', style: TextStyle(fontSize: 16)),
                     Row(
                       children: [
                         Text(
@@ -198,7 +193,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // Time picker
             InkWell(
               onTap: () => _selectTime(context),
@@ -212,10 +207,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Time',
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    const Text('Time', style: TextStyle(fontSize: 16)),
                     Row(
                       children: [
                         Text(
@@ -234,7 +226,7 @@ class _AppointmentEntryScreenState extends State<AppointmentEntryScreen> {
               ),
             ),
             const SizedBox(height: 32),
-            
+
             // Save button
             ElevatedButton(
               onPressed: _saveAppointment,
