@@ -4,6 +4,7 @@ import 'core/theme.dart';
 import 'viewmodels/tasks_viewmodel.dart';
 import 'viewmodels/notes_viewmodel.dart';
 import 'viewmodels/contacts_viewmodel.dart';
+import 'viewmodels/appointments_viewmodel.dart';
 import 'views/appointments_screen.dart';
 import 'views/contacts_screen.dart';
 import 'views/notes_screen.dart';
@@ -18,6 +19,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => TasksViewModel()),
         ChangeNotifierProvider(create: (_) => NotesViewModel()),
         ChangeNotifierProvider(create: (_) => ContactsViewModel()),
+        ChangeNotifierProvider(create: (_) => AppointmentsViewModel()),
       ],
       child: const MyApp(),
     ),

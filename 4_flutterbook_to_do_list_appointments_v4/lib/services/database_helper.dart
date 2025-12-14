@@ -5,14 +5,16 @@ import 'package:path/path.dart';
 import '../models/task_model.dart';
 import '../models/note_model.dart';
 import '../models/contact_model.dart';
+import '../models/appointment_model.dart';
 
 class DatabaseHelper {
   static const _databaseName = 'flutterbook.db';
-  static const _databaseVersion = 3;
+  static const _databaseVersion = 4;
 
   static const tableTasks = 'tasks';
   static const tableNotes = 'notes';
   static const tableContacts = 'contacts';
+  static const tableAppointments = 'appointments';
 
   DatabaseHelper._privateConstructor();
   static final DatabaseHelper instance = DatabaseHelper._privateConstructor();
@@ -67,6 +69,15 @@ class DatabaseHelper {
         birthday INTEGER
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE $tableAppointments (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        date INTEGER NOT NULL
+      )
+    ''');
   }
 
   FutureOr<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -90,6 +101,16 @@ class DatabaseHelper {
           email TEXT NOT NULL,
           avatarPath TEXT,
           birthday INTEGER
+        )
+      ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('''
+        CREATE TABLE $tableAppointments (
+          id TEXT PRIMARY KEY,
+          title TEXT NOT NULL,
+          description TEXT NOT NULL,
+          date INTEGER NOT NULL
         )
       ''');
     }
@@ -185,5 +206,50 @@ class DatabaseHelper {
   Future<void> deleteContact(String id) async {
     final db = await database;
     await db.delete(tableContacts, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Appointments CRUD operations
+  Future<List<Appointment>> getAllAppointments() async {
+    final db = await database;
+    final maps = await db.query(tableAppointments, orderBy: 'date ASC');
+    return maps.map((m) => Appointment.fromMap(m)).toList();
+  }
+
+  Future<List<Appointment>> getAppointmentsByDate(DateTime date) async {
+    final db = await database;
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    
+    final maps = await db.query(
+      tableAppointments,
+      where: 'date >= ? AND date <= ?',
+      whereArgs: [startOfDay.millisecondsSinceEpoch, endOfDay.millisecondsSinceEpoch],
+      orderBy: 'date ASC',
+    );
+    return maps.map((m) => Appointment.fromMap(m)).toList();
+  }
+
+  Future<void> insertAppointment(Appointment appointment) async {
+    final db = await database;
+    await db.insert(
+      tableAppointments,
+      appointment.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> updateAppointment(Appointment appointment) async {
+    final db = await database;
+    await db.update(
+      tableAppointments,
+      appointment.toMap(),
+      where: 'id = ?',
+      whereArgs: [appointment.id],
+    );
+  }
+
+  Future<void> deleteAppointment(String id) async {
+    final db = await database;
+    await db.delete(tableAppointments, where: 'id = ?', whereArgs: [id]);
   }
 }
