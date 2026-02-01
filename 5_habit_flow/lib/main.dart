@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:habit_flow/views/home_view.dart';
+import 'package:habit_flow/views/onboarding_view.dart';
 
 void main() {
   runApp(const HabitFlowApp());
@@ -13,11 +13,40 @@ class HabitFlowApp extends StatelessWidget {
     return MaterialApp(
       title: 'Habit Flow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
+      theme: _buildLightTheme(),
+      darkTheme: _buildDarkTheme(),
+      themeMode: ThemeMode.system,
+      home: const OnboardingView(),
+    );
+  }
+
+  ThemeData _buildLightTheme() {
+    return ThemeData(
+      brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF8B5CF6),
+        secondary: Color(0xFF4F7FFF),
+        surface: Color(0xFFF5F5F7),
+        onSurface: Color(0xFF1F2937),
       ),
-      home: const HomeView(),
+      scaffoldBackgroundColor: const Color(0xFFF5F5F7),
+      useMaterial3: true,
+      fontFamily: 'SF Pro Display',
+    );
+  }
+
+  ThemeData _buildDarkTheme() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF8B5CF6),
+        secondary: Color(0xFF4F7FFF),
+        surface: Color(0xFF1A1625),
+        onSurface: Colors.white,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF1A1625),
+      useMaterial3: true,
+      fontFamily: 'SF Pro Display',
     );
   }
 }

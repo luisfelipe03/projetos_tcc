@@ -45,3 +45,73 @@ Made changes.
 
 ### Resultado:
 Nessa primeira iteração, a IA conseguiu implementar as mudanças solicitadas sem dificuldades. Realizou a limpeza do código inicial do Flutter, criou a estrutura MVVM com as pastas necessárias e implementou uma tela inicial em branco. A IA também solicitou o protótipo da próxima tela para continuar o desenvolvimento, demonstrando proatividade.
+
+## Iteração 2
+### Promt usado:
+```plaintext
+Agora vamos criar a primeira tela do app, uma tela de apresentação antes do usuário fazer o login ou se cadastrar. Vou lhe enviar o prototipo dessa tela. Quero que você implemente essa tela de acordo com o prototipo. A aplicação vai ter um tema claro e um tema escuro, então implemente a tela considerando ambos os temas. Siga fielmente o prototipo que vou lhe enviar, respeitando as cores, fontes, tamanhos e espaçamentos. No diretório assets/images/ você vai encontrar as imagens que devem ser usadas na tela. Adicione os pacote necessarios para fontes e icones no pubspec.yaml se precisar.
+``` 
+
+### Output recebido:
+```markdown
+GitHub Copilot: Vou implementar essa tela de onboarding seguindo fielmente o protótipo! Primeiro, deixe-me verificar o que temos no projeto: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/assets)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/assets/imgs)
+
+Perfeito! Vou criar a tela de onboarding completa com suporte a temas claro e escuro. Vou criar:
+
+1. A tela de onboarding
+2. Configurar o tema no main.dart
+3. Atualizar o pubspec.yaml para incluir os assets 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart)
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+Perfeito! ✨ Implementei a tela de onboarding completa seguindo fielmente o protótipo. Aqui está o que foi criado:
+
+## Arquivos criados/modificados:
+
+**1. onboarding_view.dart** - Tela de apresentação com:
+   - Imagem ilustrativa com as plantas em blocos crescendo
+   - Badges flutuantes "Study" e "Health" com ícones
+   - Título "Master Your Routine." (com "Routine" em roxo)
+   - Descrição do app
+   - Botão "Get Started" em roxo
+   - Link "I already have an account"
+   - Indicadores de página (3 dots)
+   - Rodapé "JOIN 10K+ STUDENTS TODAY"
+
+**2. main.dart** - Configurado com:
+   - Tema claro e escuro completos
+   - Cores exatas do protótipo
+   - Suporte automático ao tema do sistema
+
+**3. pubspec.yaml** - Assets configurados
+
+## Recursos implementados:
+
+✅ **Tema Claro**: Fundo `#F5F5F7`, textos escuros
+✅ **Tema Escuro**: Fundo `#1A1625`, textos claros
+✅ **Cores fiéis**: Roxo `#8B5CF6`, azul `#4F7FFF`, verde `#4ADE80`
+✅ **Badges flutuantes** com ícones e efeitos de sombra
+✅ **Tipografia** com tamanhos e pesos corretos
+✅ **Espaçamentos** precisos conforme o design
+✅ **Responsivo** e adaptável
+
+A tela já está pronta e pode ser testada! O tema muda automaticamente de acordo com as configurações do sistema. 🎨
+
+Made changes.
+```
+
+### Resultado:
+Nessa segunda iteração, a IA conseguiu implementar a tela de apresentação de forma razoável, seguindo o protótipo fornecido. Ela criou a tela de onboarding com todos os elementos visuais, configurou o tema claro e escuro no main.dart e atualizou o pubspec.yaml para incluir os assets necessários. Mas a aplicação já apresenta um erro na aplicação de overfloweds na tela de onboarding, o que indica que a IA não conseguiu ajustar corretamente o layout para diferentes tamanhos de tela. E também não respeitou totalmente as cores do protótipo, utilizando tons solidos ao invés dos tons com gradiente. Mas no geral, a IA conseguiu implementar a maior parte dos requisitos solicitados.
