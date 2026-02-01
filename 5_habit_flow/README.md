@@ -8,7 +8,7 @@ O foco do projeto está na **implementação do front-end**, utilizando protóti
 
 # **Objetivo**
 
-O objetivo deste projeto é desenvolver **toda a interface do aplicativo** a partir de protótipos de alta fidelidade, avaliando a capacidade de modelos de IA em gerar código Flutter funcional, organizado e fiel ao design proposto.
+Avaliar até que ponto o modelo de IA conseguem projetar, implementar e organizar um aplicativo Flutter de média complexidade, focado em UI, estado e experiência do usuário, com backend abstraído via Firebase.
 
 ### Funcionalidades previstas
 
@@ -36,7 +36,8 @@ O objetivo deste projeto é desenvolver **toda a interface do aplicativo** a par
 
 * **Esforço de Refatoração**
   O código gerado deve exigir o mínimo possível de ajustes manuais para atender aos critérios de funcionalidade, qualidade e fidelidade ao design.
-
+  Quantidade de prompts até o app funcionar.
+  
 ---
 
 # **Protótipo**
