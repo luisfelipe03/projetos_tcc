@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:habit_flow/views/auth/login_view.dart';
 
 class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
@@ -212,7 +213,7 @@ class OnboardingView extends StatelessWidget {
           TextSpan(
             text: 'Master Your\n',
             style: TextStyle(
-              color: isDarkMode 
+              color: isDarkMode
                   ? Colors.white.withOpacity(0.95)
                   : const Color(0xFF1F2937),
             ),
@@ -262,7 +263,7 @@ class OnboardingView extends StatelessWidget {
       ),
       child: ElevatedButton(
         onPressed: () {
-          // TODO: Navegar para próxima tela
+          Navigator.of(context).push(_createSlideUpRoute());
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
@@ -345,6 +346,26 @@ class OnboardingView extends StatelessWidget {
         letterSpacing: 1.2,
         color: isDarkMode ? const Color(0xFF6B7280) : const Color(0xFF9CA3AF),
       ),
+    );
+  }
+
+  Route _createSlideUpRoute() {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) =>
+          const LoginView(),
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween = Tween(
+          begin: begin,
+          end: end,
+        ).chain(CurveTween(curve: curve));
+
+        return SlideTransition(position: animation.drive(tween), child: child);
+      },
+      transitionDuration: const Duration(milliseconds: 400),
     );
   }
 }

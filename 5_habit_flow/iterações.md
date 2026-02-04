@@ -286,3 +286,92 @@ Made changes.
 
 ### Resultado:
 Nessa quarta iteração, a IA conseguiu ajustar as cores da tela de onboarding conforme solicitado. No tema claro, alterou a cor do texto "Master Your" para um tom mais escuro, melhorando a legibilidade. No tema escuro, ajustou o fundo para um tom mais próximo do preto, reduzindo o excesso de roxo. A IA realizou as mudanças necessárias sem apresentar erros e confirmou que as cores agora estão alinhadas com o protótipo.
+
+## Iteração 5
+### Promt usado:
+```plaintext
+Ótimo! Agora a tela de onboarding está perfeita e fiel ao prototipo. Vamos seguir com o formulário de login. Vou lhe enviar o prototipo dessa tela para você implementar. Essa tela tem uma particularidade que vai acabar aumento um pouco o grau de dificuldade, quando o usuário clicar no botão Get Started na tela de onboarding, a tela de login deve aparecer com uma animação de baixo para cima, como se estivesse deslizando para cima. Quero que você implemente essa animação de transição entre as telas. Siga fielmente o prototipo que vou lhe enviar, respeitando as cores, fontes, tamanhos e espaçamentos. No diretório assets/images/ você vai encontrar as imagens que devem ser usadas na tela. Adicione os pacote necessarios para fontes e icones no pubspec.yaml se precisar.
+```
+
+```markdown
+Vou implementar a tela de login com a animação de slide up! Vou criar:
+
+1. A tela de login seguindo o protótipo
+2. A navegação com animação de baixo para cima
+3. Todos os componentes fiéis ao design 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+Using "Replace String in File"
+
+Using "Replace String in File"
+
+Using "Replace String in File"
+
+Deixe-me corrigir a navegação no botão: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#260-260), lines 260 to 290
+
+Using "Replace String in File"
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), no problems found
+
+Perfeito! Agora vou adicionar ícones mais adequados e ajustar alguns detalhes finais: 
+
+Using "Replace String in File"
+
+
+Using "Replace String in File"
+
+
+Checked , no problems found
+
+Perfeito! ✨ Implementei a tela de login completa com todos os recursos solicitados:
+
+## Arquivos criados:
+
+### login_view.dart
+Tela de login com:
+
+**✅ Estrutura visual:**
+- Background com a imagem das plantas (com opacity)
+- Botão de voltar no canto superior esquerdo
+- Bottom sheet deslizável com handle bar
+
+**✅ Formulário de login:**
+- Título "Welcome Back"
+- Subtítulo "Let's continue your habit journey"
+- Tabs "Login" e "Sign Up"
+- Campo de Email com ícone
+- Campo de Password com toggle show/hide
+- Link "Forgot Password?"
+- Botão "Log In" com gradiente roxo
+
+**✅ Login social:**
+- Divisor "Or continue with"
+- Botões Google e Apple
+- Texto de termos e privacidade
+
+**✅ Animação de transição:**
+- Slide up (deslizar de baixo para cima) com duração de 400ms
+- Curva de animação suave (`Curves.easeInOut`)
+
+**✅ Temas:**
+- Suporte completo para tema claro e escuro
+- Cores fiéis ao protótipo
+- Campos e botões adaptáveis
+
+**✅ Features:**
+- DraggableScrollableSheet para o bottom sheet
+- TextField com controllers
+- Toggle de visibilidade de senha
+- TabController para alternar entre Login/Sign Up
+
+A navegação está configurada - ao clicar em "Get Started" na tela de onboarding, a tela de login aparece com a animação de slide up! 🚀
+
+Made changes.
+```
+
+### Resultado:
+Nessa quinta iteração, a IA conseguiu implementar a tela de login bem parecida com o protótipo fornecido. Criou a tela de login com todos os elementos visuais, incluindo o formulário de login, botões sociais e o design do bottom sheet. Mas ainda falta melhorar alguns detalhes visuais para que fique exatamente igual ao protótipo. A IA também implementou a animação de transição de slide up entre a tela de onboarding e a tela de login, e ficou funcional mas a animação poderia ser mais suave. No geral, a IA conseguiu atender à maioria dos requisitos solicitados.
