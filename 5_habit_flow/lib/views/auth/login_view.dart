@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({super.key});
+  final int initialTab;
+
+  const LoginView({super.key, this.initialTab = 0});
 
   @override
   State<LoginView> createState() => _LoginViewState();
@@ -17,7 +19,14 @@ class _LoginViewState extends State<LoginView>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab,
+    );
+    _tabController.addListener(() {
+      setState(() {}); // Atualiza UI quando muda de tab
+    });
   }
 
   @override
@@ -95,7 +104,9 @@ class _LoginViewState extends State<LoginView>
 
                     // Título
                     Text(
-                      'Welcome Back',
+                      _tabController.index == 0
+                          ? 'Welcome Back'
+                          : 'Create Account',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 32,
@@ -110,7 +121,9 @@ class _LoginViewState extends State<LoginView>
 
                     // Subtítulo
                     Text(
-                      'Let\'s continue your habit journey',
+                      _tabController.index == 0
+                          ? 'Let\'s continue your habit journey'
+                          : 'Start building your habits today',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 15,
@@ -219,6 +232,8 @@ class _LoginViewState extends State<LoginView>
 
   Widget _buildBackground() {
     return Container(
+      width: double.infinity,
+      height: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -226,11 +241,13 @@ class _LoginViewState extends State<LoginView>
           colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
         ),
       ),
-      child: Center(
+      child: Opacity(
+        opacity: 0.3,
         child: Image.asset(
           'assets/imgs/grafico_plantas.png',
           fit: BoxFit.cover,
-          opacity: const AlwaysStoppedAnimation(0.4),
+          width: double.infinity,
+          height: double.infinity,
         ),
       ),
     );

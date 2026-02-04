@@ -263,7 +263,7 @@ class OnboardingView extends StatelessWidget {
       ),
       child: ElevatedButton(
         onPressed: () {
-          Navigator.of(context).push(_createSlideUpRoute());
+          Navigator.of(context).push(_createSlideUpRoute(initialTab: 1));
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
@@ -289,7 +289,7 @@ class OnboardingView extends StatelessWidget {
   Widget _buildLoginLink(BuildContext context, bool isDarkMode) {
     return TextButton(
       onPressed: () {
-        // TODO: Navegar para tela de login
+        Navigator.of(context).push(_createSlideUpRoute(initialTab: 0));
       },
       style: TextButton.styleFrom(
         foregroundColor: isDarkMode ? Colors.white : const Color(0xFF1F2937),
@@ -349,23 +349,33 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Route _createSlideUpRoute() {
+  Route _createSlideUpRoute({int initialTab = 1}) {
     return PageRouteBuilder(
       pageBuilder: (context, animation, secondaryAnimation) =>
-          const LoginView(),
+          LoginView(initialTab: initialTab),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
-        const curve = Curves.easeInOut;
+        const curve = Curves.fastOutSlowIn;
 
         var tween = Tween(
           begin: begin,
           end: end,
         ).chain(CurveTween(curve: curve));
 
-        return SlideTransition(position: animation.drive(tween), child: child);
+        var fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: animation,
+            curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+          ),
+        );
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: FadeTransition(opacity: fadeAnimation, child: child),
+        );
       },
-      transitionDuration: const Duration(milliseconds: 400),
+      transitionDuration: const Duration(milliseconds: 500),
     );
   }
 }
