@@ -14,7 +14,7 @@ class OnboardingView extends StatelessWidget {
               ? const LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2D1B69), Color(0xFF1A1625)],
+                  colors: [Color(0xFF1A1625), Color(0xFF0F0D15)],
                 )
               : const LinearGradient(
                   begin: Alignment.topCenter,
@@ -41,7 +41,7 @@ class OnboardingView extends StatelessWidget {
                           const Spacer(flex: 2),
 
                           // Título
-                          _buildTitle(),
+                          _buildTitle(isDarkMode),
 
                           const SizedBox(height: 16),
 
@@ -198,7 +198,7 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle() {
+  Widget _buildTitle(bool isDarkMode) {
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
@@ -211,7 +211,11 @@ class OnboardingView extends StatelessWidget {
         children: [
           TextSpan(
             text: 'Master Your\n',
-            style: TextStyle(color: Colors.white.withOpacity(0.95)),
+            style: TextStyle(
+              color: isDarkMode 
+                  ? Colors.white.withOpacity(0.95)
+                  : const Color(0xFF1F2937),
+            ),
           ),
           const TextSpan(
             text: 'Routine.',

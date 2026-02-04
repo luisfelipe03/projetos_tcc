@@ -232,3 +232,57 @@ Made changes.
 
 ### Resultado:
 Nessa terceira iteração, a IA enfrentou dificuldades para corrigir os problemas na tela de onboarding. Inicialmente, tentou fazer várias substituições e edições no arquivo existente, mas acabou corrompendo o código devido a duplicações e formatações incorretas. Após várias tentativas, a IA conseguiu criar um novo arquivo funcional e transferir o conteúdo corretamente. Tive que apagar o arquivo antigo e renomear o novo para resolver os problemas. A interface ainda apresenta inconsistências em relação ao protótipo, mas a IA conseguiu implementar as correções solicitadas.
+
+## Iteração 4
+### Promt usado:
+```plaintext
+Beleza foi ajustado o problema de overfloweds, mas ainda falta ajustar as cores da tela para que fiquem exatamente iguais as do prototipo. No tema claro o texto "Master your" não está legivel, então ajuste a cor para que fique mais escuro. No tema escuro o background está muito roxo, ajuste para que fique mais próximo do preto.
+```
+
+#### Output recebido:
+```markdown
+Vou ajustar as cores para ficarem mais fiéis ao protótipo: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart#1-1), lines 1 to 20
+
+Using "Multi-Replace String in Files"
+
+Vejo que o arquivo voltou a ser onboarding_view.dart. Vou ajustar as cores nele: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#1-1), lines 1 to 50
+
+Using "Multi-Replace String in Files"
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart), 1 problem found
+
+Preciso passar o context como parâmetro. Vou corrigir: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#195-195), lines 195 to 230
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#40-40), lines 40 to 60
+
+Using "Multi-Replace String in Files"
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart), no problems found
+
+Perfeito! ✨ As cores foram ajustadas com sucesso:
+
+## Ajustes realizados:
+
+### ✅ **Tema Escuro**
+- Background alterado de `#2D1B69` → `#1A1625` (menos roxo)
+- Para `#1A1625` → `#0F0D15` (mais próximo do preto)
+
+### ✅ **Tema Claro**  
+- Texto "Master Your" agora usa cor `#1F2937` (cinza escuro legível)
+- No tema escuro continua branco com opacidade 95%
+
+Agora a tela está com as cores exatamente como no protótipo, com o texto legível em ambos os temas! 🎨
+
+Made changes.
+```
+
+### Resultado:
+Nessa quarta iteração, a IA conseguiu ajustar as cores da tela de onboarding conforme solicitado. No tema claro, alterou a cor do texto "Master Your" para um tom mais escuro, melhorando a legibilidade. No tema escuro, ajustou o fundo para um tom mais próximo do preto, reduzindo o excesso de roxo. A IA realizou as mudanças necessárias sem apresentar erros e confirmou que as cores agora estão alinhadas com o protótipo.
