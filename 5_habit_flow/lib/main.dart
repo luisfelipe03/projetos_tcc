@@ -15,7 +15,7 @@ class HabitFlowApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: _buildLightTheme(),
       darkTheme: _buildDarkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark,
       home: const OnboardingView(),
     );
   }
