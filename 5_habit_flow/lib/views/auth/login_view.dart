@@ -241,13 +241,15 @@ class _LoginViewState extends State<LoginView>
           colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
         ),
       ),
-      child: Opacity(
-        opacity: 0.3,
-        child: Image.asset(
-          'assets/imgs/grafico_plantas.png',
-          fit: BoxFit.cover,
-          width: double.infinity,
-          height: double.infinity,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 80),
+          child: Image.asset(
+            'assets/imgs/grafico_plantas.png',
+            fit: BoxFit.contain,
+            width: double.infinity,
+          ),
         ),
       ),
     );
