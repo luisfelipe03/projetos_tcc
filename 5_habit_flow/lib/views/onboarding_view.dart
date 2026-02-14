@@ -101,7 +101,7 @@ class OnboardingView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(32),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -155,20 +155,20 @@ class OnboardingView extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: isDarkMode
-            ? const Color(0xFF2D3E5F).withOpacity(0.95)
-            : Colors.white.withOpacity(0.95),
+            ? const Color(0xFF2D3E5F).withValues(alpha: 0.95)
+            : Colors.white.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: isDarkMode
-              ? const Color(0xFF3D4E6F).withOpacity(0.5)
-              : Colors.white.withOpacity(0.8),
+              ? const Color(0xFF3D4E6F).withValues(alpha: 0.5)
+              : Colors.white.withValues(alpha: 0.8),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
             color: isDarkMode
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black.withOpacity(0.08),
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -214,7 +214,7 @@ class OnboardingView extends StatelessWidget {
             text: 'Master Your\n',
             style: TextStyle(
               color: isDarkMode
-                  ? Colors.white.withOpacity(0.95)
+                  ? Colors.white.withValues(alpha: 0.95)
                   : const Color(0xFF1F2937),
             ),
           ),
@@ -255,7 +255,7 @@ class OnboardingView extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -320,7 +320,7 @@ class OnboardingView extends StatelessWidget {
           width: 6,
           height: 6,
           decoration: BoxDecoration(
-            color: const Color(0xFF4B5563).withOpacity(0.4),
+            color: const Color(0xFF4B5563).withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(3),
           ),
         ),
@@ -329,7 +329,7 @@ class OnboardingView extends StatelessWidget {
           width: 6,
           height: 6,
           decoration: BoxDecoration(
-            color: const Color(0xFF4B5563).withOpacity(0.4),
+            color: const Color(0xFF4B5563).withValues(alpha: 0.4),
             borderRadius: BorderRadius.circular(3),
           ),
         ),

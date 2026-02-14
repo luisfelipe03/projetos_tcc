@@ -136,8 +136,8 @@ class _LoginViewState extends State<LoginView>
               child: Container(
                 decoration: BoxDecoration(
                   color: isDarkMode
-                      ? Colors.white.withOpacity(0.1)
-                      : Colors.black.withOpacity(0.1),
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
@@ -177,8 +177,8 @@ class _LoginViewState extends State<LoginView>
                           height: 4,
                           decoration: BoxDecoration(
                             color: isDarkMode
-                                ? Colors.white.withOpacity(0.3)
-                                : Colors.black.withOpacity(0.2),
+                                ? Colors.white.withValues(alpha: 0.3)
+                                : Colors.black.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -212,7 +212,7 @@ class _LoginViewState extends State<LoginView>
                         style: TextStyle(
                           fontSize: 15,
                           color: isDarkMode
-                              ? Colors.white.withOpacity(0.6)
+                              ? Colors.white.withValues(alpha: 0.6)
                               : const Color(0xFF6B7280),
                         ),
                       ),
@@ -267,8 +267,8 @@ class _LoginViewState extends State<LoginView>
                           Expanded(
                             child: Divider(
                               color: isDarkMode
-                                  ? Colors.white.withOpacity(0.1)
-                                  : Colors.black.withOpacity(0.1),
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.black.withValues(alpha: 0.1),
                             ),
                           ),
                           Padding(
@@ -278,7 +278,7 @@ class _LoginViewState extends State<LoginView>
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDarkMode
-                                    ? Colors.white.withOpacity(0.5)
+                                    ? Colors.white.withValues(alpha: 0.5)
                                     : const Color(0xFF9CA3AF),
                               ),
                             ),
@@ -286,8 +286,8 @@ class _LoginViewState extends State<LoginView>
                           Expanded(
                             child: Divider(
                               color: isDarkMode
-                                  ? Colors.white.withOpacity(0.1)
-                                  : Colors.black.withOpacity(0.1),
+                                  ? Colors.white.withValues(alpha: 0.1)
+                                  : Colors.black.withValues(alpha: 0.1),
                             ),
                           ),
                         ],
@@ -346,8 +346,8 @@ class _LoginViewState extends State<LoginView>
         border: Border(
           bottom: BorderSide(
             color: isDarkMode
-                ? Colors.white.withOpacity(0.1)
-                : Colors.black.withOpacity(0.1),
+                ? Colors.white.withValues(alpha: 0.1)
+                : Colors.black.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -360,7 +360,7 @@ class _LoginViewState extends State<LoginView>
             ? const Color(0xFF9B6FFF)
             : const Color(0xFF7C3AED),
         unselectedLabelColor: isDarkMode
-            ? Colors.white.withOpacity(0.4)
+            ? Colors.white.withValues(alpha: 0.4)
             : const Color(0xFF9CA3AF),
         labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         tabs: const [
@@ -399,18 +399,18 @@ class _LoginViewState extends State<LoginView>
             hintText: 'student@example.com',
             hintStyle: TextStyle(
               color: isDarkMode
-                  ? Colors.white.withOpacity(0.3)
+                  ? Colors.white.withValues(alpha: 0.3)
                   : const Color(0xFF9CA3AF),
             ),
             prefixIcon: Icon(
               Icons.email_outlined,
               color: isDarkMode
-                  ? Colors.white.withOpacity(0.5)
+                  ? Colors.white.withValues(alpha: 0.5)
                   : const Color(0xFF6B7280),
             ),
             filled: true,
             fillColor: isDarkMode
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : const Color(0xFFF3F4F6),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -462,13 +462,13 @@ class _LoginViewState extends State<LoginView>
             hintText: '••••••••',
             hintStyle: TextStyle(
               color: isDarkMode
-                  ? Colors.white.withOpacity(0.3)
+                  ? Colors.white.withValues(alpha: 0.3)
                   : const Color(0xFF9CA3AF),
             ),
             prefixIcon: Icon(
               Icons.lock_outline,
               color: isDarkMode
-                  ? Colors.white.withOpacity(0.5)
+                  ? Colors.white.withValues(alpha: 0.5)
                   : const Color(0xFF6B7280),
             ),
             suffixIcon: IconButton(
@@ -477,7 +477,7 @@ class _LoginViewState extends State<LoginView>
                     ? Icons.visibility_off_outlined
                     : Icons.visibility_outlined,
                 color: isDarkMode
-                    ? Colors.white.withOpacity(0.5)
+                    ? Colors.white.withValues(alpha: 0.5)
                     : const Color(0xFF6B7280),
               ),
               onPressed: () {
@@ -488,7 +488,7 @@ class _LoginViewState extends State<LoginView>
             ),
             filled: true,
             fillColor: isDarkMode
-                ? Colors.white.withOpacity(0.05)
+                ? Colors.white.withValues(alpha: 0.05)
                 : const Color(0xFFF3F4F6),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -523,7 +523,7 @@ class _LoginViewState extends State<LoginView>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF8B5CF6).withOpacity(0.3),
+            color: const Color(0xFF8B5CF6).withValues(alpha: 0.3),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -537,7 +537,7 @@ class _LoginViewState extends State<LoginView>
           shadowColor: Colors.transparent,
           elevation: 0,
           disabledBackgroundColor: Colors.transparent,
-          disabledForegroundColor: Colors.white.withOpacity(0.6),
+          disabledForegroundColor: Colors.white.withValues(alpha: 0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -609,13 +609,13 @@ class _LoginViewState extends State<LoginView>
       height: 56,
       decoration: BoxDecoration(
         color: isDarkMode
-            ? Colors.white.withOpacity(0.05)
+            ? Colors.white.withValues(alpha: 0.05)
             : const Color(0xFFF3F4F6),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isDarkMode
-              ? Colors.white.withOpacity(0.1)
-              : Colors.black.withOpacity(0.05),
+              ? Colors.white.withValues(alpha: 0.1)
+              : Colors.black.withValues(alpha: 0.05),
         ),
       ),
       child: TextButton(
@@ -668,7 +668,7 @@ class _LoginViewState extends State<LoginView>
         style: TextStyle(
           fontSize: 13,
           color: isDarkMode
-              ? Colors.white.withOpacity(0.5)
+              ? Colors.white.withValues(alpha: 0.5)
               : const Color(0xFF6B7280),
         ),
         children: [

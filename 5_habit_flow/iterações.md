@@ -887,3 +887,164 @@ Made changes.
 
 ### Resultado:
 Nessa décima terceira iteração, a IA conseguiu implementar a funcionalidade de login social usando Google com Firebase Authentication. Ela adicionou a dependência necessária, atualizou o AuthViewModel para incluir o método de login com Google, e conectou esse método ao botão correspondente na tela de login. A IA também implementou o tratamento de erros específicos do Google Sign-In e garantiu que o usuário seja redirecionado para a tela principal após um login bem-sucedido. No iPhone, tive que fazer algumas configurações adicionais para que o login com Google funcionasse corretamente, mas após isso tudo está funcionando perfeitamente. Agora os usuários podem autenticar usando suas contas do Google, proporcionando uma experiência de login mais rápida e conveniente.
+
+## Iteração 14
+### Promt usado:
+```plaintext
+Agora que a funcionalidade de login e cadastro está implementada, vamos dar uma melhorada no código antes de começar a implementar as próximas telas. Eu rodei no terminal o comando "flutter analyze" para verificar se há algum problema no código, e ele me retornou alguns warnings de método depreciado, faça os devidos ajustes para corrigir esses warnings e deixar o código mais limpo e atualizado. 
+
+flutter analyze                                                                    
+Analyzing 5_habit_flow...                                               
+
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:139:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:140:38 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:180:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:181:48 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:215:46 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:270:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:271:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:281:52 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:289:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:290:50 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:349:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:350:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:363:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:402:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:408:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:413:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:465:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:471:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:480:36 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:491:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:526:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:540:49 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:612:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:617:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:618:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/auth/login_view.dart:671:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:104:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:158:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:159:28 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:163:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:164:30 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:170:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:171:32 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:217:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:258:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:323:44 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision
+          loss • lib/views/onboarding_view.dart:332:44 • deprecated_member_use
+
+37 issues found. (ran in 1.3s)
+```
+
+### Output recebido:
+```markdown
+Vou corrigir todos os warnings de método depreciado `withOpacity` substituindo por `withValues(alpha: ...)` nos arquivos afetados: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#135-135), lines 135 to 200
+
+Searched for regex `\.withOpacity\(` (`**/lib/views/auth/login_view.dart`), 26 results
+
+Searched for regex `\.withOpacity\(` (`**/lib/views/onboarding_view.dart`), 11 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#135-135), lines 135 to 145
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#175-175), lines 175 to 185
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#210-210), lines 210 to 220
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#265-265), lines 265 to 295
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#345-345), lines 345 to 355
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#358-358), lines 358 to 368
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#398-398), lines 398 to 418
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#460-460), lines 460 to 496
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#520-520), lines 520 to 530
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#535-535), lines 535 to 545
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#607-607), lines 607 to 623
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#666-666), lines 666 to 676
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#100-100), lines 100 to 110
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#155-155), lines 155 to 175
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#212-212), lines 212 to 222
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#253-253), lines 253 to 263
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart#318-318), lines 318 to 337
+
+Replacing 223 lines with 223 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart)
+
+
+Checked , no problems found
+
+Perfeito! Todos os warnings de depreciação foram corrigidos! 🎉
+
+## ✅ Alterações realizadas:
+
+### **Arquivos atualizados:**
+- login_view.dart - 26 ocorrências corrigidas
+- onboarding_view.dart - 11 ocorrências corrigidas
+
+### **Total:** 37 substituições de `withOpacity()` por `withValues(alpha:)`
+
+Todas as ocorrências de:
+
+Colors.white.withOpacity(0.5)
+
+Foram substituídas por:
+
+Colors.white.withValues(alpha: 0.5)
+
+O código agora está atualizado com a API mais recente do Flutter e não deve mais gerar warnings quando você executar `flutter analyze`. O método `withValues()` evita perda de precisão e é a forma recomendada pela equipe do Flutter.
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA conseguiu corrigir todos os warnings de método depreciado `withOpacity` substituindo por `withValues(alpha: ...)` nos arquivos afetados. Ela fez um total de 37 substituições, garantindo que o código esteja atualizado com a API mais recente do Flutter e não gere mais warnings ao executar `flutter analyze`. Agora o código está mais limpo e atualizado, pronto para as próximas implementações!
