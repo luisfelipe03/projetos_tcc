@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:habit_flow/viewmodels/auth_viewmodel.dart';
 import 'package:habit_flow/views/onboarding_view.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const HabitFlowApp());
 }
 
@@ -10,13 +15,16 @@ class HabitFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Habit Flow',
-      debugShowCheckedModeBanner: false,
-      theme: _buildLightTheme(),
-      darkTheme: _buildDarkTheme(),
-      themeMode: ThemeMode.light,
-      home: const OnboardingView(),
+    return ChangeNotifierProvider(
+      create: (_) => AuthViewModel(),
+      child: MaterialApp(
+        title: 'Habit Flow',
+        debugShowCheckedModeBanner: false,
+        theme: _buildLightTheme(),
+        darkTheme: _buildDarkTheme(),
+        themeMode: ThemeMode.light,
+        home: const OnboardingView(),
+      ),
     );
   }
 

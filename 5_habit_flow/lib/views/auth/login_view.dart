@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../viewmodels/auth_viewmodel.dart';
+import '../home_view.dart';
 
 class LoginView extends StatefulWidget {
   final int initialTab;
@@ -15,6 +18,8 @@ class _LoginViewState extends State<LoginView>
   bool _obscurePassword = true;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -35,6 +40,83 @@ class _LoginViewState extends State<LoginView>
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+      ),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _handleAuth() async {
+    if (_formKey.currentState?.validate() != true) {
+      return;
+    }
+
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    bool success;
+
+    if (_tabController.index == 1) {
+      // Sign Up
+      success = await authViewModel.signUpWithEmail(
+        email: email,
+        password: password,
+      );
+
+      if (success) {
+        _showSuccess('Account created successfully!');
+      }
+    } else {
+      // Login
+      success = await authViewModel.signInWithEmail(
+        email: email,
+        password: password,
+      );
+
+      if (success) {
+        _showSuccess('Welcome back!');
+      }
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (!mounted) return;
+
+    if (success) {
+      // Navegar para home e remover todas as rotas anteriores
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (route) => false,
+      );
+    } else if (authViewModel.errorMessage != null) {
+      _showError(authViewModel.errorMessage!);
+      authViewModel.clearError();
+    }
   }
 
   @override
@@ -80,147 +162,150 @@ class _LoginViewState extends State<LoginView>
                     topRight: Radius.circular(32),
                   ),
                 ),
-                child: ListView(
-                  controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  children: [
-                    const SizedBox(height: 12),
+                child: Form(
+                  key: _formKey,
+                  child: ListView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    children: [
+                      const SizedBox(height: 12),
 
-                    // Handle bar
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
+                      // Handle bar
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: isDarkMode
+                                ? Colors.white.withOpacity(0.3)
+                                : Colors.black.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Título
+                      Text(
+                        _tabController.index == 0
+                            ? 'Welcome Back'
+                            : 'Create Account',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
                           color: isDarkMode
-                              ? Colors.white.withOpacity(0.3)
-                              : Colors.black.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(2),
+                              ? Colors.white
+                              : const Color(0xFF1F2937),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 8),
 
-                    // Título
-                    Text(
-                      _tabController.index == 0
-                          ? 'Welcome Back'
-                          : 'Create Account',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: isDarkMode
-                            ? Colors.white
-                            : const Color(0xFF1F2937),
-                      ),
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    // Subtítulo
-                    Text(
-                      _tabController.index == 0
-                          ? 'Let\'s continue your habit journey'
-                          : 'Start building your habits today',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: isDarkMode
-                            ? Colors.white.withOpacity(0.6)
-                            : const Color(0xFF6B7280),
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Tabs
-                    _buildTabs(isDarkMode),
-
-                    const SizedBox(height: 32),
-
-                    // Campo Email
-                    _buildEmailField(isDarkMode),
-
-                    const SizedBox(height: 20),
-
-                    // Campo Password
-                    _buildPasswordField(isDarkMode),
-
-                    const SizedBox(height: 16),
-
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: () {
-                          // TODO: Implementar recuperação de senha
-                        },
-                        child: Text(
-                          'Forgot Password?',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: isDarkMode
-                                ? const Color(0xFF9B6FFF)
-                                : const Color(0xFF7C3AED),
-                          ),
+                      // Subtítulo
+                      Text(
+                        _tabController.index == 0
+                            ? 'Let\'s continue your habit journey'
+                            : 'Start building your habits today',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: isDarkMode
+                              ? Colors.white.withOpacity(0.6)
+                              : const Color(0xFF6B7280),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
-                    // Botão Log In
-                    _buildLoginButton(),
+                      // Tabs
+                      _buildTabs(isDarkMode),
 
-                    const SizedBox(height: 32),
+                      const SizedBox(height: 32),
 
-                    // Divisor
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Divider(
-                            color: isDarkMode
-                                ? Colors.white.withOpacity(0.1)
-                                : Colors.black.withOpacity(0.1),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                      // Campo Email
+                      _buildEmailField(isDarkMode),
+
+                      const SizedBox(height: 20),
+
+                      // Campo Password
+                      _buildPasswordField(isDarkMode),
+
+                      const SizedBox(height: 16),
+
+                      // Forgot Password
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: () {
+                            // TODO: Implementar recuperação de senha
+                          },
                           child: Text(
-                            'Or continue with',
+                            'Forgot Password?',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                               color: isDarkMode
-                                  ? Colors.white.withOpacity(0.5)
-                                  : const Color(0xFF9CA3AF),
+                                  ? const Color(0xFF9B6FFF)
+                                  : const Color(0xFF7C3AED),
                             ),
                           ),
                         ),
-                        Expanded(
-                          child: Divider(
-                            color: isDarkMode
-                                ? Colors.white.withOpacity(0.1)
-                                : Colors.black.withOpacity(0.1),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Botão Log In
+                      _buildLoginButton(),
+
+                      const SizedBox(height: 32),
+
+                      // Divisor
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Divider(
+                              color: isDarkMode
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.black.withOpacity(0.1),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              'Or continue with',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isDarkMode
+                                    ? Colors.white.withOpacity(0.5)
+                                    : const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: Divider(
+                              color: isDarkMode
+                                  ? Colors.white.withOpacity(0.1)
+                                  : Colors.black.withOpacity(0.1),
+                            ),
+                          ),
+                        ],
+                      ),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Botões sociais
-                    _buildSocialButtons(isDarkMode),
+                      // Botões sociais
+                      _buildSocialButtons(isDarkMode),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Termos
-                    _buildTermsText(isDarkMode),
+                      // Termos
+                      _buildTermsText(isDarkMode),
 
-                    const SizedBox(height: 32),
-                  ],
+                      const SizedBox(height: 32),
+                    ],
+                  ),
                 ),
               );
             },
@@ -239,7 +324,7 @@ class _LoginViewState extends State<LoginView>
           // Área do topo com imagem (40% da tela)
           Expanded(
             flex: 4,
-            child: Container(
+            child: SizedBox(
               width: double.infinity,
               child: Image.asset(
                 'assets/imgs/grafico_plantas.png',
@@ -299,9 +384,13 @@ class _LoginViewState extends State<LoginView>
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
+          validator: (value) => Provider.of<AuthViewModel>(
+            context,
+            listen: false,
+          ).validateEmail(value),
           style: TextStyle(
             fontSize: 15,
             color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
@@ -327,6 +416,14 @@ class _LoginViewState extends State<LoginView>
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 2),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 16,
@@ -350,9 +447,13 @@ class _LoginViewState extends State<LoginView>
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        TextFormField(
           controller: _passwordController,
           obscureText: _obscurePassword,
+          validator: (value) => Provider.of<AuthViewModel>(
+            context,
+            listen: false,
+          ).validatePassword(value),
           style: TextStyle(
             fontSize: 15,
             color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
@@ -393,6 +494,14 @@ class _LoginViewState extends State<LoginView>
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
             ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 1.5),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: Colors.red.shade400, width: 2),
+            ),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 16,
@@ -421,26 +530,35 @@ class _LoginViewState extends State<LoginView>
         ],
       ),
       child: ElevatedButton(
-        onPressed: () {
-          // TODO: Implementar login
-        },
+        onPressed: _isLoading ? null : _handleAuth,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           foregroundColor: Colors.white,
           shadowColor: Colors.transparent,
           elevation: 0,
+          disabledBackgroundColor: Colors.transparent,
+          disabledForegroundColor: Colors.white.withOpacity(0.6),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: const Text(
-          'Log In',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.3,
-          ),
-        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+            : Text(
+                _tabController.index == 0 ? 'Log In' : 'Sign Up',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.3,
+                ),
+              ),
       ),
     );
   }
