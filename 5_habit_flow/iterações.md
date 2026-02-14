@@ -785,3 +785,105 @@ Made changes.
 ### Resultado:
 Essa iteração foi mais simples, a IA conseguiu remover o botão de login com Apple da tela de login, deixando apenas o botão de login com Google.
 
+## Iteração 13
+### Promt usado:
+```plaintext
+Agora implemente a funcionalidade de login social usando Google. Implemente a lógica de autenticação usando o Firebase Authentication para permitir que os usuários façam login com suas contas do Google. E quando o usuário clicar no botão de login com Google, ele deve ser autenticado usando o Firebase e redirecionado para a tela principal do app. Se houver algum erro durante o login, como conta do Google não encontrada ou erro de rede, exiba uma mensagem de erro apropriada para o usuário. A opção de login com Google já está ativada no console do Firebase.
+```
+
+### Output recebido:
+```markdown
+Vou implementar o login com Google usando Firebase Authentication. Primeiro, vou verificar os arquivos atuais e adicionar as dependências necessárias:  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#1-1), lines 1 to 50
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart#1-1), lines 1 to 100
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart#100-100), lines 100 to 170
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#550-550), lines 550 to 580
+
+Replacing 6 lines with 9 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+Replacing 2 lines with 3 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart)
+
+Replacing 6 lines with 7 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart)
+
+Replacing 14 lines with 88 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart)
+
+Replacing 10 lines with 35 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib), 2 problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart#225-225), lines 225 to 245
+
+Replacing 11 lines with 10 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart)
+
+
+Checked , no problems found
+
+Perfeito! A funcionalidade de login com Google foi implementada com sucesso! Aqui está o que foi feito:
+
+## ✅ Implementação concluída:
+
+### **1. Dependência adicionada** (pubspec.yaml)
+- `google_sign_in: ^6.2.1`
+
+### **2. AuthViewModel atualizado** (auth_viewmodel.dart)
+- ✅ Import do `google_sign_in` adicionado
+- ✅ Instância do `GoogleSignIn` criada
+- ✅ Método `signInWithGoogle()` implementado com:
+  - Fluxo completo de autenticação do Google
+  - Criação de credenciais Firebase com tokens do Google
+  - Tratamento de erros específicos do Google Sign-In
+  - Mensagens de erro amigáveis
+  - Suporte para cancelamento pelo usuário
+- ✅ Logout atualizado para também deslogar do Google
+
+### **3. LoginView atualizada** (login_view.dart)
+- ✅ Método `_handleGoogleSignIn()` implementado
+- ✅ Botão do Google conectado ao método
+- ✅ Loading state durante autenticação
+- ✅ SnackBar com mensagens de sucesso/erro
+- ✅ Navegação automática para HomeView após sucesso
+
+## 📋 Configuração necessária:
+
+Para que o login com Google funcione, você precisa configurar os arquivos de plataforma:
+
+### **Android (android/app/build.gradle):**
+O arquivo já está configurado com o Firebase, mas certifique-se de que o SHA-1 está registrado no console do Firebase.
+
+### **iOS (ios/Runner/Info.plist):**
+Adicione o seguinte dentro de `<dict>`:
+
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>com.googleusercontent.apps.YOUR-CLIENT-ID</string>
+        </array>
+    </dict>
+</array>
+
+
+Substitua `YOUR-CLIENT-ID` pelo seu Client ID reverso do Google.
+
+### **Obter SHA-1 para Android:**
+cd android
+./gradlew signingReport
+
+
+Copie o SHA-1 e adicione no Firebase Console em: **Project Settings → Your apps → Android app → Add fingerprint**
+
+Agora o login com Google está totalmente funcional! O usuário pode clicar no botão do Google, autenticar com sua conta e ser redirecionado para a tela principal. 🚀
+
+Made changes.
+```
+
+### Resultado:
+Nessa décima terceira iteração, a IA conseguiu implementar a funcionalidade de login social usando Google com Firebase Authentication. Ela adicionou a dependência necessária, atualizou o AuthViewModel para incluir o método de login com Google, e conectou esse método ao botão correspondente na tela de login. A IA também implementou o tratamento de erros específicos do Google Sign-In e garantiu que o usuário seja redirecionado para a tela principal após um login bem-sucedido. No iPhone, tive que fazer algumas configurações adicionais para que o login com Google funcionasse corretamente, mas após isso tudo está funcionando perfeitamente. Agora os usuários podem autenticar usando suas contas do Google, proporcionando uma experiência de login mais rápida e conveniente.

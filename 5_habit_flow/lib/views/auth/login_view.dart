@@ -568,10 +568,35 @@ class _LoginViewState extends State<LoginView>
       icon: '🇬',
       label: 'Google',
       isDarkMode: isDarkMode,
-      onPressed: () {
-        // TODO: Implementar login com Google
-      },
+      onPressed: _handleGoogleSignIn,
     );
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    final authViewModel = Provider.of<AuthViewModel>(context, listen: false);
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final success = await authViewModel.signInWithGoogle();
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (!mounted) return;
+
+    if (success) {
+      _showSuccess('Successfully signed in with Google!');
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeView()),
+        (route) => false,
+      );
+    } else if (authViewModel.errorMessage != null) {
+      _showError(authViewModel.errorMessage!);
+      authViewModel.clearError();
+    }
   }
 
   Widget _buildSocialButton({

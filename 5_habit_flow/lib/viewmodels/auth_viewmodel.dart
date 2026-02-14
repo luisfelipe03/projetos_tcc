@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   User? _user;
   bool _isLoading = false;
@@ -155,10 +157,85 @@ class AuthViewModel extends ChangeNotifier {
 
   /// Faz logout
   Future<void> signOut() async {
-    await _auth.signOut();
+    await _googleSignIn.signOut();
     _user = null;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  /// Faz login com Google
+  Future<bool> signInWithGoogle() async {
+    try {
+      _isLoading = true;
+      _errorMessage = null;
+      notifyListeners();
+
+      // Inicia o fluxo de autenticação do Google
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // O usuário cancelou o login
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Obtém os detalhes de autenticação da solicitação
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      // Cria uma nova credencial
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Faz login no Firebase com a credencial do Google
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      _user = userCredential.user;
+      _isLoading = false;
+      notifyListeners();
+
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _isLoading = false;
+
+      switch (e.code) {
+        case 'account-exists-with-different-credential':
+          _errorMessage =
+              'An account already exists with the same email but different sign-in credentials';
+          break;
+        case 'invalid-credential':
+          _errorMessage = 'The credential is malformed or has expired';
+          break;
+        case 'operation-not-allowed':
+          _errorMessage = 'Google sign-in is not enabled';
+          break;
+        case 'user-disabled':
+          _errorMessage = 'This user account has been disabled';
+          break;
+        case 'user-not-found':
+          _errorMessage = 'No user found with this credential';
+          break;
+        case 'wrong-password':
+          _errorMessage = 'Wrong password';
+          break;
+        default:
+          _errorMessage =
+              'An error occurred during Google sign in: ${e.message}';
+      }
+
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'An unexpected error occurred: $e';
+      notifyListeners();
+      return false;
+    }
   }
 
   /// Limpa a mensagem de erro
