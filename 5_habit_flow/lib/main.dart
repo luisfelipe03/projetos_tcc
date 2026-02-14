@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:habit_flow/viewmodels/auth_viewmodel.dart';
+import 'package:habit_flow/viewmodels/habit_viewmodel.dart';
 import 'package:habit_flow/views/onboarding_view.dart';
 import 'package:habit_flow/services/notification_service.dart';
 
@@ -22,14 +23,17 @@ class HabitFlowApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => AuthViewModel(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider(create: (_) => HabitViewModel()),
+      ],
       child: MaterialApp(
         title: 'Habit Flow',
         debugShowCheckedModeBanner: false,
         theme: _buildLightTheme(),
         darkTheme: _buildDarkTheme(),
-        themeMode: ThemeMode.light,
+        themeMode: ThemeMode.dark,
         home: const OnboardingView(),
       ),
     );

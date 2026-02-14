@@ -1267,3 +1267,149 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA conseguiu criar um novo modelo chamado HabitReminder para representar os lembretes dos hábitos, com os campos time, repeat e daysOfWeek. Ela atualizou o modelo de hábito para utilizar esse novo modelo de reminder. Além disso, a IA implementou o sistema de notificações usando o pacote flutter_local_notifications, criando um serviço de notificações que pode ser utilizado para agendar notificações com base no tipo de repetição selecionado e nos dias da semana, se aplicável. A IA também adicionou uma documentação completa sobre o sistema de notificações em um arquivo NOTIFICATIONS_README.md, explicando como usar o serviço e configurar as notificações para Android e iOS. Agora o sistema de notificações está completo e pronto para ser integrado à tela principal do aplicativo!
+
+## Iteração 17
+### Promt usado:
+```plaintext
+Agora vamos começar a implementar primeiro a tela de cadastro de hábitos. Nessa tela, o usuário poderá criar um novo hábito preenchendo um formulário com os campos do modelo de hábito que criamos anteriormente. O formulário deve conter campos para o título do hábito, a frequência, a categoria, a cor, o horário do lembrete e as opções de repetição. E quando o usuário salvar o hábito, ele deve ser persistido no Firebase Firestore e uma notificação deve ser agendada com base nas configurações de lembrete selecionadas. Implemente a lógica para lidar com a criação do hábito, validação dos campos do formulário e integração com o Firestore e o sistema de notificações. Em anexo está o design da tela de cadastro de hábitos para você se basear.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a tela de cadastro de hábitos baseada no design fornecido. Primeiro, vou verificar os arquivos atuais e depois criar toda a estrutura necessária.     
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart#1-1), lines 1 to 30
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_reminder.dart#1-1), lines 1 to 30
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart#1-1), lines 1 to 50
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_category.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_frequency.dart)
+
+Agora vou criar toda a estrutura necessária para a tela de criação de hábitos: 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+ 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Agora vou atualizar os arquivos existentes para integrar a tela de criação:  
+
+Searched for text `uuid` (`**/pubspec.yaml`), no results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart)
+
+Replacing 76 lines with 180 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#30-30), lines 30 to 50
+
+
+Checked workspace, 4 problems found in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Replacing 3 lines with 6 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#30-30), lines 30 to 55
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib), 3 problems found
+
+Perfeito! Agora vou criar um documento resumindo tudo o que foi implementado: 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/CREATE_HABIT_IMPLEMENTATION.md)
+
+ 
+
+Checked workspace, 2 problems found in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Replacing 7 lines with 5 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+
+Checked workspace, 2 problems found in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Perfeito! Agora vou criar um guia rápido de como testar: 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/TESTING_GUIDE.md)
+
+ 
+
+Checked workspace, no problems found
+
+✅ **Tela de Criação de Hábitos implementada com sucesso!**
+
+## 📋 Resumo da Implementação
+
+### 🆕 Arquivos Criados:
+
+1. **HabitViewModel** - Gerenciamento de estado e lógica de negócios
+   - Criação, atualização, exclusão de hábitos
+   - Integração com Firestore
+   - Agendamento automático de notificações
+   - Toggle de conclusão
+
+2. **CreateHabitView** - Interface de criação
+   - Formulário completo seguindo o design fornecido
+   - Validações em tempo real
+   - Seletor de dias da semana para hábitos semanais
+   - Time picker para lembretes
+   - Suporte a temas claro/escuro
+
+3. **Documentação:**
+   - CREATE_HABIT_IMPLEMENTATION.md - Detalhes técnicos completos
+   - TESTING_GUIDE.md - Guia passo a passo de testes
+
+### 🔄 Arquivos Atualizados:
+
+1. **main.dart** - Adicionado HabitViewModel ao MultiProvider
+2. **home_view.dart** - Lista de hábitos + FAB para criar novos
+3. **pubspec.yaml** - Adicionado pacote `uuid: ^4.5.1`
+
+## ✨ Funcionalidades Implementadas:
+
+### Formulário Completo:
+- ✅ Nome do hábito com validação
+- ✅ Frequência (Daily/Weekly)
+- ✅ 5 Categorias com ícones (Health, Study, Finance, Personal, Social)
+- ✅ Lembrete configurável com horário
+- ✅ Seletor de dias da semana (para Weekly)
+- ✅ 5 cores de hábito (Red, Blue, Green, Purple, Orange)
+- ✅ Botão Reset
+- ✅ Salvamento com loading state
+
+### Integrações:
+- ✅ Firebase Firestore (persistência)
+- ✅ NotificationService (lembretes automáticos)
+- ✅ Provider (state management)
+- ✅ Navegação fluida
+
+### UX/UI:
+- ✅ Design fiel ao protótipo
+- ✅ Suporte a temas claro/escuro
+- ✅ Animações e transições
+- ✅ SnackBars de feedback
+- ✅ Estado vazio na home
+- ✅ Lista scrollável de hábitos
+
+## 🚀 Próximo Passo:
+
+Execute o comando para instalar as dependências:
+
+flutter pub get
+
+
+Depois teste o app seguindo o TESTING_GUIDE.md!
+
+O sistema está pronto para criar, salvar e agendar notificações para hábitos. 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA conseguiu implementar a tela de cadastro de hábitos, permitindo que o usuário crie um novo hábito preenchendo um formulário com os campos do modelo de hábito. O formulário ficou completo, seguindo o design fornecido, e inclui validações em tempo real, um seletor de dias da semana para hábitos semanais, um time picker para os lembretes e suporte a temas claro/escuro. A IA também integrou a lógica para persistir os hábitos no Firebase Firestore e agendar notificações com base nas configurações de lembrete selecionadas. Além disso, pela segunda vez, a IA criou uma documentação detalhada sobre a implementação da tela de criação de hábitos e um guia de testes para facilitar a validação da funcionalidade. Agora a tela de cadastro de hábitos está completa e listando os hábitos na home.
+
