@@ -2,13 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'habit_frequency.dart';
 import 'habit_category.dart';
 import 'habit_color.dart';
+import 'habit_reminder.dart';
 
 class Habit {
   final String id;
   final String title;
   final HabitFrequency frequency;
   final HabitCategory category;
-  final DateTime? reminderTime;
+  final HabitReminder? reminder;
   final HabitColor habitColor;
   final DateTime createdAt;
   final bool isCompleted;
@@ -18,7 +19,7 @@ class Habit {
     required this.title,
     required this.frequency,
     required this.category,
-    this.reminderTime,
+    this.reminder,
     required this.habitColor,
     required this.createdAt,
     this.isCompleted = false,
@@ -30,7 +31,7 @@ class Habit {
     String? title,
     HabitFrequency? frequency,
     HabitCategory? category,
-    DateTime? reminderTime,
+    HabitReminder? reminder,
     HabitColor? habitColor,
     DateTime? createdAt,
     bool? isCompleted,
@@ -40,7 +41,7 @@ class Habit {
       title: title ?? this.title,
       frequency: frequency ?? this.frequency,
       category: category ?? this.category,
-      reminderTime: reminderTime ?? this.reminderTime,
+      reminder: reminder ?? this.reminder,
       habitColor: habitColor ?? this.habitColor,
       createdAt: createdAt ?? this.createdAt,
       isCompleted: isCompleted ?? this.isCompleted,
@@ -54,9 +55,7 @@ class Habit {
       'title': title,
       'frequency': frequency.name,
       'category': category.name,
-      'reminderTime': reminderTime != null
-          ? Timestamp.fromDate(reminderTime!)
-          : null,
+      'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': Timestamp.fromDate(createdAt),
       'isCompleted': isCompleted,
@@ -70,8 +69,8 @@ class Habit {
       title: map['title'] as String,
       frequency: HabitFrequency.fromString(map['frequency'] as String),
       category: HabitCategory.fromString(map['category'] as String),
-      reminderTime: map['reminderTime'] != null
-          ? (map['reminderTime'] as Timestamp).toDate()
+      reminder: map['reminder'] != null
+          ? HabitReminder.fromMap(map['reminder'] as Map<String, dynamic>)
           : null,
       habitColor: HabitColor.fromString(map['habitColor'] as String),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
@@ -92,7 +91,7 @@ class Habit {
       'title': title,
       'frequency': frequency.name,
       'category': category.name,
-      'reminderTime': reminderTime?.toIso8601String(),
+      'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': createdAt.toIso8601String(),
       'isCompleted': isCompleted,
@@ -103,7 +102,7 @@ class Habit {
   String toString() {
     return 'Habit(id: $id, title: $title, frequency: ${frequency.name}, '
         'category: ${category.name}, habitColor: ${habitColor.name}, '
-        'isCompleted: $isCompleted)';
+        'reminder: ${reminder?.toString()}, isCompleted: $isCompleted)';
   }
 
   @override
@@ -115,7 +114,7 @@ class Habit {
         other.title == title &&
         other.frequency == frequency &&
         other.category == category &&
-        other.reminderTime == reminderTime &&
+        other.reminder == reminder &&
         other.habitColor == habitColor &&
         other.createdAt == createdAt &&
         other.isCompleted == isCompleted;
@@ -127,7 +126,7 @@ class Habit {
         title.hashCode ^
         frequency.hashCode ^
         category.hashCode ^
-        reminderTime.hashCode ^
+        reminder.hashCode ^
         habitColor.hashCode ^
         createdAt.hashCode ^
         isCompleted.hashCode;

@@ -1173,3 +1173,97 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA conseguiu criar um modelo de dados para representar um hábito, com todos os campos solicitados e compatível com a estrutura de dados do Firebase Firestore. Ela criou enums para frequência, categoria e cor do hábito, e implementou o modelo principal com métodos para conversão entre Map e DocumentSnapshot, além de um método copyWith para facilitar a atualização dos hábitos. A IA também adicionou a dependência do Cloud Firestore no pubspec.yaml. Agora o modelo de dados está pronto para ser usado na implementação da tela principal do aplicativo, onde os usuários poderão visualizar e interagir com seus hábitos.
+
+## Iteração 16
+### Promt usado:
+```plaintext
+Vamos melhorar um pouco o atributo reminderTime do modelo de hábito. Em vez de ser um DateTime, vamos criar um novo modelo chamado HabitReminder que terá os seguintes campos: time (TimeOfDay), repeat (enum: none, daily, weekly, monthly) e daysOfWeek (List<enum: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday>). O campo daysOfWeek só deve ser preenchido se o repeat for igual a weekly. E o campo time deve ser obrigatório. Faça as devidas alterações no modelo de hábito para utilizar esse novo modelo de reminder. E comece a criar o sistema de notificações usando o pacote flutter_local_notifications para enviar notificações de lembrete para os hábitos com reminder configurado. Implemente a lógica para agendar as notificações com base no tipo de repetição selecionado (diário, semanal, mensal) e nos dias da semana, se aplicável. E certifique-se de que as notificações sejam enviadas no horário correto, mesmo que o aplicativo esteja fechado ou em segundo plano.
+```
+
+### Output recebido:
+```markdown
+Vou criar o modelo HabitReminder, atualizar o modelo Habit e implementar o sistema de notificações:  
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/day_of_week.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/reminder_repeat.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_reminder.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#30-30), lines 30 to 50
+
+Replacing 5 lines with 9 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#1-1), lines 1 to 50
+
+Replacing 48 lines with 49 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#48-48), lines 48 to 80
+
+Replacing 31 lines with 29 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#85-85), lines 85 to 110
+
+Replacing 20 lines with 20 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#110-110), lines 110 to 135
+
+Replacing 27 lines with 27 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart)
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib), 1 problem found
+
+Replacing 10 lines with 9 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart)
+
+
+Checked , no problems found
+
+Replacing 11 lines with 18 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart)
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/NOTIFICATIONS_README.md)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart#1-1), lines 1 to 30
+
+Checked , no problems found
+
+Summarized conversation history✅ Sistema de notificações completo e documentado!
+
+## O que foi implementado:
+
+1. **Inicialização no app** - Adicionada chamada para inicializar o NotificationService no main.dart
+
+2. **Documentação completa** - Criado NOTIFICATIONS_README.md com:
+   - Visão geral dos componentes (DayOfWeek, ReminderRepeat, HabitReminder, NotificationService)
+   - Exemplos práticos de uso
+   - Configuração para Android e iOS
+   - Recursos implementados
+   - Comportamento de cada tipo de repetição
+
+## 🎯 Status do Projeto
+
+**Fundação completa:**
+- ✅ MVVM structure
+- ✅ Firebase Authentication (email/password + Google)
+- ✅ Modelos de dados (Habit, HabitReminder, enums)
+- ✅ Sistema de notificações configurável
+- ✅ Serialização Firestore
+
+**Pronto para a próxima etapa:**
+- Tela principal de listagem de hábitos
+- Interface para criar/editar hábitos
+- Sistema de conclusão de hábitos
+- Dashboard com estatísticas
+
+Sem erros de compilação. Quando estiver pronto, podemos começar a implementar a tela principal do app!
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA conseguiu criar um novo modelo chamado HabitReminder para representar os lembretes dos hábitos, com os campos time, repeat e daysOfWeek. Ela atualizou o modelo de hábito para utilizar esse novo modelo de reminder. Além disso, a IA implementou o sistema de notificações usando o pacote flutter_local_notifications, criando um serviço de notificações que pode ser utilizado para agendar notificações com base no tipo de repetição selecionado e nos dias da semana, se aplicável. A IA também adicionou uma documentação completa sobre o sistema de notificações em um arquivo NOTIFICATIONS_README.md, explicando como usar o serviço e configurar as notificações para Android e iOS. Agora o sistema de notificações está completo e pronto para ser integrado à tela principal do aplicativo!

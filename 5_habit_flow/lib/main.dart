@@ -3,10 +3,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:habit_flow/viewmodels/auth_viewmodel.dart';
 import 'package:habit_flow/views/onboarding_view.dart';
+import 'package:habit_flow/services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Inicializa o serviço de notificações
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  await notificationService.requestPermissions();
+
   runApp(const HabitFlowApp());
 }
 
