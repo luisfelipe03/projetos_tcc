@@ -517,6 +517,49 @@ Made changes.
 ```
 
 ### Resultado:
-A IA continua sem conseguir ajustar a imagem de fundo na tela de login para que fique visível conforme o protótipo. 
+A IA continua sem conseguir ajustar a imagem de fundo na tela de login para que fique visível conforme o protótipo.
 
-Nessa
+## Iteração 8
+### Promt usado:
+```plaintext
+A imagem de fundo ainda não está aparecendo. O problema não é o BoxFit, alinhamento ou opacidade, o problema é o posicionamento da imagem. Vamos imaginar que a tela de login é dividida em duas partes, a parte de baixo onde tem o formulário e a parte de cima onde tem a imagem, o que está acontecendo é que a imagem está ficando posicionada atrás do formulário, então precisamos ajustar o layout para que a imagem fique na parte de cima da tela, e o formulário fique na parte de baixo, como se fossem dois blocos separados. Ajuste o layout para que isso aconteça e a imagem fique visível.
+```
+
+### Output recebido:
+```markdown
+Entendi o problema! A imagem está sendo coberta pelo DraggableScrollableSheet. Vou ajustar o layout para que a imagem fique visível na parte superior e o formulário na parte inferior: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#35-35), lines 35 to 80
+
+Replacing 6 lines with 6 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+Replacing 24 lines with 40 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), no problems found
+
+Perfeito! ✨ Ajustei o layout para que a tela seja dividida em duas partes distintas:
+
+## Correções aplicadas:
+
+### ✅ **Layout reestruturado**
+- **Parte superior (40%)**: Área com o gradiente verde e a imagem das plantas
+  - Imagem posicionada com padding adequado
+  - SafeArea para evitar sobreposição com notch/status bar
+  
+- **Parte inferior (60%)**: Formulário de login
+  - DraggableScrollableSheet ajustado de 75% para 60%
+  - minChildSize também ajustado para 60%
+
+### ✅ **Background com Column**
+- Usa `Column` com `Expanded` para dividir a tela
+- flex: 4 para imagem (40%) 
+- flex: 6 para formulário (60%)
+- Imagem com `fit: BoxFit.contain` para aparecer completa
+
+Agora a imagem das plantas ficará visível na parte superior da tela, completamente separada do formulário que aparece na parte inferior! 🌱
+
+Made changes.
+```
+
+### Resultado:
+Nessa oitava iteração, a IA conseguiu ajustar o layout da tela de login para que a imagem de fundo fique visível na parte superior, enquanto o formulário de login fica na parte inferior. Mas não ficou legal a disposição da imagem, ela ficou muito pequena e não preencheu a parte superior da tela, ficando com um grande espaço vazio em volta. A IA conseguiu resolver o problema de posicionamento, mas ainda falta ajustar o tamanho da imagem para que fique mais proporcional e preencha melhor a área destinada a ela.

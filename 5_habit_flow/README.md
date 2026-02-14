@@ -19,6 +19,7 @@ Avaliar até que ponto o modelo de IA conseguem projetar, implementar e organiza
 * Persistência de dados com Cloud Firestore
 * Registro diário do hábito com suporte a fotos
 * Suporte a **tema claro (Light Mode) e escuro (Dark Mode)**
+* Internacionalização (i18n) com suporte a múltiplos idiomas
 
 ---
 
@@ -45,10 +46,10 @@ Avaliar até que ponto o modelo de IA conseguem projetar, implementar e organiza
 > Os protótipos abaixo foram gerados pela ferramenta de IA **Google Stitch**.
 > O resultado final pode sofrer pequenas alterações durante a implementação, servindo os protótipos apenas como **referência visual e inspiração**.
 
-### Primeira tela
+### Onboarding
 
-<img width="300" alt="Primeira tela - Dark" src="https://github.com/user-attachments/assets/aa034b99-9d0a-491b-80ad-14580f62477d" />
-<img width="300" alt="Primeira tela - Light" src="https://github.com/user-attachments/assets/361f991a-f0d0-4e23-a5f5-cc293280acf6" />
+<img width="300" alt="Onboarding - Dark" src="https://github.com/user-attachments/assets/aa034b99-9d0a-491b-80ad-14580f62477d" />
+<img width="300" alt="Onboarding - Light" src="https://github.com/user-attachments/assets/361f991a-f0d0-4e23-a5f5-cc293280acf6" />
 
 ---
 

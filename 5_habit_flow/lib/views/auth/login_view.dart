@@ -68,8 +68,8 @@ class _LoginViewState extends State<LoginView>
 
           // Bottom Sheet
           DraggableScrollableSheet(
-            initialChildSize: 0.75,
-            minChildSize: 0.75,
+            initialChildSize: 0.6,
+            minChildSize: 0.6,
             maxChildSize: 0.9,
             builder: (context, scrollController) {
               return Container(
@@ -231,26 +231,42 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildBackground() {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       height: double.infinity,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
-        ),
-      ),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 80),
-          child: Image.asset(
-            'assets/imgs/grafico_plantas.png',
-            fit: BoxFit.contain,
-            width: double.infinity,
+      child: Column(
+        children: [
+          // Área do topo com imagem (40% da tela)
+          Expanded(
+            flex: 4,
+            child: Container(
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
+                  child: Image.asset(
+                    'assets/imgs/grafico_plantas.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+          // Área do formulário (60% da tela)
+          Expanded(
+            flex: 6,
+            child: Container(
+              color: Colors.transparent,
+            ),
+          ),
+        ],
       ),
     );
   }
