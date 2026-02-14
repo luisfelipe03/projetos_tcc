@@ -248,24 +248,24 @@ class _LoginViewState extends State<LoginView>
                   colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
                 ),
               ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 60, left: 24, right: 24),
-                  child: Image.asset(
-                    'assets/imgs/grafico_plantas.png',
-                    fit: BoxFit.contain,
+              child: Stack(
+                children: [
+                  // Imagem preenchendo toda a área
+                  Positioned.fill(
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 50),
+                      child: Image.asset(
+                        'assets/imgs/grafico_plantas.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
           // Área do formulário (60% da tela)
-          Expanded(
-            flex: 6,
-            child: Container(
-              color: Colors.transparent,
-            ),
-          ),
+          Expanded(flex: 6, child: Container(color: Colors.transparent)),
         ],
       ),
     );
