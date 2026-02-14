@@ -1048,3 +1048,128 @@ Made changes.
 
 ### Resultado:
 Nessa iteração, a IA conseguiu corrigir todos os warnings de método depreciado `withOpacity` substituindo por `withValues(alpha: ...)` nos arquivos afetados. Ela fez um total de 37 substituições, garantindo que o código esteja atualizado com a API mais recente do Flutter e não gere mais warnings ao executar `flutter analyze`. Agora o código está mais limpo e atualizado, pronto para as próximas implementações!
+
+## Iteração 15
+### Promt usado:
+```plaintext
+Vamos começar a implementar o core do aplicativo, que é a tela principal onde o usuário verá seus hábitos e poderá interagir com eles. Antes de começar a implementar a tela principal, quero que você crie um modelo de dados para representar um hábito. O modelo deve conter os seguintes campos: id (uuid), title (string), frequency (enum: daily, weekly, monthly), category (enum: Health, Personal, Study, Social, Finance), reminderTime (DateTime), habit color (enum: red, blue, green, purple, orange), createdAt (DateTime) e isCompleted (bool). Vamos persistir os hábitos usando o Firebase Firestore, então certifique-se de que o modelo seja compatível com a estrutura de dados do Firestore. 
+```
+
+### Output recebido:
+```markdown
+Vou criar o modelo de dados para o Hábito com todos os campos solicitados e compatível com o Firestore:  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#30-30), lines 30 to 50
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models)
+
+Replacing 6 lines with 7 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_frequency.dart)
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_category.dart)
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_color.dart)
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Checked , no problems found
+
+Perfeito! O modelo de dados Habit foi criado com sucesso! Aqui está o resumo da implementação:
+
+## ✅ Arquivos criados:
+
+### **1. habit_frequency.dart**
+Enum com três frequências:
+- `daily` - Diário
+- `weekly` - Semanal
+- `monthly` - Mensal
+
+Inclui métodos `displayName` e `fromString()` para conversão.
+
+### **2. habit_category.dart**
+Enum com cinco categorias:
+- `health` - Saúde
+- `personal` - Pessoal
+- `study` - Estudo
+- `social` - Social
+- `finance` - Financeiro
+
+### **3. habit_color.dart**
+Enum com cinco cores e seus valores RGB:
+- `red` (#EF4444)
+- `blue` (#3B82F6)
+- `green` (#10B981)
+- `purple` (#8B5CF6)
+- `orange` (#F97316)
+
+Cada cor tem um método `color` que retorna o `Color` do Flutter.
+
+### **4. habit.dart**
+Modelo principal com todos os campos solicitados:
+- ✅ `id` (String - UUID)
+- ✅ `title` (String)
+- ✅ `frequency` (HabitFrequency enum)
+- ✅ `category` (HabitCategory enum)
+- ✅ `reminderTime` (DateTime?)
+- ✅ `habitColor` (HabitColor enum)
+- ✅ `createdAt` (DateTime)
+- ✅ `isCompleted` (bool)
+
+**Métodos implementados:**
+- `toMap()` - Converte para Map compatível com Firestore
+- `fromMap()` - Cria instância a partir de Map
+- `fromFirestore()` - Cria instância a partir de DocumentSnapshot
+- `copyWith()` - Cria cópia com campos atualizados
+- `toJson()` - Conversão para JSON (útil para debug)
+- `toString()`, `==` e `hashCode` - Métodos padrão
+
+### **5. pubspec.yaml**
+Dependência adicionada:
+- `cloud_firestore: ^5.5.0`
+
+## 📋 Exemplo de uso:
+
+import 'package:uuid/uuid.dart';
+import 'models/habit.dart';
+import 'models/habit_frequency.dart';
+import 'models/habit_category.dart';
+import 'models/habit_color.dart';
+
+// Criar um novo hábito
+final habit = Habit(
+  id: Uuid().v4(),
+  title: 'Meditar 10 minutos',
+  frequency: HabitFrequency.daily,
+  category: HabitCategory.health,
+  reminderTime: DateTime.now().add(Duration(hours: 1)),
+  habitColor: HabitColor.purple,
+  createdAt: DateTime.now(),
+  isCompleted: false,
+);
+
+// Salvar no Firestore
+await FirebaseFirestore.instance
+    .collection('users')
+    .doc(userId)
+    .collection('habits')
+    .doc(habit.id)
+    .set(habit.toMap());
+
+// Ler do Firestore
+final doc = await FirebaseFirestore.instance
+    .collection('users')
+    .doc(userId)
+    .collection('habits')
+    .doc(habitId)
+    .get();
+
+final loadedHabit = Habit.fromFirestore(doc);
+
+O modelo está pronto para ser usado com o Firestore! 🚀
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA conseguiu criar um modelo de dados para representar um hábito, com todos os campos solicitados e compatível com a estrutura de dados do Firebase Firestore. Ela criou enums para frequência, categoria e cor do hábito, e implementou o modelo principal com métodos para conversão entre Map e DocumentSnapshot, além de um método copyWith para facilitar a atualização dos hábitos. A IA também adicionou a dependência do Cloud Firestore no pubspec.yaml. Agora o modelo de dados está pronto para ser usado na implementação da tela principal do aplicativo, onde os usuários poderão visualizar e interagir com seus hábitos.
