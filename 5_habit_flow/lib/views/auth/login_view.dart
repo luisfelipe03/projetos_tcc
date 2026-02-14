@@ -241,26 +241,10 @@ class _LoginViewState extends State<LoginView>
             flex: 4,
             child: Container(
               width: double.infinity,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF2C5F54), Color(0xFF1A3A32)],
-                ),
-              ),
-              child: Stack(
-                children: [
-                  // Imagem preenchendo toda a área
-                  Positioned.fill(
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 50),
-                      child: Image.asset(
-                        'assets/imgs/grafico_plantas.png',
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                ],
+              child: Image.asset(
+                'assets/imgs/grafico_plantas.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
             ),
           ),
