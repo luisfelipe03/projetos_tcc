@@ -749,3 +749,39 @@ Made changes.
 ### Resultado:
 Resultado impressionante! A IA conseguiu implementar a funcionalidade de cadastro e login usando Firebase Authentication, em apenas uma iteração. Ela adicionou as dependências necessárias, criou um ViewModel para gerenciar a autenticação, atualizou a tela de login para incluir validação de campos e tratamento de erros, e configurou a navegação para a tela principal após o login bem-sucedido. A IA também forneceu um resumo detalhado das mudanças feitas e os próximos passos que eu tive que fazer manualmente para configurar o Firebase no projeto. Agora os usuários poderão criar contas e fazer login usando email e senha, com mensagens de erro claras em caso de problemas. Excelente trabalho!
 
+## Iteração 12
+### Promt usado:
+```plaintext
+Remova o botão de login social do Apple, pois não vamos conseguir implementar essa funcionalidade agora. Deixe apenas o botão de login com Google na tela. 
+```
+
+### Output recebido:
+```markdown
+Vou verificar o arquivo de login atual e remover o botão de login com Apple: 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#1-1), lines 1 to 50
+
+Searched for text `Apple` (`**/lib/views/auth/login_view.dart`), 3 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#560-560), lines 560 to 600
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#595-595), lines 595 to 660
+
+Replacing 27 lines with 10 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#595-595), lines 595 to 670
+
+Replacing 42 lines with 32 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), no problems found
+
+Pronto! O botão de login com Apple foi removido com sucesso. Agora a tela de login exibe apenas o botão de login com Google na seção "Or continue with". O código foi simplificado e está sem erros.
+
+Made changes.
+```
+
+### Resultado:
+Essa iteração foi mais simples, a IA conseguiu remover o botão de login com Apple da tela de login, deixando apenas o botão de login com Google.
+

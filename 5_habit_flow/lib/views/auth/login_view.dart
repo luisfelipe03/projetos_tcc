@@ -564,30 +564,13 @@ class _LoginViewState extends State<LoginView>
   }
 
   Widget _buildSocialButtons(bool isDarkMode) {
-    return Row(
-      children: [
-        Expanded(
-          child: _buildSocialButton(
-            icon: '🇬',
-            label: 'Google',
-            isDarkMode: isDarkMode,
-            onPressed: () {
-              // TODO: Implementar login com Google
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: _buildSocialButton(
-            icon: '',
-            label: 'Apple',
-            isDarkMode: isDarkMode,
-            onPressed: () {
-              // TODO: Implementar login com Apple
-            },
-          ),
-        ),
-      ],
+    return _buildSocialButton(
+      icon: '🇬',
+      label: 'Google',
+      isDarkMode: isDarkMode,
+      onPressed: () {
+        // TODO: Implementar login com Google
+      },
     );
   }
 
@@ -623,29 +606,19 @@ class _LoginViewState extends State<LoginView>
             Container(
               width: 20,
               height: 20,
-              decoration: BoxDecoration(
-                color: label == 'Google'
-                    ? Colors.white
-                    : (isDarkMode ? Colors.white : const Color(0xFF1F2937)),
+              decoration: const BoxDecoration(
+                color: Colors.white,
                 shape: BoxShape.circle,
               ),
-              child: Center(
-                child: label == 'Google'
-                    ? const Text(
-                        'G',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Color(0xFF4285F4),
-                        ),
-                      )
-                    : Icon(
-                        Icons.apple,
-                        color: isDarkMode
-                            ? const Color(0xFF1F2937)
-                            : Colors.white,
-                        size: 16,
-                      ),
+              child: const Center(
+                child: Text(
+                  'G',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF4285F4),
+                  ),
+                ),
               ),
             ),
             const SizedBox(width: 12),
