@@ -1413,3 +1413,182 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA conseguiu implementar a tela de cadastro de hábitos, permitindo que o usuário crie um novo hábito preenchendo um formulário com os campos do modelo de hábito. O formulário ficou completo, seguindo o design fornecido, e inclui validações em tempo real, um seletor de dias da semana para hábitos semanais, um time picker para os lembretes e suporte a temas claro/escuro. A IA também integrou a lógica para persistir os hábitos no Firebase Firestore e agendar notificações com base nas configurações de lembrete selecionadas. Além disso, pela segunda vez, a IA criou uma documentação detalhada sobre a implementação da tela de criação de hábitos e um guia de testes para facilitar a validação da funcionalidade. Agora a tela de cadastro de hábitos está completa e listando os hábitos na home.
 
+## Iteração 18
+### Promt usado:
+```plaintext
+Agora que a tela de cadastro de hábitos está implementada, vamos começar a implementar a tela principal onde o usuário verá a lista de hábitos criados. Nessa tela, o usuário poderá ver todos os seus hábitos, um seletor de data, uma barra de progresso indicando quantos hábitos foram concluídos no dia, uma barra de navageção inferior para acessar outras telas do aplicativo e um botão para criar um novo hábito qe=ue continua sendo o FAB. Implemente a lógica para buscar os hábitos do usuário no Firebase Firestore e exibi-los em uma lista. E implemente a funcionalidade para marcar um hábito como concluído, que deve atualizar o status do hábito no Firestore e atualizar a barra de progresso. Em anexo está o design da tela principal para você se basear. Vamos apenas fazer uma modificação nos design em comparação com o protótipo, na barra de navegação inferior, ao invés de ter 4 ícones (Home, Estatísticas, calendario e configuração), vamos deixar apenas 3 ícones (Home, estatística e Configurações), para deixar o design mais clean e simples.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a tela principal completa seguindo o design fornecido. Primeiro, vou verificar os arquivos atuais e depois implementar todas as funcionalidades.   
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart#1-1), lines 1 to 50
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#1-1), lines 1 to 80
+
+Agora vou implementar a tela principal completa seguindo o design fornecido: 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view_new.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart)
+
+ 
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart)
+
+ 
+
+Searched for text `intl` (`**/pubspec.yaml`), no results
+
+Agora vou adicionar o pacote `intl` e substituir a home_view antiga:       
+
+Replacing 2 lines with 5 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+ 
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml#30-30), lines 30 to 55
+
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view_new.dart)
+
+Agora vou substituir a home_view antiga pela nova: 
+
+Replacing 143 lines with 459 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Checked workspace, no problems found
+
+Perfeito! Agora vou criar a documentação completa da implementação:      
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/HOME_SCREEN_IMPLEMENTATION.md)
+
+ 
+
+Checked workspace, no problems found
+
+Agora vou criar um guia rápido para testar a nova interface:      
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/HOME_TESTING_GUIDE.md)
+
+ 
+
+Searched for files matching `**/home_view_new.dart`, 1 match
+
+Perfeito! Agora vou criar um resumo final e verificar se há algum erro:         
+
+Created [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/HOME_IMPLEMENTATION_SUMMARY.md)
+
+Checked workspace, no problems found
+
+✅ **Tela Principal implementada com sucesso!**
+
+## 🎉 Resumo da Implementação
+
+### 🆕 Arquivos Criados:
+
+1. **home_widgets.dart** - Componentes reutilizáveis:
+   - `CustomBottomNavBar` - Navegação inferior (3 itens)
+   - `HorizontalCalendar` - Calendário scrollável
+   - `DailyProgressCard` - Card de progresso
+
+2. **stats_view.dart** - Tela de estatísticas (placeholder)
+
+3. **settings_view.dart** - Tela de configurações completa
+
+4. **home_view.dart** - COMPLETAMENTE REDESENHADA com:
+   - Header personalizado (avatar + data + saudação)
+   - Progresso diário com barra visual
+   - Calendário horizontal
+   - Lista de hábitos estilizada
+   - Menu de opções (editar/deletar)
+
+### 📦 Dependência Adicionada:
+
+intl: ^0.19.0  # Formatação de datas
+
+### ✨ Funcionalidades Implementadas:
+
+#### **Interface Principal:**
+- ✅ **Header dinâmico** - Avatar com status online, data formatada ("Wednesday, Oct 25"), saudação personalizada
+- ✅ **Daily Progress** - Barra de progresso visual calculada automaticamente (ex: 50% - 3 of 6 habits)
+- ✅ **Calendário horizontal** - 7 dias visíveis, seleção animada, scroll suave
+- ✅ **Cards de hábitos** - Cores personalizadas, checkbox customizado, título riscado quando completo
+- ✅ **Menu de opções** - Bottom sheet com editar/deletar + confirmação
+
+#### **Navegação:**
+- ✅ **Bottom Navigation** - 3 telas (Home, Stats, Settings)
+- ✅ **FAB persistente** - Botão + para criar hábitos em todas as telas
+- ✅ **Transições suaves** - Entre telas e estados
+
+#### **Ações:**
+- ✅ **Toggle de conclusão** - Marca/desmarca hábitos com atualização imediata
+- ✅ **Deletar hábito** - Com confirmação, remove do Firestore e cancela notificações
+- ✅ **Logout** - Com confirmação, redireciona para onboarding
+- ✅ **Feedback visual** - SnackBars de sucesso/erro
+
+#### **UX/UI:**
+- ✅ **Temas adaptativos** - Light (azul) e Dark (roxo)
+- ✅ **Estado vazio** - Mensagem informativa quando não há hábitos
+- ✅ **Animações** - InkWell, transitions, shadows
+- ✅ **Responsivo** - Adapta a diferentes tamanhos de tela
+
+### 📚 Documentação Criada:
+
+1. **HOME_SCREEN_IMPLEMENTATION.md** - Documentação técnica completa
+2. **HOME_TESTING_GUIDE.md** - Guia de testes passo a passo
+3. **HOME_IMPLEMENTATION_SUMMARY.md** - Resumo executivo
+
+## 🚀 Próximo Passo:
+
+Execute o comando para instalar a nova dependência:
+
+flutter pub get
+
+Depois teste o app! A interface está totalmente funcional e seguindo o design fornecido. 🎊
+
+### 🎯 Layout Implementado:
+
+┌─────────────────────────────────┐
+│ 👤 Wednesday, Oct 25        🔔 │
+│    Hi, Alex                     │
+├─────────────────────────────────┤
+│ Daily Progress          50%     │
+│ ████████████░░░░░░░░░░░░░░     │
+│ 3 of 6 habits completed         │
+├─────────────────────────────────┤
+│ Tue Wed Thu Fri Sat            │
+│ 24  25  26  27  28             │
+│     ↑ (selected)               │
+├─────────────────────────────────┤
+│ ☑️ Morning Yoga            ⋮   │
+│    07:00 AM • Daily            │
+├─────────────────────────────────┤
+│ ☐ Read a Book             ⋮   │
+│    20 mins • Daily             │
+├─────────────────────────────────┤
+│ 🏠 Stats ⚙️                [+] │
+└─────────────────────────────────┘
+
+Todas as funcionalidades principais estão operacionais! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a tela principal do aplicativo, onde o usuário visualiza a lista de hábitos cadastrados. A interface conta com um header dinâmico que exibe o avatar do usuário, a data formatada e uma saudação personalizada, deixando a experiência mais contextual e organizada.
+
+Também foi adicionada uma barra de progresso visual que mostra quantos hábitos foram concluídos no dia, além de um calendário horizontal que permite navegar entre as datas com facilidade. A lista de hábitos foi estilizada e oferece ações diretas para marcar como concluído, editar ou excluir cada item.
+
+A barra de navegação inferior foi implementada com três ícones, Home, Estatísticas e Configurações, conforme solicitado, e as respectivas telas foram criadas. A tela de Configurações foi bem desenvolvida, mesmo sem um pedido explícito para isso. Já a tela de Estatísticas foi criada com uma estrutura inicial e apresenta uma mensagem informando que a funcionalidade ainda está em desenvolvimento.
+
+Quando uma atividade é marcada como concluída, o status do hábito é atualizado no Firestore, garantindo a persistência correta dos dados.
+
+Mas tem algumas melhorias a serem feitas, como por exemplo, o ajuste da atividade de marcar um hábito como concluído, que atualmente não está funcionando corretamente, mas devido a lógica do model, quando criamos um hábito, ele é utilizado para todos os dias, e quando marcamos ele como concluído, ele é marcado como concluído para todos os dias, o que não é o comportamento esperado. O ideal seria criar uma nova coleção no Firestore para armazenar o status de conclusão dos hábitos por dia, e assim quando marcamos um hábito como concluído, ele só é marcado como concluído para aquele dia específico. 
