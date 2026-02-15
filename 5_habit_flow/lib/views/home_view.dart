@@ -24,7 +24,9 @@ class _HomeViewState extends State<HomeView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<HabitViewModel>().loadHabits();
+      final viewModel = context.read<HabitViewModel>();
+      viewModel.loadHabits();
+      viewModel.loadCompletionsForDate(_selectedDate);
     });
   }
 
@@ -87,7 +89,9 @@ class _HomeViewState extends State<HomeView> {
 
     // Filtra hábitos do dia selecionado
     final todayHabits = habitViewModel.habits;
-    final completedCount = todayHabits.where((h) => h.isCompleted).length;
+    final completedCount = habitViewModel.getCompletedCountForDate(
+      _selectedDate,
+    );
 
     return SafeArea(
       child: Column(
@@ -105,6 +109,7 @@ class _HomeViewState extends State<HomeView> {
               setState(() {
                 _selectedDate = date;
               });
+              context.read<HabitViewModel>().loadCompletionsForDate(date);
             },
           ),
           const SizedBox(height: 20),
@@ -258,7 +263,10 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildHabitCard(Habit habit, HabitViewModel viewModel, bool isDark) {
-    final isCompleted = habit.isCompleted;
+    final isCompleted = viewModel.isHabitCompletedOnDate(
+      habit.id,
+      _selectedDate,
+    );
     final habitColor = habit.habitColor.color;
 
     return Container(
@@ -281,7 +289,7 @@ class _HomeViewState extends State<HomeView> {
               children: [
                 GestureDetector(
                   onTap: () {
-                    viewModel.toggleHabitCompletion(habit.id);
+                    viewModel.toggleHabitCompletion(habit.id, _selectedDate);
                   },
                   child: Container(
                     width: 48,

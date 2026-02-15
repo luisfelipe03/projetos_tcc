@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
 import '../models/habit.dart';
+import '../models/habit_completion.dart';
 import '../models/habit_frequency.dart';
 import '../models/habit_category.dart';
 import '../models/habit_color.dart';
@@ -16,6 +17,7 @@ class HabitViewModel extends ChangeNotifier {
   final Uuid _uuid = const Uuid();
 
   List<Habit> _habits = [];
+  Map<String, List<HabitCompletion>> _completionsByDate = {};
   bool _isLoading = false;
   String? _error;
 
@@ -24,6 +26,30 @@ class HabitViewModel extends ChangeNotifier {
   String? get error => _error;
 
   String? get userId => _auth.currentUser?.uid;
+
+  /// Verifica se um hábito está completo em uma data específica
+  bool isHabitCompletedOnDate(String habitId, DateTime date) {
+    final dateKey = _getDateKey(date);
+    final completions = _completionsByDate[dateKey] ?? [];
+    return completions.any((c) => c.habitId == habitId);
+  }
+
+  /// Obtém o número de hábitos completos em uma data
+  int getCompletedCountForDate(DateTime date) {
+    final dateKey = _getDateKey(date);
+    final completions = _completionsByDate[dateKey] ?? [];
+    return completions.length;
+  }
+
+  /// Gera uma chave única para a data (yyyy-MM-dd)
+  String _getDateKey(DateTime date) {
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+  }
+
+  /// Normaliza a data para meia-noite (remove horas, minutos, segundos)
+  DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 
   /// Cria um novo hábito
   Future<bool> createHabit({
@@ -55,7 +81,6 @@ class HabitViewModel extends ChangeNotifier {
         habitColor: habitColor,
         reminder: reminder,
         createdAt: DateTime.now(),
-        isCompleted: false,
       );
 
       // Salva no Firestore
@@ -165,6 +190,9 @@ class HabitViewModel extends ChangeNotifier {
           .doc(habitId)
           .delete();
 
+      // Deleta todas as conclusões deste hábito
+      await _deleteHabitCompletions(habitId);
+
       // Cancela notificações
       await _notificationService.cancelHabitReminder(habitId);
 
@@ -181,37 +209,161 @@ class HabitViewModel extends ChangeNotifier {
     }
   }
 
-  /// Marca/desmarca um hábito como completo
-  Future<bool> toggleHabitCompletion(String habitId) async {
+  /// Marca/desmarca um hábito como completo em uma data específica
+  Future<bool> toggleHabitCompletion(String habitId, DateTime date) async {
     try {
       if (userId == null) {
         throw Exception('User not authenticated');
       }
 
-      final habitIndex = _habits.indexWhere((h) => h.id == habitId);
-      if (habitIndex == -1) {
-        throw Exception('Habit not found');
+      final normalizedDate = _normalizeDate(date);
+      final dateKey = _getDateKey(normalizedDate);
+
+      // Verifica se já existe uma conclusão para este hábito nesta data
+      final existingCompletions = _completionsByDate[dateKey] ?? [];
+      final existingCompletion = existingCompletions
+          .where((c) => c.habitId == habitId)
+          .firstOrNull;
+
+      if (existingCompletion != null) {
+        // Se existe, remove (desmarca)
+        await _firestore
+            .collection('habitCompletions')
+            .doc(existingCompletion.id)
+            .delete();
+
+        existingCompletions.remove(existingCompletion);
+        _completionsByDate[dateKey] = existingCompletions;
+      } else {
+        // Se não existe, cria (marca como completo)
+        final completion = HabitCompletion(
+          id: _uuid.v4(),
+          habitId: habitId,
+          userId: userId!,
+          completedAt: normalizedDate,
+        );
+
+        await _firestore
+            .collection('habitCompletions')
+            .doc(completion.id)
+            .set(completion.toMap());
+
+        existingCompletions.add(completion);
+        _completionsByDate[dateKey] = existingCompletions;
       }
 
-      final habit = _habits[habitIndex];
-      final updatedHabit = habit.copyWith(isCompleted: !habit.isCompleted);
-
-      // Atualiza no Firestore
-      await _firestore
-          .collection('users')
-          .doc(userId)
-          .collection('habits')
-          .doc(habitId)
-          .update({'isCompleted': updatedHabit.isCompleted});
-
-      // Atualiza na lista local
-      _habits[habitIndex] = updatedHabit;
       notifyListeners();
-
       return true;
     } catch (e) {
       _setError(e.toString());
       return false;
+    }
+  }
+
+  /// Carrega as conclusões de uma data específica
+  Future<void> loadCompletionsForDate(DateTime date) async {
+    try {
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final normalizedDate = _normalizeDate(date);
+      final dateKey = _getDateKey(normalizedDate);
+
+      // Carrega do Firestore
+      final startOfDay = normalizedDate;
+      final endOfDay = normalizedDate.add(const Duration(days: 1));
+
+      final querySnapshot = await _firestore
+          .collection('habitCompletions')
+          .where('userId', isEqualTo: userId)
+          .where(
+            'completedAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+          )
+          .where('completedAt', isLessThan: Timestamp.fromDate(endOfDay))
+          .get();
+
+      final completions = querySnapshot.docs
+          .map((doc) => HabitCompletion.fromMap(doc.data()))
+          .toList();
+
+      _completionsByDate[dateKey] = completions;
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  /// Carrega completions para múltiplas datas (útil para calendário)
+  Future<void> loadCompletionsForDateRange(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final normalizedStart = _normalizeDate(startDate);
+      final normalizedEnd = _normalizeDate(
+        endDate,
+      ).add(const Duration(days: 1));
+
+      final querySnapshot = await _firestore
+          .collection('habitCompletions')
+          .where('userId', isEqualTo: userId)
+          .where(
+            'completedAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+          )
+          .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
+          .get();
+
+      final completions = querySnapshot.docs
+          .map((doc) => HabitCompletion.fromMap(doc.data()))
+          .toList();
+
+      // Agrupa por data
+      _completionsByDate.clear();
+      for (var completion in completions) {
+        final dateKey = _getDateKey(completion.completedAt);
+        if (_completionsByDate[dateKey] == null) {
+          _completionsByDate[dateKey] = [];
+        }
+        _completionsByDate[dateKey]!.add(completion);
+      }
+
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+    }
+  }
+
+  /// Deleta todas as conclusões de um hábito
+  Future<void> _deleteHabitCompletions(String habitId) async {
+    try {
+      if (userId == null) return;
+
+      final querySnapshot = await _firestore
+          .collection('habitCompletions')
+          .where('userId', isEqualTo: userId)
+          .where('habitId', isEqualTo: habitId)
+          .get();
+
+      // Deleta em batch
+      final batch = _firestore.batch();
+      for (var doc in querySnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+
+      // Remove do cache local
+      _completionsByDate.forEach((key, completions) {
+        completions.removeWhere((c) => c.habitId == habitId);
+      });
+    } catch (e) {
+      _setError(e.toString());
     }
   }
 

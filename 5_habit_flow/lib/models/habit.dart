@@ -12,7 +12,6 @@ class Habit {
   final HabitReminder? reminder;
   final HabitColor habitColor;
   final DateTime createdAt;
-  final bool isCompleted;
 
   Habit({
     required this.id,
@@ -22,7 +21,6 @@ class Habit {
     this.reminder,
     required this.habitColor,
     required this.createdAt,
-    this.isCompleted = false,
   });
 
   /// Cria uma cópia do hábito com campos atualizados
@@ -34,7 +32,6 @@ class Habit {
     HabitReminder? reminder,
     HabitColor? habitColor,
     DateTime? createdAt,
-    bool? isCompleted,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -44,7 +41,6 @@ class Habit {
       reminder: reminder ?? this.reminder,
       habitColor: habitColor ?? this.habitColor,
       createdAt: createdAt ?? this.createdAt,
-      isCompleted: isCompleted ?? this.isCompleted,
     );
   }
 
@@ -58,7 +54,6 @@ class Habit {
       'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': Timestamp.fromDate(createdAt),
-      'isCompleted': isCompleted,
     };
   }
 
@@ -74,7 +69,6 @@ class Habit {
           : null,
       habitColor: HabitColor.fromString(map['habitColor'] as String),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
-      isCompleted: map['isCompleted'] as bool? ?? false,
     );
   }
 
@@ -94,7 +88,6 @@ class Habit {
       'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': createdAt.toIso8601String(),
-      'isCompleted': isCompleted,
     };
   }
 
@@ -102,7 +95,7 @@ class Habit {
   String toString() {
     return 'Habit(id: $id, title: $title, frequency: ${frequency.name}, '
         'category: ${category.name}, habitColor: ${habitColor.name}, '
-        'reminder: ${reminder?.toString()}, isCompleted: $isCompleted)';
+        'reminder: ${reminder?.toString()})';
   }
 
   @override
@@ -116,8 +109,7 @@ class Habit {
         other.category == category &&
         other.reminder == reminder &&
         other.habitColor == habitColor &&
-        other.createdAt == createdAt &&
-        other.isCompleted == isCompleted;
+        other.createdAt == createdAt;
   }
 
   @override
@@ -128,7 +120,6 @@ class Habit {
         category.hashCode ^
         reminder.hashCode ^
         habitColor.hashCode ^
-        createdAt.hashCode ^
-        isCompleted.hashCode;
+        createdAt.hashCode;
   }
 }
