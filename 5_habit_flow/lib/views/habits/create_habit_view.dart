@@ -517,7 +517,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                 _reminderEnabled = value;
               });
             },
-            activeColor: isDark
+            activeTrackColor: isDark
                 ? const Color(0xFFA855F7)
                 : const Color(0xFF10B981),
           ),

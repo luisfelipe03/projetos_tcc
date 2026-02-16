@@ -82,7 +82,7 @@ class HabitReminder {
 
   @override
   String toString() {
-    return 'HabitReminder(time: ${formattedTime}, repeat: ${repeat.name}, '
+    return 'HabitReminder(time: $formattedTime, repeat: ${repeat.name}, '
         'daysOfWeek: ${daysOfWeek.map((d) => d.name).toList()})';
   }
 

@@ -300,7 +300,7 @@ class _HomeViewState extends State<HomeView> {
                       border: Border.all(color: habitColor, width: 2),
                     ),
                     child: isCompleted
-                        ? const Icon(Icons.check, color: Colors.white, size: 28)
+                        ? const Icon(Icons.check, color: Colors.white, size: 20)
                         : null,
                   ),
                 ),
@@ -415,20 +415,20 @@ class _HomeViewState extends State<HomeView> {
               onTap: () async {
                 Navigator.pop(context);
                 final confirmed = await _showDeleteConfirmation();
-                if (confirmed == true && mounted) {
+                if (confirmed == true) {
+                  if (!mounted) return;
                   await viewModel.deleteHabit(habit.id);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: const Text('Habit deleted'),
-                        backgroundColor: Colors.red,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('Habit deleted'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    );
-                  }
+                    ),
+                  );
                 }
               },
             ),

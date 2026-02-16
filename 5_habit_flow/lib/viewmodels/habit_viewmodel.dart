@@ -17,7 +17,7 @@ class HabitViewModel extends ChangeNotifier {
   final Uuid _uuid = const Uuid();
 
   List<Habit> _habits = [];
-  Map<String, List<HabitCompletion>> _completionsByDate = {};
+  final Map<String, List<HabitCompletion>> _completionsByDate = {};
   bool _isLoading = false;
   String? _error;
 

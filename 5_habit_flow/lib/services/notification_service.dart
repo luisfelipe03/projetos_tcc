@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -50,7 +51,7 @@ class NotificationService {
   /// Callback quando a notificação é tocada
   void _onNotificationTapped(NotificationResponse response) {
     // TODO: Implementar navegação para o hábito específico
-    print('Notification tapped: ${response.payload}');
+    debugPrint('Notification tapped: ${response.payload}');
   }
 
   /// Solicita permissões de notificação (iOS)
