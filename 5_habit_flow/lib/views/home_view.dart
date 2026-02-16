@@ -292,8 +292,8 @@ class _HomeViewState extends State<HomeView> {
                     viewModel.toggleHabitCompletion(habit.id, _selectedDate);
                   },
                   child: Container(
-                    width: 48,
-                    height: 48,
+                    width: 35,
+                    height: 35,
                     decoration: BoxDecoration(
                       color: isCompleted ? habitColor : Colors.transparent,
                       borderRadius: BorderRadius.circular(12),
@@ -417,9 +417,10 @@ class _HomeViewState extends State<HomeView> {
                 final confirmed = await _showDeleteConfirmation();
                 if (confirmed == true) {
                   if (!mounted) return;
+                  final messenger = ScaffoldMessenger.of(context);
                   await viewModel.deleteHabit(habit.id);
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     SnackBar(
                       content: const Text('Habit deleted'),
                       backgroundColor: Colors.red,

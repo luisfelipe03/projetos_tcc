@@ -1967,3 +1967,70 @@ Made changes.
 
 ### Resultado:
 O código foi corrigido parcialmente, ainda contem duas issues relacionadas ao uso de `BuildContext` após operações assíncronas. Essas issues ocorrem porque o código está tentando usar o `BuildContext` para mostrar um `SnackBar` ou navegar para outra tela após uma operação assíncrona, sem verificar se o widget ainda está montado. Para corrigir isso, é necessário adicionar uma verificação de `mounted` antes de usar o `BuildContext`, garantindo que o widget ainda esteja na árvore de widgets antes de tentar acessar o contexto. E também acho que não fui muito claro no ajuste do tamanho do ícone de check, o que eu quis dizer é para diminuir o tamanho do box do checkbox, e não o tamanho do ícone de check em si, então o ideal seria diminuir o tamanho do checkbox para que fique mais proporcional ao card do hábito.
+
+## Iteração 22
+### Promt usado:
+```plaintext
+Ótimo! Agora vamos corrigir as issues relacionadas ao uso de BuildContext após operações assíncronas. Para isso, precisamos adicionar uma verificação de mounted antes de usar o BuildContext para mostrar um SnackBar ou navegar para outra tela. Implemente essa correção em ambos os arquivos home_view.dart e exclua o home_view_new.dart, já que ele não está mais sendo utilizado. E também ajuste o tamanho do checkbox para que fique mais proporcional ao card do hábito, diminuindo o tamanho do box do checkbox e não o tamanho do ícone de check em si. 
+
+Analyzing 5_habit_flow...                                               
+
+   info • Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check • lib/views/home_view.dart:422:40 • use_build_context_synchronously
+
+1 issues found. (ran in 1.9s)
+```
+
+### Output recebido:
+```markdown
+Vou corrigir as issues de BuildContext, excluir o home_view_new.dart e ajustar o tamanho do checkbox:  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#415-415), lines 415 to 435
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#290-290), lines 290 to 310
+
+Replacing 36 lines with 37 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Searched for text `home_view_new`, 20 results
+
+Searched for files matching `**/home_view_new.dart`, 1 match
+
+Searched for text `import 'home_view_new` (`**/lib/**/*.dart`), no results
+
+Searched for text `HomeViewNew` (`**/lib/**/*.dart`), no results
+
+Checked , no problems found
+
+Perfeito! Todas as correções foram aplicadas:
+
+## ✅ Correções Implementadas
+
+### 1. **use_build_context_synchronously** (home_view.dart)
+- Capturado `ScaffoldMessenger` antes da operação assíncrona
+- Agora usa `messenger.showSnackBar()` ao invés de `ScaffoldMessenger.of(context)`
+- Isso evita acessar o BuildContext após gaps assíncronos
+
+### 2. **Tamanho do Checkbox** (home_view.dart)
+- Reduzido de `48x48` para `40x40`
+- Mantido tamanho do ícone em `20` (não alterado)
+- Proporção visual melhorada no card do hábito
+
+### 3. **home_view_new.dart**
+O arquivo home_view_new.dart não está sendo usado em nenhum lugar do código (não há imports). Para removê-lo completamente do projeto, você pode:
+
+**Opção 1 - Via VS Code:**
+- Clique com botão direito no arquivo
+- Selecione "Delete"
+
+**Opção 2 - Via Terminal:**
+
+rm lib/views/home_view_new.dart
+
+
+O código agora está sem warnings e com melhor proporção visual! 🎉
+
+Made changes.
+```
+
+### Resultado:
+As issues relacionadas ao uso de BuildContext após operações assíncronas foram corrigidas, garantindo que o ScaffoldMessenger seja capturado antes da operação assíncrona e usado posteriormente para mostrar SnackBars. O arquivo home_view_new.dart foi completamente removido do projeto, e o tamanho do checkbox foi ajustado para ficar mais proporcional ao card do hábito, mantendo o tamanho do ícone de check inalterado. Agora o código está limpo de warnings e com uma interface visualmente mais equilibrada!
+
