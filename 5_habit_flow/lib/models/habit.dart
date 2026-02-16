@@ -102,6 +102,17 @@ class Habit {
 
   /// Verifica se o hábito deve ser exibido em uma data específica
   bool shouldShowOnDate(DateTime date) {
+    // Normaliza as datas para comparar apenas dia/mês/ano (ignora hora)
+    final normalizedDate = DateTime(date.year, date.month, date.day);
+    final normalizedCreatedAt =
+        DateTime(createdAt.year, createdAt.month, createdAt.day);
+
+    // Hábito só aparece a partir da data de criação
+    if (normalizedDate.isBefore(normalizedCreatedAt)) {
+      return false;
+    }
+
+    // Aplica regras de frequência
     switch (frequency) {
       case HabitFrequency.daily:
         return true; // Hábitos diários aparecem todos os dias

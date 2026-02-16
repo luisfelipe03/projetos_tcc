@@ -2034,3 +2034,56 @@ Made changes.
 ### Resultado:
 As issues relacionadas ao uso de BuildContext após operações assíncronas foram corrigidas, garantindo que o ScaffoldMessenger seja capturado antes da operação assíncrona e usado posteriormente para mostrar SnackBars. O arquivo home_view_new.dart foi completamente removido do projeto, e o tamanho do checkbox foi ajustado para ficar mais proporcional ao card do hábito, mantendo o tamanho do ícone de check inalterado. Agora o código está limpo de warnings e com uma interface visualmente mais equilibrada!
 
+## Iteração 23
+### Promt usado:
+```plaintext
+Pronto agora com o código limpo de warnings e com a interface visualmente mais equilibrada, vamos começar a ajustar um detalhe na listagem de hábitos na tela home. Quando um hábito é criado ele é listado no dias anteriores ao dia que ele foi criado, o que não é o ideial pois atrabalha as métricas de hábitos concluídos por dia, então o ideal seria ajustar a lógica para que os hábitos só sejam listados a partir da data de criação do hábito, ou seja, se um hábito foi criado no dia 20/10, ele só deve aparecer na listagem a partir do dia 20/10 em diante. Implemente essa lógica para filtrar os hábitos exibidos na tela home de acordo com a data de criação do hábito. 
+```
+
+### Output recebido:
+```markdown
+Vou ajustar a lógica para que os hábitos só apareçam a partir da data de criação:  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#100-100), lines 100 to 125
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#1-1), lines 1 to 25
+
+Replacing 18 lines with 29 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Checked , no problems found
+
+Perfeito! A lógica foi ajustada com sucesso. Aqui está o que foi implementado:
+
+## ✅ Filtro por Data de Criação
+
+### Modificação no Modelo Habit (habit.dart)
+
+O método `shouldShowOnDate()` agora:
+
+1. **Normaliza as datas** para comparar apenas dia/mês/ano (ignorando horas)
+2. **Verifica se a data é anterior à criação** - retorna `false` se for
+3. **Aplica as regras de frequência** somente para datas >= data de criação
+
+### Como Funciona
+
+**Exemplo - Hábito criado em 20/10/2026:**
+
+- ✅ **20/10/2026** → Aparece (dia de criação)
+- ✅ **21/10/2026** → Aparece (depois da criação)
+- ✅ **22/10/2026** → Aparece (depois da criação)
+- ❌ **19/10/2026** → NÃO aparece (antes da criação)
+- ❌ **18/10/2026** → NÃO aparece (antes da criação)
+
+### Benefícios
+
+1. **Métricas corretas** - contagem de hábitos concluídos não é afetada por datas retroativas
+2. **Lógica consistente** - impossível marcar como completo antes de existir
+3. **UX melhor** - usuário vê apenas hábitos relevantes para cada data
+
+O código está funcionando sem erros! 🎉
+
+Made changes.
+```
+
+### Resultado:
+O problema foi solucionado com facilidade criando apenas uma verificação simples no método `shouldShowOnDate()` do modelo Habit para garantir que os hábitos só sejam listados a partir da data de criação. 
