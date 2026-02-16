@@ -6,6 +6,7 @@ import '../viewmodels/habit_viewmodel.dart';
 import '../models/habit.dart';
 import '../widgets/home_widgets.dart';
 import 'habits/create_habit_view.dart';
+import 'habits/habit_details_view.dart';
 import 'stats_view.dart';
 import 'settings_view.dart';
 
@@ -280,8 +281,17 @@ class _HomeViewState extends State<HomeView> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // TODO: Navegar para detalhes do hábito
+          onTap: () async {
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => HabitDetailsView(habit: habit),
+              ),
+            );
+            // Recarrega dados após voltar da tela de detalhes
+            if (mounted) {
+              viewModel.loadHabits();
+              viewModel.loadCompletionsForDate(_selectedDate);
+            }
           },
           child: Padding(
             padding: const EdgeInsets.all(16),

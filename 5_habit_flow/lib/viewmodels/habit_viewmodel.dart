@@ -48,6 +48,162 @@ class HabitViewModel extends ChangeNotifier {
     return completions.where((c) => validHabitIds.contains(c.habitId)).length;
   }
 
+  /// Obtém todas as conclusões de um hábito específico
+  Future<List<HabitCompletion>> getHabitCompletions(String habitId) async {
+    try {
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final querySnapshot = await _firestore
+          .collection('habitCompletions')
+          .where('userId', isEqualTo: userId)
+          .where('habitId', isEqualTo: habitId)
+          .orderBy('completedAt', descending: true)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => HabitCompletion.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      _setError(e.toString());
+      return [];
+    }
+  }
+
+  /// Calcula a sequência atual de dias consecutivos de um hábito
+  int getCurrentStreak(List<HabitCompletion> completions, Habit habit) {
+    if (completions.isEmpty) return 0;
+
+    completions.sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+    int streak = 0;
+    DateTime checkDate = DateTime.now();
+    final today = DateTime(checkDate.year, checkDate.month, checkDate.day);
+
+    // Verifica se o hábito deveria ser feito hoje
+    if (habit.shouldShowOnDate(today)) {
+      final completedToday = completions.any(
+        (c) =>
+            c.completedAt.year == today.year &&
+            c.completedAt.month == today.month &&
+            c.completedAt.day == today.day,
+      );
+
+      if (completedToday) {
+        streak = 1;
+        checkDate = today.subtract(const Duration(days: 1));
+      } else {
+        // Se não foi completado hoje, a streak é 0
+        return 0;
+      }
+    } else {
+      // Se não deveria ser feito hoje, começa verificando de ontem
+      checkDate = today.subtract(const Duration(days: 1));
+    }
+
+    // Verifica dias anteriores
+    while (true) {
+      final normalizedCheck = DateTime(
+        checkDate.year,
+        checkDate.month,
+        checkDate.day,
+      );
+
+      // Para se chegou em data anterior à criação do hábito
+      if (!habit.shouldShowOnDate(normalizedCheck)) {
+        break;
+      }
+
+      // Verifica se foi completado neste dia
+      final completedOnDate = completions.any(
+        (c) =>
+            c.completedAt.year == normalizedCheck.year &&
+            c.completedAt.month == normalizedCheck.month &&
+            c.completedAt.day == normalizedCheck.day,
+      );
+
+      if (completedOnDate) {
+        streak++;
+        checkDate = checkDate.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
+  }
+
+  /// Calcula o melhor streak de um hábito
+  int getBestStreak(List<HabitCompletion> completions, Habit habit) {
+    if (completions.isEmpty) return 0;
+
+    completions.sort((a, b) => a.completedAt.compareTo(b.completedAt));
+
+    int bestStreak = 0;
+    int currentStreak = 0;
+    DateTime? lastDate;
+
+    for (var completion in completions) {
+      final completionDate = DateTime(
+        completion.completedAt.year,
+        completion.completedAt.month,
+        completion.completedAt.day,
+      );
+
+      if (lastDate == null) {
+        currentStreak = 1;
+      } else {
+        final daysDiff = completionDate.difference(lastDate).inDays;
+
+        if (daysDiff == 1) {
+          currentStreak++;
+        } else {
+          bestStreak = currentStreak > bestStreak ? currentStreak : bestStreak;
+          currentStreak = 1;
+        }
+      }
+
+      lastDate = completionDate;
+    }
+
+    return currentStreak > bestStreak ? currentStreak : bestStreak;
+  }
+
+  /// Calcula a taxa de conclusão mensal
+  double getMonthlyCompletionRate(
+    List<HabitCompletion> completions,
+    Habit habit,
+    DateTime month,
+  ) {
+    final firstDay = DateTime(month.year, month.month, 1);
+    final lastDay = DateTime(month.year, month.month + 1, 0);
+
+    int totalDays = 0;
+    int completedDays = 0;
+
+    for (
+      var day = firstDay;
+      day.isBefore(lastDay) || day.isAtSameMomentAs(lastDay);
+      day = day.add(const Duration(days: 1))
+    ) {
+      if (habit.shouldShowOnDate(day) && !day.isAfter(DateTime.now())) {
+        totalDays++;
+
+        final wasCompleted = completions.any(
+          (c) =>
+              c.completedAt.year == day.year &&
+              c.completedAt.month == day.month &&
+              c.completedAt.day == day.day,
+        );
+
+        if (wasCompleted) completedDays++;
+      }
+    }
+
+    return totalDays == 0 ? 0 : (completedDays / totalDays);
+  }
+
   /// Gera uma chave única para a data (yyyy-MM-dd)
   String _getDateKey(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
