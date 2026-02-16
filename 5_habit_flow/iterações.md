@@ -1744,3 +1744,136 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou um novo sistema de conclusão de hábitos por data, criando uma nova coleção no Firestore para armazenar as conclusões de forma independente para cada dia. O modelo HabitCompletion foi criado para representar cada conclusão individual, e a lógica do HabitViewModel foi atualizada para lidar com a marcação e verificação de conclusões por data. A interface da HomeView também foi ajustada para refletir o status correto dos hábitos com base na data selecionada. Agora, quando um hábito é marcado como concluído, ele só é marcado como concluído para aquele dia específico, permitindo um rastreamento mais preciso do progresso do usuário ao longo do tempo.
 
+## Iteração 20
+### Promt usado:
+```plaintext
+Muito bom o sistema de conclusão por data! Agora vamos fazer um ajuste na tela home, os hábitos que são de dias específicos da semana, como por exemplo um hábito que só deve ser feito às segundas, quartas e sextas, atualmente estão aparecendo todos os dias, o que não é o comportamento esperado. O ideal seria ajustar a lógica para que os hábitos só apareçam nos dias corretos da semana, de acordo com a configuração de frequência do hábito. Implemente essa lógica para filtrar os hábitos exibidos na tela home de acordo com os dias da semana configurados para cada hábito. 
+```
+
+### Output recebido:
+```markdown
+Vou implementar a lógica para filtrar os hábitos de acordo com os dias da semana configurados. Primeiro, preciso verificar a estrutura atual:   
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_frequency.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#80-80), lines 80 to 120
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#1-1), lines 1 to 60
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#1-1), lines 1 to 100
+
+Searched for text `weekDays` (`**/lib/models/habit.dart`), no results
+
+Searched for text `selectedDays` (`**/lib/models/habit.dart`), no results
+
+Searched for text `frequency` (`**/lib/views/habits/create_habit_view.dart`), 20 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#130-130), lines 130 to 250
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#550-550), lines 550 to 700
+
+Searched for text `_selectedWeekDays` (`**/lib/views/habits/create_habit_view.dart`), no results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#1-1), lines 1 to 80
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/day_of_week.dart#1-1), lines 1 to 50
+
+Vou implementar o sistema de filtragem por dias da semana. Primeiro, vou adicionar o campo de dias da semana ao modelo Habit e criar a lógica de filtragem:  
+
+Replacing 64 lines with 72 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/day_of_week.dart#45-45), lines 45 to 50
+
+
+Replacing 12 lines with 32 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#80-80), lines 80 to 126
+
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#70-70), lines 70 to 120
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#190-190), lines 190 to 220
+
+Replacing 31 lines with 37 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+Replacing 71 lines with 143 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#530-530), lines 530 to 600
+
+Replacing 9 lines with 82 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#520-520), lines 520 to 610
+
+
+Replacing 26 lines with 28 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#55-55), lines 55 to 90
+
+Replacing 31 lines with 33 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+
+Replacing 19 lines with 26 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#25-25), lines 25 to 60
+
+
+Replacing 11 lines with 11 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+Replacing 11 lines with 11 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view_new.dart)
+
+
+Checked , no problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/day_of_week.dart#45-45), lines 45 to 109
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#1-1), lines 1 to 25
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart#95-95), lines 95 to 120
+
+Perfeito! Implementei o sistema de filtragem por dias da semana. Aqui está o resumo das mudanças:
+
+## ✅ Implementação Completa
+
+### 1. **Modelo Habit** (habit.dart)
+- Adicionado campo `selectedWeekDays: List<int>` (1=Monday, 7=Sunday)
+- Atualizado construtores, `toMap()`, `fromMap()`, `copyWith()`
+- Criado método `shouldShowOnDate(DateTime date)`:
+  - **Daily**: aparecem todos os dias
+  - **Weekly**: aparecem apenas nos dias selecionados (ou todos se nenhum selecionado)
+  - **Monthly**: aparecem todos os dias
+
+### 2. **CreateHabitView** (create_habit_view.dart)
+- Adicionado `_habitWeekDays` para armazenar dias da semana do hábito
+- Criado `_buildHabitWeekDaySelector()` - seletor visual de dias
+- Seletor aparece automaticamente quando `frequency = Weekly`
+- Passa `selectedWeekDays` ao criar o hábito
+
+### 3. **HabitViewModel** (habit_viewmodel.dart)
+- `createHabit()` agora aceita parâmetro `selectedWeekDays`
+- Novo método `getHabitsForDate(DateTime)` - filtra hábitos válidos para a data
+- `getCompletedCountForDate()` agora conta apenas hábitos válidos da data
+
+### 4. **HomeView** (home_view.dart e home_view_new.dart)
+- Usa `getHabitsForDate(_selectedDate)` para exibir apenas hábitos do dia
+- Progresso calculado corretamente por data
+
+## 🎯 Como Funciona
+
+**Exemplo - Hábito Semanal (Seg, Qua, Sex)**:
+1. Usuário cria hábito com frequency = Weekly
+2. Seleciona Segunda, Quarta e Sexta no seletor
+3. Sistema salva `selectedWeekDays: [1, 3, 5]`
+4. **Segunda** → Hábito aparece ✅
+5. **Terça** → Hábito NÃO aparece ❌
+6. **Quarta** → Hábito aparece ✅
+7. **Quinta** → Hábito NÃO aparece ❌
+
+Agora os hábitos semanais aparecem apenas nos dias configurados! 🎉
+
+Made changes.
+```
+
+### Resultado:
+Nessa iteração, a IA implementou a lógica para filtrar os hábitos exibidos na tela home de acordo com os dias da semana configurados para cada hábito. O modelo Habit foi atualizado para incluir um campo `selectedWeekDays`, que armazena os dias da semana em que o hábito deve ser realizado. A lógica de exibição na HomeView foi ajustada para mostrar apenas os hábitos que são válidos para a data selecionada, garantindo que os hábitos semanais apareçam apenas nos dias configurados. Agora, se um hábito é configurado para ser feito às segundas, quartas e sextas, ele só aparecerá nesses dias específicos, proporcionando uma experiência mais personalizada e relevante para o usuário.
+

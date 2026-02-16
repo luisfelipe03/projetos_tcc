@@ -12,6 +12,7 @@ class Habit {
   final HabitReminder? reminder;
   final HabitColor habitColor;
   final DateTime createdAt;
+  final List<int> selectedWeekDays; // 1=Monday, 7=Sunday
 
   Habit({
     required this.id,
@@ -21,7 +22,8 @@ class Habit {
     this.reminder,
     required this.habitColor,
     required this.createdAt,
-  });
+    List<int>? selectedWeekDays,
+  }) : selectedWeekDays = selectedWeekDays ?? [];
 
   /// Cria uma cópia do hábito com campos atualizados
   Habit copyWith({
@@ -32,6 +34,7 @@ class Habit {
     HabitReminder? reminder,
     HabitColor? habitColor,
     DateTime? createdAt,
+    List<int>? selectedWeekDays,
   }) {
     return Habit(
       id: id ?? this.id,
@@ -41,6 +44,7 @@ class Habit {
       reminder: reminder ?? this.reminder,
       habitColor: habitColor ?? this.habitColor,
       createdAt: createdAt ?? this.createdAt,
+      selectedWeekDays: selectedWeekDays ?? this.selectedWeekDays,
     );
   }
 
@@ -54,6 +58,7 @@ class Habit {
       'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': Timestamp.fromDate(createdAt),
+      'selectedWeekDays': selectedWeekDays,
     };
   }
 
@@ -69,6 +74,9 @@ class Habit {
           : null,
       habitColor: HabitColor.fromString(map['habitColor'] as String),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
+      selectedWeekDays: map['selectedWeekDays'] != null
+          ? List<int>.from(map['selectedWeekDays'] as List)
+          : [],
     );
   }
 
@@ -88,7 +96,27 @@ class Habit {
       'reminder': reminder?.toMap(),
       'habitColor': habitColor.name,
       'createdAt': createdAt.toIso8601String(),
+      'selectedWeekDays': selectedWeekDays,
     };
+  }
+
+  /// Verifica se o hábito deve ser exibido em uma data específica
+  bool shouldShowOnDate(DateTime date) {
+    switch (frequency) {
+      case HabitFrequency.daily:
+        return true; // Hábitos diários aparecem todos os dias
+
+      case HabitFrequency.weekly:
+        // Se não há dias selecionados, aparece todos os dias
+        if (selectedWeekDays.isEmpty) {
+          return true;
+        }
+        // Verifica se o dia da semana está na lista (1=Monday, 7=Sunday)
+        return selectedWeekDays.contains(date.weekday);
+
+      case HabitFrequency.monthly:
+        return true; // Hábitos mensais aparecem todos os dias (pode ser refinado)
+    }
   }
 
   @override

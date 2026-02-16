@@ -26,7 +26,8 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   bool _reminderEnabled = true;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 7, minute: 0);
   ReminderRepeat _reminderRepeat = ReminderRepeat.daily;
-  List<DayOfWeek> _selectedDays = [];
+  List<DayOfWeek> _selectedDays = []; // Para reminder
+  List<DayOfWeek> _habitWeekDays = []; // Para hábitos semanais
 
   @override
   void dispose() {
@@ -44,6 +45,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
       _selectedTime = const TimeOfDay(hour: 7, minute: 0);
       _reminderRepeat = ReminderRepeat.daily;
       _selectedDays = [];
+      _habitWeekDays = [];
     });
   }
 
@@ -108,6 +110,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
       category: _selectedCategory,
       habitColor: _selectedColor,
       reminder: reminder,
+      selectedWeekDays: _habitWeekDays.map((day) => day.weekdayNumber).toList(),
     );
 
     if (!mounted) return;
@@ -194,6 +197,10 @@ class _CreateHabitViewState extends State<CreateHabitView> {
             _buildSectionLabel('FREQUENCY'),
             const SizedBox(height: 12),
             _buildFrequencySelector(),
+            if (_selectedFrequency == HabitFrequency.weekly) ...[
+              const SizedBox(height: 12),
+              _buildHabitWeekDaySelector(),
+            ],
             const SizedBox(height: 28),
             _buildSectionLabel('CATEGORY'),
             const SizedBox(height: 12),
@@ -559,6 +566,79 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                       _selectedDays.remove(day);
                     } else {
                       _selectedDays.add(day);
+                    }
+                  });
+                },
+                child: Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: isSelected ? color : Colors.transparent,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected ? color : Colors.grey[400]!,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      day.shortName[0],
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected ? Colors.white : Colors.grey[600],
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHabitWeekDaySelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1A1625) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Which days should this habit be done?',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[500],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: DayOfWeek.values.map((day) {
+              final isSelected = _habitWeekDays.contains(day);
+              final color = isDark
+                  ? const Color(0xFFA855F7)
+                  : const Color(0xFF10B981);
+
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (isSelected) {
+                      _habitWeekDays.remove(day);
+                    } else {
+                      _habitWeekDays.add(day);
                     }
                   });
                 },

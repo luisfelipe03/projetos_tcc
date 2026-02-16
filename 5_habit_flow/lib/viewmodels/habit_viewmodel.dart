@@ -27,6 +27,11 @@ class HabitViewModel extends ChangeNotifier {
 
   String? get userId => _auth.currentUser?.uid;
 
+  /// Retorna os hábitos que devem aparecer em uma data específica
+  List<Habit> getHabitsForDate(DateTime date) {
+    return _habits.where((habit) => habit.shouldShowOnDate(date)).toList();
+  }
+
   /// Verifica se um hábito está completo em uma data específica
   bool isHabitCompletedOnDate(String habitId, DateTime date) {
     final dateKey = _getDateKey(date);
@@ -38,7 +43,9 @@ class HabitViewModel extends ChangeNotifier {
   int getCompletedCountForDate(DateTime date) {
     final dateKey = _getDateKey(date);
     final completions = _completionsByDate[dateKey] ?? [];
-    return completions.length;
+    // Filtra apenas os hábitos que deveriam aparecer nesta data
+    final validHabitIds = getHabitsForDate(date).map((h) => h.id).toSet();
+    return completions.where((c) => validHabitIds.contains(c.habitId)).length;
   }
 
   /// Gera uma chave única para a data (yyyy-MM-dd)
@@ -58,6 +65,7 @@ class HabitViewModel extends ChangeNotifier {
     required HabitCategory category,
     required HabitColor habitColor,
     HabitReminder? reminder,
+    List<int>? selectedWeekDays,
   }) async {
     try {
       _setLoading(true);
@@ -81,6 +89,7 @@ class HabitViewModel extends ChangeNotifier {
         habitColor: habitColor,
         reminder: reminder,
         createdAt: DateTime.now(),
+        selectedWeekDays: selectedWeekDays,
       );
 
       // Salva no Firestore

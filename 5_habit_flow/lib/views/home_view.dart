@@ -88,7 +88,7 @@ class _HomeViewState extends State<HomeView> {
     final habitViewModel = context.watch<HabitViewModel>();
 
     // Filtra hábitos do dia selecionado
-    final todayHabits = habitViewModel.habits;
+    final todayHabits = habitViewModel.getHabitsForDate(_selectedDate);
     final completedCount = habitViewModel.getCompletedCountForDate(
       _selectedDate,
     );
