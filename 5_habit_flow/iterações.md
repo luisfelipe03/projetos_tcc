@@ -2209,3 +2209,148 @@ Made changes.
 
 ### Resultado:
 A tela de detalhes do hábito foi implementada com sucesso, incluindo a navegação correta, fidelidade ao design do protótipo. As estatísticas ainda tem que ser testadas para garantir que estão calculando corretamente, mas a estrutura e a interface estão completas. Não foi implementado a navegação a partir da notificação de lembrete como solicitado, mas isso pode ser adicionado posteriormente. O código está limpo de warnings e pronto para ser testado! 
+
+## Iteração 25
+### Promt usado:
+```plaintext
+Ótimo! Agora que a tela de detalhes do hábito está implementada, vamos adicionar a funcionalidade de editar o hábito. Quando o usuário clicar no botão de editar na tela de detalhes do hábito, ele deve ser direcionado para a tela de criação de hábito, mas com os campos preenchidos com as informações do hábito que ele deseja editar. O usuário deve poder editar qualquer campo do hábito, como nome, categoria, frequência, dias da semana, horário do lembrete, etc. Depois que o usuário fizer as alterações e salvar, ele deve ser redirecionado de volta para a tela de detalhes do hábito, onde as informações atualizadas do hábito devem ser exibidas. Implemente essa funcionalidade de edição de hábito seguindo essas especificações. 
+```
+
+### Output recebido:
+```markdown
+Vou implementar a funcionalidade de edição de hábito. Primeiro, vou adicionar o método de atualização no ViewModel e depois modificar a CreateHabitView para suportar edição:  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#130-130), lines 130 to 180
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#1-1), lines 1 to 50
+
+Replacing 5 lines with 77 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Replacing 18 lines with 58 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#165-165), lines 165 to 190
+
+Replacing 48 lines with 87 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#75-75), lines 75 to 130
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#180-180), lines 180 to 220
+
+Compacted conversation
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#240-240), lines 240 to 280
+
+Searched for text `Save Habit` (`**/lib/views/habits/create_habit_view.dart`), 1 result
+
+Replacing 19 lines with 19 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#820-820), lines 820 to 860
+
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#835-835), lines 835 to 860
+
+Replacing 15 lines with 15 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart#1-1), lines 1 to 50
+
+
+Searched for text `PopupMenuItem` (`**/lib/views/habits/habit_details_view.dart`), 1 result
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart#100-100), lines 100 to 170
+
+Replacing 11 lines with 21 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart#1-1), lines 1 to 10
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart), 73 problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#180-180), lines 180 to 230
+
+Replacing 25 lines with 6 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart), 2 problems found
+
+Replacing 7 lines with 7 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#55-55), lines 55 to 70
+
+Replacing 11 lines with 12 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow), 2 problems found
+
+Searched for text `Future<bool> updateHabit` (`**/lib/viewmodels/habit_viewmodel.dart`), 2 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#60-60), lines 60 to 70
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#270-270), lines 270 to 340
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#340-340), lines 340 to 400
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#275-275), lines 275 to 345
+
+Replacing 67 lines with 4 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Replacing 12 lines with 10 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow), 2 problems found
+
+Searched for text `class HabitReminder` (`**/lib/models/**`), 1 result
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_reminder.dart#1-1), lines 1 to 30
+
+Replacing 10 lines with 10 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+Checked , no problems found
+
+Completed! The habit editing functionality has been fully implemented:
+
+## Changes Made
+
+### 1. **HabitViewModel** - habit_viewmodel.dart
+- Added `updateHabit()` method with:
+  - Validation for title and authentication
+  - Finds existing habit by ID
+  - Creates updated Habit maintaining original `createdAt`
+  - Updates Firestore document
+  - Reschedules notifications
+  - Updates local state
+
+### 2. **CreateHabitView** - create_habit_view.dart
+- Added optional `Habit? habit` parameter for edit mode
+- Added `_isEditMode` getter to detect editing
+- Added `_loadHabitData()` method to pre-fill form fields
+- Modified `_saveHabit()` to:
+  - Call `updateHabit()` when editing
+  - Call `createHabit()` when creating
+  - Show appropriate success messages
+- Updated UI:
+  - AppBar title changes to "Edit Habit" in edit mode
+  - Save button text changes to "Update Habit" in edit mode
+
+### 3. **HabitDetailsView** - habit_details_view.dart
+- Added import for `CreateHabitView`
+- Connected Edit menu option to navigate to `CreateHabitView` with current habit
+- Added data reload after successful edit
+
+## How It Works
+
+1. User opens habit details screen
+2. Clicks "Edit" from popup menu
+3. Opens `CreateHabitView` with pre-filled data
+4. User modifies fields (title, frequency, category, color, reminder, weekdays)
+5. Clicks "Update Habit" button
+6. Saves changes to Firestore and updates local state
+7. Returns to details screen with updated information
+
+All Flutter analysis errors have been resolved. The edit flow is now complete and ready for testing.
+
+Made changes.
+```
+
+### Resultado:
+Foi implementada a funcionalidade de edição de hábito, permitindo que o usuário edite qualquer campo do hábito e veja as informações atualizadas na tela de detalhes. O método `updateHabit()` foi adicionado ao ViewModel para lidar com a lógica de atualização, e a `CreateHabitView` foi modificada para suportar tanto criação quanto edição de hábitos. Mas a navegação para a tela de edição foi implementada mas não está funcionando, existe duas opções de botões para editar o hábito, um na barra de ações e outro no menu de 3 pontos, ambos estão configurados para navegar para a tela de edição, mas nenhum dos dois está funcionando, então é necessário corrigir isso para que o usuário possa acessar a tela de edição.

@@ -4,6 +4,7 @@ import '../../models/habit.dart';
 import '../../models/habit_completion.dart';
 import '../../viewmodels/habit_viewmodel.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'create_habit_view.dart';
 
 class HabitDetailsView extends StatefulWidget {
   final Habit habit;
@@ -134,9 +135,18 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
                 ),
               ),
             ],
-            onSelected: (value) {
+            onSelected: (value) async {
               if (value == 'edit') {
-                // TODO: Navegar para edição
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateHabitView(habit: widget.habit),
+                  ),
+                );
+                // Recarregar dados se houve atualização
+                if (result == true && mounted) {
+                  await _loadCompletions();
+                }
               }
             },
           ),
@@ -539,12 +549,15 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
                 showTitles: true,
                 reservedSize: 22,
                 getTitlesWidget: (value, meta) {
-                  if (value == 0)
+                  if (value == 0) {
                     return const Text('Oct 1', style: TextStyle(fontSize: 10));
-                  if (value == 14)
+                  }
+                  if (value == 14) {
                     return const Text('Oct 15', style: TextStyle(fontSize: 10));
-                  if (value == 29)
+                  }
+                  if (value == 29) {
                     return const Text('Today', style: TextStyle(fontSize: 10));
+                  }
                   return const Text('');
                 },
               ),

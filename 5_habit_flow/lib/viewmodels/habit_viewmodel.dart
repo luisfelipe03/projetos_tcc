@@ -277,11 +277,12 @@ class HabitViewModel extends ChangeNotifier {
   /// Atualiza um hábito existente
   Future<bool> updateHabit({
     required String habitId,
-    String? title,
-    HabitFrequency? frequency,
-    HabitCategory? category,
-    HabitColor? habitColor,
+    required String title,
+    required HabitFrequency frequency,
+    required HabitCategory category,
+    required HabitColor habitColor,
     HabitReminder? reminder,
+    List<int>? selectedWeekDays,
   }) async {
     try {
       _setLoading(true);
@@ -291,21 +292,29 @@ class HabitViewModel extends ChangeNotifier {
         throw Exception('User not authenticated');
       }
 
-      // Encontra o hábito na lista
+      // Validações
+      if (title.trim().isEmpty) {
+        throw Exception('Habit title cannot be empty');
+      }
+
+      // Encontra o hábito existente
       final habitIndex = _habits.indexWhere((h) => h.id == habitId);
       if (habitIndex == -1) {
         throw Exception('Habit not found');
       }
 
-      final oldHabit = _habits[habitIndex];
+      final existingHabit = _habits[habitIndex];
 
-      // Cria o hábito atualizado
-      final updatedHabit = oldHabit.copyWith(
-        title: title,
+      // Cria o hábito atualizado (mantém createdAt original)
+      final updatedHabit = Habit(
+        id: habitId,
+        title: title.trim(),
         frequency: frequency,
         category: category,
         habitColor: habitColor,
         reminder: reminder,
+        createdAt: existingHabit.createdAt, // Mantém data de criação original
+        selectedWeekDays: selectedWeekDays,
       );
 
       // Atualiza no Firestore
@@ -319,8 +328,8 @@ class HabitViewModel extends ChangeNotifier {
       // Cancela notificações antigas
       await _notificationService.cancelHabitReminder(habitId);
 
-      // Agenda novas notificações se houver reminder
-      if (updatedHabit.reminder != null) {
+      // Cria novas notificações se houver reminder
+      if (reminder != null) {
         await _notificationService.scheduleHabitReminder(updatedHabit);
       }
 

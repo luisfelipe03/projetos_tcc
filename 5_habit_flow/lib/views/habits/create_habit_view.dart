@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../viewmodels/habit_viewmodel.dart';
+import '../../models/habit.dart';
 import '../../models/habit_frequency.dart';
 import '../../models/habit_category.dart';
 import '../../models/habit_color.dart';
@@ -9,7 +10,9 @@ import '../../models/reminder_repeat.dart';
 import '../../models/day_of_week.dart';
 
 class CreateHabitView extends StatefulWidget {
-  const CreateHabitView({super.key});
+  final Habit? habit; // Habit opcional para edição
+
+  const CreateHabitView({super.key, this.habit});
 
   @override
   State<CreateHabitView> createState() => _CreateHabitViewState();
@@ -28,6 +31,43 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   ReminderRepeat _reminderRepeat = ReminderRepeat.daily;
   List<DayOfWeek> _selectedDays = []; // Para reminder
   List<DayOfWeek> _habitWeekDays = []; // Para hábitos semanais
+
+  bool get _isEditMode => widget.habit != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditMode) {
+      _loadHabitData();
+    }
+  }
+
+  void _loadHabitData() {
+    final habit = widget.habit!;
+    _titleController.text = habit.title;
+    _selectedFrequency = habit.frequency;
+    _selectedCategory = habit.category;
+    _selectedColor = habit.habitColor;
+
+    // Carrega dias da semana para hábitos semanais
+    if (habit.frequency == HabitFrequency.weekly &&
+        habit.selectedWeekDays.isNotEmpty) {
+      _habitWeekDays = habit.selectedWeekDays
+          .map((dayNum) => DayOfWeek.fromWeekdayNumber(dayNum))
+          .toList();
+    }
+
+    // Carrega reminder se existir
+    if (habit.reminder != null) {
+      final reminder = habit.reminder!;
+      _reminderEnabled = true;
+      _selectedTime = reminder.time;
+      _reminderRepeat = reminder.repeat;
+      _selectedDays = reminder.daysOfWeek;
+    } else {
+      _reminderEnabled = false;
+    }
+  }
 
   @override
   void dispose() {
@@ -104,21 +144,42 @@ class _CreateHabitViewState extends State<CreateHabitView> {
       }
     }
 
-    final success = await habitViewModel.createHabit(
-      title: _titleController.text,
-      frequency: _selectedFrequency,
-      category: _selectedCategory,
-      habitColor: _selectedColor,
-      reminder: reminder,
-      selectedWeekDays: _habitWeekDays.map((day) => day.weekdayNumber).toList(),
-    );
+    final weekDays = _habitWeekDays.map((day) => day.weekdayNumber).toList();
+
+    bool success;
+    if (_isEditMode) {
+      // Modo de edição
+      success = await habitViewModel.updateHabit(
+        habitId: widget.habit!.id,
+        title: _titleController.text,
+        frequency: _selectedFrequency,
+        category: _selectedCategory,
+        habitColor: _selectedColor,
+        reminder: reminder,
+        selectedWeekDays: weekDays,
+      );
+    } else {
+      // Modo de criação
+      success = await habitViewModel.createHabit(
+        title: _titleController.text,
+        frequency: _selectedFrequency,
+        category: _selectedCategory,
+        habitColor: _selectedColor,
+        reminder: reminder,
+        selectedWeekDays: weekDays,
+      );
+    }
 
     if (!mounted) return;
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Habit created successfully!'),
+          content: Text(
+            _isEditMode
+                ? 'Habit updated successfully!'
+                : 'Habit created successfully!',
+          ),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -126,11 +187,16 @@ class _CreateHabitViewState extends State<CreateHabitView> {
           ),
         ),
       );
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(true); // Retorna true para indicar sucesso
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(habitViewModel.error ?? 'Failed to create habit'),
+          content: Text(
+            habitViewModel.error ??
+                (_isEditMode
+                    ? 'Failed to update habit'
+                    : 'Failed to create habit'),
+          ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -164,9 +230,9 @@ class _CreateHabitViewState extends State<CreateHabitView> {
           ),
         ),
         leadingWidth: 80,
-        title: const Text(
-          'New Habit',
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        title: Text(
+          _isEditMode ? 'Edit Habit' : 'New Habit',
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
         actions: [
@@ -755,14 +821,14 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                           ),
                         ),
                       )
-                    : const Row(
+                    : Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.save, color: Colors.white),
-                          SizedBox(width: 8),
+                          const Icon(Icons.save, color: Colors.white),
+                          const SizedBox(width: 8),
                           Text(
-                            'Save Habit',
-                            style: TextStyle(
+                            _isEditMode ? 'Update Habit' : 'Save Habit',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.w600,
