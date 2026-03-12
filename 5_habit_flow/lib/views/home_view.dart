@@ -411,9 +411,18 @@ class _HomeViewState extends State<HomeView> {
             ListTile(
               leading: const Icon(Icons.edit),
               title: const Text('Edit Habit'),
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                // TODO: Navegar para edição
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CreateHabitView(habit: habit),
+                  ),
+                );
+                // Recarregar hábitos se houve atualização
+                if (result == true) {
+                  viewModel.loadHabits();
+                }
               },
             ),
             ListTile(

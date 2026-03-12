@@ -687,8 +687,17 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
       children: [
         Expanded(
           child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: Navegar para edição
+            onPressed: () async {
+              final result = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => CreateHabitView(habit: widget.habit),
+                ),
+              );
+              // Recarregar dados se houve atualização
+              if (result == true && mounted) {
+                await _loadCompletions();
+              }
             },
             icon: const Icon(Icons.edit),
             label: const Text('Edit'),
