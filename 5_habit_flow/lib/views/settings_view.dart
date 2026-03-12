@@ -19,10 +19,7 @@ class SettingsView extends StatelessWidget {
           children: [
             const Text(
               'Settings',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 32, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 20),
             _buildSettingsCard(
@@ -93,10 +90,9 @@ class SettingsView extends StatelessWidget {
                     if (confirmed == true && context.mounted) {
                       await authViewModel.signOut();
                       if (context.mounted) {
-                        Navigator.of(context).pushNamedAndRemoveUntil(
-                          '/',
-                          (route) => false,
-                        );
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/', (route) => false);
                       }
                     }
                   },
@@ -140,10 +136,7 @@ class SettingsView extends StatelessWidget {
       leading: Icon(icon, color: titleColor),
       title: Text(
         title,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: titleColor,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w600, color: titleColor),
       ),
       subtitle: Text(subtitle),
       trailing: const Icon(Icons.chevron_right),

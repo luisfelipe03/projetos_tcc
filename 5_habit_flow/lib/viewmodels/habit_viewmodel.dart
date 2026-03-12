@@ -523,6 +523,40 @@ class HabitViewModel extends ChangeNotifier {
     }
   }
 
+  /// Busca todas as conclusões do usuário em um intervalo de datas
+  Future<List<HabitCompletion>> getCompletionsInRange(
+    DateTime startDate,
+    DateTime endDate,
+  ) async {
+    try {
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final normalizedStart = _normalizeDate(startDate);
+      final normalizedEnd = _normalizeDate(
+        endDate,
+      ).add(const Duration(days: 1));
+
+      final querySnapshot = await _firestore
+          .collection('habitCompletions')
+          .where('userId', isEqualTo: userId)
+          .where(
+            'completedAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+          )
+          .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => HabitCompletion.fromMap(doc.data()))
+          .toList();
+    } catch (e) {
+      _setError(e.toString());
+      return [];
+    }
+  }
+
   /// Deleta todas as conclusões de um hábito
   Future<void> _deleteHabitCompletions(String habitId) async {
     try {

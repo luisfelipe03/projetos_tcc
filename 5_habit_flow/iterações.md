@@ -2489,3 +2489,112 @@ Made changes.
 
 ### Resultado:
 A navegação a partir das notificações de lembrete foi implementada com sucesso. Agora, quando o usuário clicar em uma notificação, ele será direcionado para a tela de detalhes do hábito correspondente, onde poderá ver todas as informações e estatísticas do hábito.
+
+## Iteração 28
+### Promt usado:
+```plaintext
+Completamos os hábitos, agora os proximos passos são implementar a tela de estatísticas e configurações. Vamos começar pela tela de estatísticas. A tela de estatísticas deve mostrar gráficos e métricas relacionadas ao desempenho do usuário com seus hábitos, como a taxa de conclusão por categoria, hábitos mais consistentes e por ai vai. Em anexo estão os screenshots do protótipo da tela de estatísticas para te ajudar a implementar a interface. Implemente a tela de estatísticas seguindo o design do protótipo e utilizando os dados disponíveis para calcular as métricas e gerar os gráficos. 
+```
+
+### Output recebido:
+```markdown
+Optimizing tool selection...Vou mapear o estado atual da tela de estatísticas e dos dados disponíveis no ViewModel para implementar a UI do protótipo com métricas reais.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib)
+
+Searched for files matching `**/lib/views/**/*.dart`, 7 matches
+
+Read memory
+
+Agora vou ler stats_view.dart e os métodos do `HabitViewModel` para calcular as métricas e construir os gráficos com os dados existentes.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#1-1), lines 1 to 450
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Identifiquei que stats_view.dart está só com placeholder; agora vou extrair mais contexto (categorias, conclusões e carregamento) para montar os cards, gráfico por categoria e ranking de hábitos consistentes.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#450-450), lines 450 to 599
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_completion.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_category.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_color.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#1-1), lines 1 to 220
+
+Contexto levantado: a tela de stats está vazia e o ViewModel já tem dados suficientes para calcular métricas; agora vou checar os widgets de navegação/estilo para manter consistência visual com o app.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart#281-281), lines 281 to 281
+
+Searched for regex `fl_chart|charts_flutter|Syncfusion|LineChart|BarChart` (`**/lib/**/*.dart`), 5 results
+
+Searched for regex `HabitCategory|Icons\.|displayName` (`**/lib/views/habits/create_habit_view.dart`), 20 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#460-460), lines 460 to 590
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart#500-500), lines 500 to 650
+
+Levantamento concluído: a tela de stats está totalmente placeholder, então vou implementar a interface completa do protótipo e adicionar no `HabitViewModel` um método de consulta por intervalo para alimentar métricas e gráficos reais.
+
+Generating patch (50 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+Generating patch (1034 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart)
+
+Implementei a nova tela completa de estatísticas; agora vou validar compilação/análise para corrigir qualquer erro restante antes de te entregar.
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), 2 problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart#602-602), lines 602 to 636
+
+Generating patch (17 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart), no problems found
+
+Validação passou sem erros; vou só confirmar os arquivos alterados para te devolver um resumo objetivo do que foi implementado.
+
+Read changed files in the active git repository
+
+Tela de estatísticas implementada com UI baseada no protótipo e métricas reais calculadas a partir dos hábitos/conclusões.
+
+**O que foi implementado**
+- Nova dashboard completa em stats_view.dart:
+  - Header `Statistics` com seletor de período (`Last 7/30/90 Days`).
+  - Cards de métricas no topo (Completion, Best Streak, Check-ins) em layout horizontal como no protótipo.
+  - Gráfico de barras `Category Breakdown` (usando `fl_chart`) com taxa de conclusão por categoria.
+  - Seção `Top Performing` com os hábitos mais consistentes (ordenados por taxa de conclusão, streak e volume).
+  - Estados de `loading`, `empty`, `error` e `pull-to-refresh`.
+
+- Cálculo de métricas com dados reais:
+  - Taxa de conclusão global no período selecionado.
+  - Variação de taxa vs período anterior (delta).
+  - Melhor streak geral.
+  - Total de check-ins.
+  - Taxa de conclusão por categoria.
+  - Ranking de hábitos mais consistentes.
+
+- Suporte no ViewModel em habit_viewmodel.dart:
+  - Adicionado `getCompletionsInRange(DateTime startDate, DateTime endDate)` para consultar conclusões por intervalo e alimentar os gráficos/métricas da tela.
+
+**Validação**
+- Verifiquei erros de compilação/análise nos arquivos alterados.
+- Resultado: sem erros em stats_view.dart, habit_viewmodel.dart e home_view.dart.
+
+**Observação**
+- Não executei o app em runtime aqui, então a validação foi estática (análise/compile checks).  
+
+Próximos passos naturais:
+1. Testar no emulador/dispositivo os 3 períodos (7/30/90 dias) com dados reais.
+2. Ajustar microdetalhes visuais (espaçamentos/cores) caso queira ficar ainda mais idêntico ao protótipo.
+
+Made changes.
+```
+
+### Resultado:
+A tela de estatísticas foi implementada com sucesso, seguindo o design do protótipo e utilizando dados reais para calcular as métricas e gerar os gráficos. A interface agora inclui um header com seletor de período, cards de métricas, gráfico de barras para breakdown por categoria e uma seção de top performing habits. O ViewModel foi atualizado para fornecer os dados necessários para a tela. Ainda não temos dados reais para testar os gráficos, mas a estrutura está pronta para ser alimentada com dados reais e validada em runtime.
