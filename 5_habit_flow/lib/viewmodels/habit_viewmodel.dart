@@ -27,6 +27,15 @@ class HabitViewModel extends ChangeNotifier {
 
   String? get userId => _auth.currentUser?.uid;
 
+  /// Busca um hábito específico por ID
+  Habit? getHabitById(String habitId) {
+    try {
+      return _habits.firstWhere((habit) => habit.id == habitId);
+    } catch (e) {
+      return null;
+    }
+  }
+
   /// Retorna os hábitos que devem aparecer em uma data específica
   List<Habit> getHabitsForDate(DateTime date) {
     return _habits.where((habit) => habit.shouldShowOnDate(date)).toList();

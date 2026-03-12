@@ -15,6 +15,12 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _isInitialized = false;
+  Function(String habitId)? _onNotificationTapCallback;
+
+  /// Define o callback para quando uma notificação for tocada
+  void setOnNotificationTapCallback(Function(String habitId) callback) {
+    _onNotificationTapCallback = callback;
+  }
 
   /// Inicializa o serviço de notificações
   Future<void> initialize() async {
@@ -50,8 +56,14 @@ class NotificationService {
 
   /// Callback quando a notificação é tocada
   void _onNotificationTapped(NotificationResponse response) {
-    // TODO: Implementar navegação para o hábito específico
-    debugPrint('Notification tapped: ${response.payload}');
+    final habitId = response.payload;
+    if (habitId != null && _onNotificationTapCallback != null) {
+      _onNotificationTapCallback!(habitId);
+    } else {
+      debugPrint(
+        'Notification tapped but no callback set: ${response.payload}',
+      );
+    }
   }
 
   /// Solicita permissões de notificação (iOS)

@@ -2415,3 +2415,77 @@ Made changes.
 
 ### Resultado:
 Foi corrigida a navegação para a tela de edição de hábito tanto no botão "Edit" da tela de detalhes quanto na opção "Edit Habit" do menu na tela home. Agora, ao clicar em qualquer um dos botões, o usuário será direcionado para a tela de edição com os campos pré-preenchidos com as informações do hábito selecionado, e após salvar as alterações, os dados serão recarregados corretamente. A funcionalidade de edição está agora completamente acessível a partir de ambos os pontos na interface!
+
+## Iteração 27
+### Promt usado:
+```plaintext
+Ótimo! Agora que a tela de edição do hábito está implementada finalizamos toda parte do hábito, vamos adicionar a funcionalidade de navegação a partir da notificação de lembrete. Quando o usuário clicar na notificação de lembrete, ele deve ser direcionado para a tela de detalhes do hábito correspondente. Para isso, precisamos garantir que a notificação envie o ID do hábito e que a tela de detalhes consiga receber esse ID para carregar as informações corretas. Implemente essa funcionalidade para que a navegação a partir da notificação de lembrete funcione corretamente.
+```
+
+### Output recebido:
+```markdown
+Vou implementar a navegação a partir das notificações de lembrete. Preciso verificar como as notificações estão configuradas e adicionar a lógica de navegação.  
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart#1-1), lines 1 to 100
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart#90-90), lines 90 to 200
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart#200-200), lines 200 to 300
+
+Searched for regex `getHabit|findHabit|habitById` (`**/lib/viewmodels/habit_viewmodel.dart`), 3 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#1-1), lines 1 to 50
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#50-50), lines 50 to 100
+
+Replacing 49 lines with 102 lines in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#25-25), lines 25 to 80
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/services/notification_service.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), no problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart#1-1), lines 1 to 50
+
+Checked , no problems found
+
+Perfeito! Implementei a navegação a partir das notificações de lembrete. Agora quando o usuário clicar em uma notificação, será direcionado para a tela de detalhes do hábito correspondente.
+
+## ✅ Implementação Completa
+
+### 1. **HabitViewModel** - habit_viewmodel.dart
+- Adicionado método `getHabitById(String habitId)` para buscar um hábito específico por ID
+- Retorna `null` se o hábito não for encontrado
+
+### 2. **NotificationService** - notification_service.dart
+- Adicionado campo `_onNotificationTapCallback` para armazenar o callback de navegação
+- Criado método `setOnNotificationTapCallback()` para configurar o callback
+- Modificado `_onNotificationTapped()` para executar o callback com o `habitId` recebido
+- As notificações já estavam enviando o `habit.id` como payload
+
+### 3. **Main.dart** - main.dart
+- Criado `GlobalKey<NavigatorState> navigatorKey` para navegação global
+- Adicionado `navigatorKey` ao `MaterialApp` 
+- Criado função `_handleNotificationTap()` que:
+  - Recebe o `habitId` da notificação
+  - Busca o hábito usando o `HabitViewModel`
+  - Navega para `HabitDetailsView` com o hábito encontrado
+  - Trata casos de erro (contexto nulo ou hábito não encontrado)
+- Configurado o callback no `NotificationService` na inicialização do app
+
+## 🔄 Fluxo Completo
+
+1. **Usuário recebe notificação** → Payload contém o `habitId`
+2. **Usuário clica na notificação** → `_onNotificationTapped()` é chamado
+3. **Callback é executado** → `_handleNotificationTap(habitId)` busca o hábito
+4. **Navegação automática** → Abre `HabitDetailsView` com os detalhes completos do hábito
+
+A funcionalidade está completa e pronta para uso! 🎉
+
+Made changes.
+```
+
+### Resultado:
+A navegação a partir das notificações de lembrete foi implementada com sucesso. Agora, quando o usuário clicar em uma notificação, ele será direcionado para a tela de detalhes do hábito correspondente, onde poderá ver todas as informações e estatísticas do hábito.

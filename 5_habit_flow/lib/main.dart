@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:habit_flow/viewmodels/auth_viewmodel.dart';
 import 'package:habit_flow/viewmodels/habit_viewmodel.dart';
 import 'package:habit_flow/views/onboarding_view.dart';
+import 'package:habit_flow/views/habits/habit_details_view.dart';
 import 'package:habit_flow/services/notification_service.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +18,35 @@ void main() async {
   await notificationService.initialize();
   await notificationService.requestPermissions();
 
+  // Configura o callback para navegação de notificações
+  notificationService.setOnNotificationTapCallback((habitId) {
+    _handleNotificationTap(habitId);
+  });
+
   runApp(const HabitFlowApp());
+}
+
+/// Trata o toque em uma notificação navegando para os detalhes do hábito
+void _handleNotificationTap(String habitId) {
+  final context = navigatorKey.currentContext;
+  if (context == null) {
+    debugPrint('Navigator context is null');
+    return;
+  }
+
+  // Busca o hábito usando o HabitViewModel
+  final habitViewModel = Provider.of<HabitViewModel>(context, listen: false);
+  final habit = habitViewModel.getHabitById(habitId);
+
+  if (habit == null) {
+    debugPrint('Habit not found: $habitId');
+    return;
+  }
+
+  // Navega para a tela de detalhes do hábito
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (context) => HabitDetailsView(habit: habit)),
+  );
 }
 
 class HabitFlowApp extends StatelessWidget {
@@ -29,6 +60,7 @@ class HabitFlowApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => HabitViewModel()),
       ],
       child: MaterialApp(
+        navigatorKey: navigatorKey,
         title: 'Habit Flow',
         debugShowCheckedModeBanner: false,
         theme: _buildLightTheme(),
