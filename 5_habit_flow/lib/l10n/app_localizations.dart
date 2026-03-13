@@ -266,6 +266,12 @@ abstract class AppLocalizations {
   /// **'Email'**
   String get authEmailLabel;
 
+  /// No description provided for @authEmailHint.
+  ///
+  /// In en, this message translates to:
+  /// **'student@example.com'**
+  String get authEmailHint;
+
   /// No description provided for @authPasswordLabel.
   ///
   /// In en, this message translates to:
@@ -385,6 +391,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No user found for this email'**
   String get authErrorUserNotFound;
+
+  /// No description provided for @authErrorUserNotFoundCredential.
+  ///
+  /// In en, this message translates to:
+  /// **'No user found with this credential'**
+  String get authErrorUserNotFoundCredential;
 
   /// No description provided for @authErrorWrongPassword.
   ///

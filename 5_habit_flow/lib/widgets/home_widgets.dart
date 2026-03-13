@@ -251,7 +251,10 @@ class DailyProgressCard extends StatelessWidget {
             children: [
               Text(
                 l10n.dailyProgressTitle,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 '${(percentage * 100).toInt()}%',

@@ -92,9 +92,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
 
   String _localizedHabitError(String? rawError) {
     final l10n = context.l10n;
-    final normalizedError = rawError
-        ?.replaceFirst('Exception: ', '')
-        .trim();
+    final normalizedError = rawError?.replaceFirst('Exception: ', '').trim();
 
     switch (normalizedError) {
       case 'User not authenticated':

@@ -321,7 +321,10 @@ class _StatsViewState extends State<StatsView> {
         children: [
           Text(
             l10n.statsTitle,
-            style: const TextStyle(fontSize: 48 / 1.5, fontWeight: FontWeight.w800),
+            style: const TextStyle(
+              fontSize: 48 / 1.5,
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const Spacer(),
           PopupMenuButton<_StatsRange>(

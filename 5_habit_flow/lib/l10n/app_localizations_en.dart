@@ -95,6 +95,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authEmailLabel => 'Email';
 
   @override
+  String get authEmailHint => 'student@example.com';
+
+  @override
   String get authPasswordLabel => 'Password';
 
   @override
@@ -156,6 +159,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authErrorUserNotFound => 'No user found for this email';
+
+  @override
+  String get authErrorUserNotFoundCredential =>
+      'No user found with this credential';
 
   @override
   String get authErrorWrongPassword => 'Wrong password';

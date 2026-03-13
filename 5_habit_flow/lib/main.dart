@@ -77,7 +77,8 @@ class HabitFlowApp extends StatelessWidget {
         builder: (context, settings, _) {
           return MaterialApp(
             navigatorKey: navigatorKey,
-            onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+            onGenerateTitle: (context) =>
+                AppLocalizations.of(context)!.appTitle,
             debugShowCheckedModeBanner: false,
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),

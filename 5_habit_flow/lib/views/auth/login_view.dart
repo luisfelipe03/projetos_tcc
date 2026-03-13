@@ -412,7 +412,7 @@ class _LoginViewState extends State<LoginView>
             color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
           ),
           decoration: InputDecoration(
-            hintText: 'student@example.com',
+            hintText: context.l10n.authEmailHint,
             hintStyle: TextStyle(
               color: isDarkMode
                   ? Colors.white.withValues(alpha: 0.3)
@@ -734,10 +734,13 @@ class _LoginViewState extends State<LoginView>
       case 'An account already exists for this email':
         return l10n.authErrorEmailAlreadyInUse;
       case 'Email/password accounts are not enabled':
+        return l10n.authErrorOperationNotAllowed;
       case 'Google sign-in is not enabled':
         return l10n.authErrorGoogleDisabled;
       case 'No user found for this email':
         return l10n.authErrorUserNotFound;
+      case 'No user found with this credential':
+        return l10n.authErrorUserNotFoundCredential;
       case 'Wrong password':
         return l10n.authErrorWrongPassword;
       case 'This user account has been disabled':
@@ -757,6 +760,6 @@ class _LoginViewState extends State<LoginView>
       return l10n.authErrorUnexpected;
     }
 
-    return message;
+    return l10n.authErrorUnexpected;
   }
 }

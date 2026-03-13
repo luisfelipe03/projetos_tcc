@@ -2860,3 +2860,119 @@ Próximos passos naturais:
 
 ### Resultado:
 A internacionalização foi feita de forma parcial, cobrindo apenas a tela home, estatísticas e configurações. As telas de criação/edição e detalhes dos hábitos ainda estão com textos hardcoded em inglês, então é necessário completar a internacionalização nessas telas para que o aplicativo esteja totalmente localizado em inglês e português. E a internationalização dos textos causo oververflow em alguns widgets, então é necessário ajustar o layout para suportar os textos mais longos em português.
+
+## Iteração 31
+### Promt usado:
+```plaintext
+Vamos completar a internacionalização das telas de criação/edição, detalhes dos hábitos e login/onboarding. Continue da mesma forma que fez para as outras telas, criando as chaves de tradução necessárias, atualizando os arquivos de localização e corrigindo os textos hardcoded. 
+```
+
+#### Output recebido:
+```markdown
+Perfeito, vou validar o estado atual dessas quatro telas e dos ARBs para identificar exatamente quais textos ainda estão hardcoded antes de aplicar os patches finais de i18n.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart#1-1), lines 1 to 760
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_en.arb)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_pt.arb)
+
+Revisei o estado atual: criação/edição e detalhes já estão majoritariamente localizados, e onboarding também está praticamente completo. O que ainda ficou hardcoded está concentrado em pontos do login (ex.: `hintText` e mapeamento de mensagens), então vou fazer uma varredura precisa e aplicar só os ajustes faltantes com novas chaves ARB se necessário.
+
+Searched for regex `Text\('|hintText: '|SnackBar\(|AlertDialog\(|showDialog\(|RichText\(|Tab\(text: '|Tooltip\(|Semantics\(` (`**/lib/views/auth/login_view.dart`), 9 results
+
+Searched for regex `Text\('|hintText: '|SnackBar\(|AlertDialog\(|showDialog\(|RichText\(|Tooltip\(` (`**/lib/views/onboarding_view.dart`), 1 result
+
+Searched for regex `Text\('|hintText: '|SnackBar\(|AlertDialog\(|showDialog\(|PopupMenuItem\(|label: Text\('|title: Text\(` (`**/lib/views/habits/create_habit_view.dart`), 7 results
+
+Searched for regex `Text\('|hintText: '|SnackBar\(|AlertDialog\(|showDialog\(|PopupMenuItem\(|label: Text\('|title: Text\(` (`**/lib/views/habits/habit_details_view.dart`), 8 results
+
+Encontrei pouquíssimo pendente: nas telas de hábitos não sobrou texto visível hardcoded, e no onboarding também está ok. Vou fechar o login com os últimos ajustes de i18n (hint de e-mail e cobertura completa das mensagens de erro do `AuthViewModel`) para evitar qualquer fallback em inglês na UI.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/auth_viewmodel.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/l10n.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/l10n.yaml)
+
+Searched for regex `'[^']*[A-Za-z][^']*'` (`**/lib/views/habits/create_habit_view.dart`), 15 results
+
+Searched for regex `'[^']*[A-Za-z][^']*'` (`**/lib/views/habits/habit_details_view.dart`), 21 results
+
+Searched for regex `'[^']*[A-Za-z][^']*'` (`**/lib/views/auth/login_view.dart`), 27 results
+
+Searched for regex `'[^']*[A-Za-z][^']*'` (`**/lib/views/onboarding_view.dart`), 4 results
+
+Vou aplicar um patch pequeno e focado no login: remover o `hintText` em inglês fixo, cobrir a mensagem de erro do Google que faltava no mapeamento e evitar fallback em inglês para mensagens desconhecidas. Em seguida, regenero o l10n e valido tudo.
+
+Generating patch (51 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_en.arb), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_pt.arb), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
+
+
+```
+
+```
+
+```
+
+```
+
+```
+
+```
+
+
+Ran terminal command:  flutter gen-l10n
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), no problems found
+
+Searched for regex `hintText: 'student@example.com'|Text\('Welcome Back'\)|Text\('Create Account'\)|Text\('Get Started'\)|Text\('I already have an account'\)|Text\('Edit Habit'\)|Text\('New Habit'\)|Text\('HABIT DETAILS'\)|Text\('This Week'\)|Text\('Monthly Overview'\)` (`**/lib/views/{auth,onboarding,habits}/**`), no results
+
+Ajustes aplicados e compilando. Vou só confirmar o diff efetivo para te devolver um resumo objetivo dos arquivos atualizados nesta rodada.
+
+Read changed files in the active git repository
+
+Internacionalização dessas telas foi fechada com os últimos ajustes que faltavam no login, e validei que criação/edição, detalhes e onboarding já estavam consistentes.
+
+O que foi feito:
+- Adicionei novas chaves de tradução:
+  - `authEmailHint`
+  - `authErrorUserNotFoundCredential`
+- Atualizei os ARBs:
+  - app_en.arb
+  - app_pt.arb
+- Atualizei o login para remover texto hardcoded e melhorar mapeamento de erros:
+  - login_view.dart
+  - `hintText` de e-mail agora usa `context.l10n.authEmailHint`
+  - `Email/password accounts are not enabled` agora usa `authErrorOperationNotAllowed`
+  - `No user found with this credential` agora usa `authErrorUserNotFoundCredential`
+  - fallback final de erro agora retorna `authErrorUnexpected` (evita texto cru em inglês)
+
+Validação:
+- Regeneração de localizações executada com `flutter gen-l10n`.
+- Sem erros de análise em:
+  - login_view.dart
+  - onboarding_view.dart
+  - create_habit_view.dart
+  - habit_details_view.dart
+  - main.dart
+
+Resumo do status por tela:
+- create_habit_view.dart: sem hardcoded visível pendente.
+- habit_details_view.dart: sem hardcoded visível pendente.
+- onboarding_view.dart: sem hardcoded visível pendente.
+- login_view.dart: pendências resolvidas nesta iteração.
+
+Próximo passo natural:
+1. Rodar um teste manual rápido alternando idioma em Configurações e passando pelos fluxos de Onboarding -> Login -> Criar hábito -> Detalhes para confirmar UX final em `pt` e `en`.
+
+Made changes.
+```
+
+### Resultado:
+Todas as telas estão agora completamente internacionalizadas, sem textos hardcoded em inglês. Agora vamos ter que fazer alguns ajustes de layout para suportar os textos mais longos em português, especialmente nos botões. 

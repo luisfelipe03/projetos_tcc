@@ -96,6 +96,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get authEmailLabel => 'E-mail';
 
   @override
+  String get authEmailHint => 'aluno@exemplo.com';
+
+  @override
   String get authPasswordLabel => 'Senha';
 
   @override
@@ -158,6 +161,10 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get authErrorUserNotFound =>
       'Nenhum usuário encontrado para este e-mail';
+
+  @override
+  String get authErrorUserNotFoundCredential =>
+      'Nenhum usuário encontrado com esta credencial';
 
   @override
   String get authErrorWrongPassword => 'Senha incorreta';
