@@ -44,7 +44,7 @@ class _HomeViewState extends State<HomeView> {
       case 1:
         return const StatsView();
       case 2:
-        return const SettingsView();
+        return SettingsView(onBack: () => _onNavTap(0));
       default:
         return _buildHomeScreen();
     }

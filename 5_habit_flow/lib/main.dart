@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:habit_flow/viewmodels/auth_viewmodel.dart';
 import 'package:habit_flow/viewmodels/habit_viewmodel.dart';
+import 'package:habit_flow/viewmodels/settings_viewmodel.dart';
 import 'package:habit_flow/views/onboarding_view.dart';
 import 'package:habit_flow/views/habits/habit_details_view.dart';
 import 'package:habit_flow/services/notification_service.dart';
@@ -13,17 +15,22 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
 
+  final settingsViewModel = SettingsViewModel();
+  await settingsViewModel.loadPreferences();
+
   // Inicializa o serviço de notificações
   final notificationService = NotificationService();
   await notificationService.initialize();
-  await notificationService.requestPermissions();
+  if (settingsViewModel.notificationsEnabled) {
+    await notificationService.requestPermissions();
+  }
 
   // Configura o callback para navegação de notificações
   notificationService.setOnNotificationTapCallback((habitId) {
     _handleNotificationTap(habitId);
   });
 
-  runApp(const HabitFlowApp());
+  runApp(HabitFlowApp(settingsViewModel: settingsViewModel));
 }
 
 /// Trata o toque em uma notificação navegando para os detalhes do hábito
@@ -50,7 +57,9 @@ void _handleNotificationTap(String habitId) {
 }
 
 class HabitFlowApp extends StatelessWidget {
-  const HabitFlowApp({super.key});
+  final SettingsViewModel settingsViewModel;
+
+  const HabitFlowApp({super.key, required this.settingsViewModel});
 
   @override
   Widget build(BuildContext context) {
@@ -58,15 +67,29 @@ class HabitFlowApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => HabitViewModel()),
+        ChangeNotifierProvider<SettingsViewModel>.value(
+          value: settingsViewModel,
+        ),
       ],
-      child: MaterialApp(
-        navigatorKey: navigatorKey,
-        title: 'Habit Flow',
-        debugShowCheckedModeBanner: false,
-        theme: _buildLightTheme(),
-        darkTheme: _buildDarkTheme(),
-        themeMode: ThemeMode.system,
-        home: const OnboardingView(),
+      child: Consumer<SettingsViewModel>(
+        builder: (context, settings, _) {
+          return MaterialApp(
+            navigatorKey: navigatorKey,
+            title: 'Habit Flow',
+            debugShowCheckedModeBanner: false,
+            theme: _buildLightTheme(),
+            darkTheme: _buildDarkTheme(),
+            themeMode: settings.themeMode,
+            locale: settings.locale,
+            supportedLocales: const [Locale('en'), Locale('pt')],
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: const OnboardingView(),
+          );
+        },
       ),
     );
   }

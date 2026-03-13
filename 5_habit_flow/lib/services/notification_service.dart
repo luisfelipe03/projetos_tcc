@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tz;
 import '../models/habit.dart';
@@ -98,6 +99,9 @@ class NotificationService {
   /// Agenda notificação para um hábito
   Future<void> scheduleHabitReminder(Habit habit) async {
     if (habit.reminder == null) return;
+
+    final notificationsEnabled = await _areNotificationsEnabled();
+    if (!notificationsEnabled) return;
 
     await initialize();
 
@@ -310,9 +314,14 @@ class NotificationService {
     }
   }
 
-  /// Cancela todas as notificações
+  /// Cancela todas as notificações agendadas
   Future<void> cancelAllNotifications() async {
     await _notifications.cancelAll();
+  }
+
+  Future<bool> _areNotificationsEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('settings.notifications_enabled') ?? true;
   }
 
   /// Obtém todas as notificações pendentes
