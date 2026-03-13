@@ -56,11 +56,12 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final pageBackground = isDark
+        ? const Color(0xFF071533)
+        : const Color(0xFFF3F4F8);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? const Color(0xFF0F0D15)
-          : const Color(0xFFF8F9FA),
+      backgroundColor: pageBackground,
       body: _getCurrentScreen(),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentNavIndex,
@@ -136,7 +137,7 @@ class _HomeViewState extends State<HomeView> {
     final userName =
         authViewModel.user?.displayName ??
         authViewModel.user?.email?.split('@')[0] ??
-      l10n.homeUserFallback;
+        l10n.homeUserFallback;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -166,8 +167,8 @@ class _HomeViewState extends State<HomeView> {
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: isDark
-                          ? const Color(0xFF0F0D15)
-                          : const Color(0xFFF8F9FA),
+                          ? const Color(0xFF071533)
+                          : const Color(0xFFF3F4F8),
                       width: 2,
                     ),
                   ),

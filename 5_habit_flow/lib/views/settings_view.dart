@@ -33,10 +33,10 @@ class SettingsView extends StatelessWidget {
             _buildHeader(context, isDark, strings),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
                 children: [
                   _buildSectionTitle(strings.account, isDark),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   _buildSettingsGroup(isDark, [
                     _buildItem(
                       isDark: isDark,
@@ -49,9 +49,9 @@ class SettingsView extends StatelessWidget {
                       },
                     ),
                   ]),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildSectionTitle(strings.preferences, isDark),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   _buildSettingsGroup(isDark, [
                     _buildItem(
                       isDark: isDark,
@@ -84,7 +84,7 @@ class SettingsView extends StatelessWidget {
                       icon: Icons.language,
                       iconColor: const Color(0xFFF97316),
                       title: strings.language,
-                        trailingText: strings.currentLanguage,
+                      trailingText: strings.currentLanguage,
                       onTap: () {
                         _showLanguageSheet(
                           context,
@@ -95,9 +95,9 @@ class SettingsView extends StatelessWidget {
                       },
                     ),
                   ]),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   _buildSectionTitle(strings.support, isDark),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
                   _buildSettingsGroup(isDark, [
                     _buildItem(
                       isDark: isDark,
@@ -119,14 +119,14 @@ class SettingsView extends StatelessWidget {
                       },
                     ),
                   ]),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 24),
                   _buildLogoutButton(context, authViewModel, strings, isDark),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 14),
                   Center(
                     child: Text(
                       'Version 2.4.0',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.45)
                             : const Color(0xFF94A3B8),
@@ -149,12 +149,12 @@ class SettingsView extends StatelessWidget {
     _SettingsStrings strings,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+      padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
       child: Row(
         children: [
           IconButton(
             onPressed: onBack,
-            icon: const Icon(Icons.chevron_left_rounded, size: 34),
+            icon: const Icon(Icons.chevron_left_rounded, size: 30),
             color: onBack != null
                 ? (isDark ? Colors.white : const Color(0xFF0F172A))
                 : Colors.transparent,
@@ -164,13 +164,13 @@ class SettingsView extends StatelessWidget {
               strings.settings,
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 40 / 1.5,
+                fontSize: 24,
                 fontWeight: FontWeight.w800,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
             ),
           ),
-          const SizedBox(width: 48),
+          const SizedBox(width: 44),
         ],
       ),
     );
@@ -182,9 +182,9 @@ class SettingsView extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 34 / 2,
+          fontSize: 15,
           fontWeight: FontWeight.w800,
-          letterSpacing: 1.1,
+          letterSpacing: 0.9,
           color: isDark
               ? Colors.white.withValues(alpha: 0.6)
               : const Color(0xFF64748B),
@@ -197,7 +197,7 @@ class SettingsView extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1C2944) : Colors.white,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: isDark
               ? Colors.white.withValues(alpha: 0.08)
@@ -206,8 +206,8 @@ class SettingsView extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: isDark ? 0.24 : 0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 5),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -235,14 +235,14 @@ class SettingsView extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         child: Row(
           children: [
             _buildIconBubble(icon: icon, iconColor: iconColor),
-            const SizedBox(width: 14),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,17 +250,19 @@ class SettingsView extends StatelessWidget {
                   Text(
                     title,
                     style: TextStyle(
-                      fontSize: 37 / 2,
+                      fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: isDark ? Colors.white : const Color(0xFF0F172A),
                     ),
                   ),
                   if (subtitle != null) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 34 / 2,
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: isDark
                             ? Colors.white.withValues(alpha: 0.6)
@@ -273,11 +275,13 @@ class SettingsView extends StatelessWidget {
             ),
             if (trailingText != null)
               Padding(
-                padding: const EdgeInsets.only(right: 10),
+                padding: const EdgeInsets.only(right: 8),
                 child: Text(
                   trailingText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 17,
+                    fontSize: 14,
                     fontWeight: FontWeight.w500,
                     color: isDark
                         ? Colors.white.withValues(alpha: 0.58)
@@ -290,7 +294,7 @@ class SettingsView extends StatelessWidget {
               color: isDark
                   ? Colors.white.withValues(alpha: 0.32)
                   : const Color(0xFFCBD5E1),
-              size: 30,
+              size: 28,
             ),
           ],
         ),
@@ -307,16 +311,16 @@ class SettingsView extends StatelessWidget {
     required ValueChanged<bool> onChanged,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
           _buildIconBubble(icon: icon, iconColor: iconColor),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               title,
               style: TextStyle(
-                fontSize: 37 / 2,
+                fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: isDark ? Colors.white : const Color(0xFF0F172A),
               ),
@@ -339,13 +343,13 @@ class SettingsView extends StatelessWidget {
 
   Widget _buildIconBubble({required IconData icon, required Color iconColor}) {
     return Container(
-      width: 76,
-      height: 76,
+      width: 54,
+      height: 54,
       decoration: BoxDecoration(
         color: iconColor.withValues(alpha: 0.20),
         shape: BoxShape.circle,
       ),
-      child: Icon(icon, color: iconColor, size: 34),
+      child: Icon(icon, color: iconColor, size: 26),
     );
   }
 
@@ -372,21 +376,21 @@ class SettingsView extends StatelessWidget {
           (route) => false,
         );
       },
-      icon: const Icon(Icons.logout, size: 32),
+      icon: const Icon(Icons.logout, size: 26),
       label: Text(
         strings.logOut,
-        style: const TextStyle(fontSize: 41 / 2, fontWeight: FontWeight.w700),
+        style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
       ),
       style: OutlinedButton.styleFrom(
         foregroundColor: const Color(0xFFF87171),
         side: BorderSide(
           color: const Color(0xFFF87171).withValues(alpha: 0.45),
         ),
-        minimumSize: const Size(double.infinity, 72),
+        minimumSize: const Size(double.infinity, 64),
         backgroundColor: isDark
             ? const Color(0xFF1C2944)
             : Colors.white.withValues(alpha: 0.7),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       ),
     );
   }
@@ -646,7 +650,6 @@ class SettingsView extends StatelessWidget {
   Color _pageBackground(bool isDark) {
     return isDark ? const Color(0xFF071533) : const Color(0xFFF3F4F8);
   }
-
 }
 
 class _SettingsStrings {
