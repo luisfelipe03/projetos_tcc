@@ -144,10 +144,26 @@
   "settingsDarkMode": "Dark Mode",
   "settingsLanguage": "Language",
   "settingsSupport": "SUPPORT",
+  "settingsDevelopment": "DEVELOPMENT",
   "settingsAbout": "About",
   "settingsAboutContent": "Habit Flow\nVersion 2.4.0",
   "settingsHelpSupport": "Help & Support",
   "settingsHelpSoon": "Help center coming soon",
+  "settingsSeedDatabase": "Populate Test Data",
+  "settingsSeedDatabaseSubtitle": "Create fake habits and completion history",
+  "settingsSeederInProgress": "Creating fake data...",
+  "settingsSeederSuccess": "{habits} habits and {completions} completions created",
+  "@settingsSeederSuccess": {
+    "placeholders": {
+      "habits": {
+        "type": "int"
+      },
+      "completions": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSeederFailed": "Failed to create fake data",
   "settingsChooseLanguage": "Choose language",
   "settingsLogOut": "Log Out",
   "settingsLogoutConfirm": "Are you sure you want to log out?",

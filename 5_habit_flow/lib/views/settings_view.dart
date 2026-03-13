@@ -119,6 +119,21 @@ class SettingsView extends StatelessWidget {
                       },
                     ),
                   ]),
+                  const SizedBox(height: 20),
+                  _buildSectionTitle(strings.development, isDark),
+                  const SizedBox(height: 10),
+                  _buildSettingsGroup(isDark, [
+                    _buildItem(
+                      isDark: isDark,
+                      icon: Icons.science,
+                      iconColor: const Color(0xFF14B8A6),
+                      title: strings.seedDatabase,
+                      subtitle: strings.seedDatabaseSubtitle,
+                      onTap: () {
+                        _runSeeder(context, strings);
+                      },
+                    ),
+                  ]),
                   const SizedBox(height: 24),
                   _buildLogoutButton(context, authViewModel, strings, isDark),
                   const SizedBox(height: 14),
@@ -596,6 +611,50 @@ class SettingsView extends StatelessWidget {
     }
   }
 
+  Future<void> _runSeeder(
+    BuildContext context,
+    _SettingsStrings strings,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(SnackBar(content: Text(strings.seederInProgress)));
+
+    try {
+      final result = await context
+          .read<HabitViewModel>()
+          .seedFakeDataForDevelopment(clearExistingData: true);
+
+      if (!context.mounted) {
+        return;
+      }
+
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            strings.seederSuccess(
+              result.habitsCreated,
+              result.completionsCreated,
+            ),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (_) {
+      if (!context.mounted) {
+        return;
+      }
+
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(strings.seederFailed),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Future<bool?> _showLogoutConfirmation(
     BuildContext context,
     _SettingsStrings strings,
@@ -665,10 +724,16 @@ class _SettingsStrings {
   final String darkMode;
   final String language;
   final String support;
+  final String development;
   final String about;
   final String aboutContent;
   final String helpSupport;
   final String helpSoon;
+  final String seedDatabase;
+  final String seedDatabaseSubtitle;
+  final String seederInProgress;
+  final String Function(int habits, int completions) seederSuccess;
+  final String seederFailed;
   final String chooseLanguage;
   final String logOut;
   final String logoutConfirm;
@@ -688,10 +753,16 @@ class _SettingsStrings {
     required this.darkMode,
     required this.language,
     required this.support,
+    required this.development,
     required this.about,
     required this.aboutContent,
     required this.helpSupport,
     required this.helpSoon,
+    required this.seedDatabase,
+    required this.seedDatabaseSubtitle,
+    required this.seederInProgress,
+    required this.seederSuccess,
+    required this.seederFailed,
     required this.chooseLanguage,
     required this.logOut,
     required this.logoutConfirm,
@@ -713,10 +784,17 @@ class _SettingsStrings {
       darkMode: l10n.settingsDarkMode,
       language: l10n.settingsLanguage,
       support: l10n.settingsSupport,
+      development: l10n.settingsDevelopment,
       about: l10n.settingsAbout,
       aboutContent: l10n.settingsAboutContent,
       helpSupport: l10n.settingsHelpSupport,
       helpSoon: l10n.settingsHelpSoon,
+      seedDatabase: l10n.settingsSeedDatabase,
+      seedDatabaseSubtitle: l10n.settingsSeedDatabaseSubtitle,
+      seederInProgress: l10n.settingsSeederInProgress,
+      seederSuccess: (habits, completions) =>
+          l10n.settingsSeederSuccess(habits, completions),
+      seederFailed: l10n.settingsSeederFailed,
       chooseLanguage: l10n.settingsChooseLanguage,
       logOut: l10n.settingsLogOut,
       logoutConfirm: l10n.settingsLogoutConfirm,

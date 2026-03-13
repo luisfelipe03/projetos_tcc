@@ -3169,3 +3169,134 @@ Made changes.
 
 ### Resultado:
 O botão FAB foi removido das telas de estatísticas e configurações, permanecendo apenas natela home onde é utilizado para criar um novo hábito. Isso ajuda a reduzir a distração visual nessas telas e mantém o foco na funcionalidade principal de cada seção.
+
+## Iteração 35
+### Promt usado:
+```plaintext
+Agora para testar nossa aplicação, vamos desenvolver um seeder para popular o banco de dados com dados falsos. O seeder deve criar uma série de hábitos falsos com diferentes categorias, frequências e status de conclusão para que possamos testar a visualização de dados nas telas de estatísticas e detalhes dos hábitos. Implemente esse seeder e ele deve ser executado através de um botão na tela de configurações, para que possamos popular o banco de dados facilmente durante o desenvolvimento e testes. Garanta que o seeder crie uma variedade de hábitos para cobrir diferentes cenários de visualização, como hábitos com alta frequência, hábitos concluídos e não concluídos, e hábitos de diferentes categorias.
+```
+
+### Output recebido:
+```markdown
+Perfeito, vou mapear rapidamente onde criar o seeder e onde encaixar o botão na tela de configurações sem quebrar os fluxos atuais, e em seguida já implemento ponta a ponta com validação.
+
+Search complete: Find seeder integration points
+
+Searched for files matching `**/*`, 112 matches
+
+Searched for regex `Firestore|FirebaseFirestore|collection\(|doc\(|set\(|add\(|update\(|delete\(` (`**/lib/**/*.dart`), 98 results
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#1-1), lines 1 to 260
+
+Read [](file:///Users/felipe/Library/Application%20Support/Code/User/workspaceStorage/2baa9506dffe7b1da3fe85183690d9a0/GitHub.copilot-chat/chat-session-resources/f2b07b07-59f5-4703-a925-53c593457d4f/call_vCK71I9f9jz47mEkUKyAEo6n__vscode-1773361411324/content.txt#1-1), lines 1 to 320
+
+Read [](file:///Users/felipe/Library/Application%20Support/Code/User/workspaceStorage/2baa9506dffe7b1da3fe85183690d9a0/GitHub.copilot-chat/chat-session-resources/f2b07b07-59f5-4703-a925-53c593457d4f/call_vCK71I9f9jz47mEkUKyAEo6n__vscode-1773361411324/content.txt#321-321), lines 321 to 760
+
+Antes de codar o seeder, vou checar as regras de exibição por frequência e os enums (categoria/cor/dias) para gerar dados sintéticos consistentes com o comportamento real do app.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_frequency.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_category.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/habit_color.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/day_of_week.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/models/reminder_repeat.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/pubspec.yaml)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#1-1), lines 1 to 220
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#220-220), lines 220 to 633
+
+Contexto confirmado. Vou implementar o seeder no `HabitViewModel` (com limpeza opcional + geração variada de hábitos/completions) e depois expor um botão dedicado em Configurações com feedback via SnackBar. Em seguida atualizo traduções e valido.
+
+Generating patch (341 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+
+Vou adicionar as chaves de tradução do seeder (botão + mensagens) e em seguida integrar o botão na Settings com feedback de execução.
+
+Generating patch (54 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_en.arb), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_pt.arb)
+
+
+
+Generating patch (129 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart)
+
+Seeder e botão já foram integrados, com mensagens localizadas e execução via Settings. Próximo passo é regenerar as classes de localização e validar erros de compilação/análise nos arquivos alterados.
+
+Ran terminal command:  flutter gen-l10n
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/l10n.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), no problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_localizations.dart#1-1), lines 1 to 420
+
+Read changed files in the active git repository
+
+Vou formatar os dois arquivos alterados para normalizar indentação e facilitar manutenção, depois rodo uma validação final.
+
+Ran terminal command:  dart format lib/viewmodels/habit_viewmodel.dart lib/views/settings_view.dart
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_localizations.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_localizations_en.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_localizations_pt.dart), no problems found
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart#90-90), lines 90 to 260
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/settings_view.dart#560-560), lines 560 to 808
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart#620-620), lines 620 to 954
+
+Seeder implementado com botão na tela de Configurações, pronto para uso em desenvolvimento/testes.
+
+**O que foi implementado**
+- Seeder completo no `HabitViewModel`:
+  - Arquivo: habit_viewmodel.dart
+  - Novo método público: `seedFakeDataForDevelopment({bool clearExistingData = true})`
+  - Gera um dataset variado com:
+    - diferentes categorias (`health`, `personal`, `study`, `social`, `finance`)
+    - diferentes frequências (`daily`, `weekly`, `monthly`)
+    - diferentes níveis de conclusão (alto, médio, baixo, zero)
+    - hábitos com streak recente e hábitos sem conclusão
+  - Cria hábitos + históricos de conclusão (`habitCompletions`) em batch.
+  - Faz limpeza de dados do usuário antes de semear (configurado como `true` na UI), para evitar duplicação e manter cenário previsível.
+  - Atualiza cache local (`loadHabits()` e `loadCompletionsForDate()`).
+
+- Botão para executar seeder na Settings:
+  - Arquivo: settings_view.dart
+  - Nova seção `DEVELOPMENT` com ação `Populate Test Data` / `Popular dados de teste`.
+  - Ao tocar no item:
+    - mostra feedback de progresso
+    - executa seeder
+    - mostra `SnackBar` de sucesso com contagem de hábitos e conclusões criados
+    - mostra erro em caso de falha
+
+- Internacionalização das novas strings:
+  - Arquivos:
+    - app_en.arb
+    - app_pt.arb
+  - Chaves novas (seeder/settings development):
+    - `settingsDevelopment`
+    - `settingsSeedDatabase`
+    - `settingsSeedDatabaseSubtitle`
+    - `settingsSeederInProgress`
+    - `settingsSeederSuccess`
+    - `settingsSeederFailed`
+  - Localizations regeneradas (`flutter gen-l10n`).
+
+**Validação**
+- Sem erros de análise nos arquivos alterados.
+- Arquivos formatados com `dart format`.
+
+**Como usar**
+1. Abra `Settings`.
+2. Vá na seção `DEVELOPMENT` / `DESENVOLVIMENTO`.
+3. Toque em `Populate Test Data` / `Popular dados de teste`.
+
+Observação importante: a ação atual limpa os hábitos/completions existentes do usuário logado antes de inserir o dataset fake (comportamento intencional para testes consistentes).
+
+Made changes.
+```
+
+### Resultado:
+O seeder foi implementado com sucesso, permitindo popular o banco de dados com dados falsos para testes. O botão para executar o seeder foi adicionado na tela de configurações, eas mensagens de feedback foram localizadas para inglês e português. Mas a aplicação não está consultando os habitos concluidos, então os gráficos de estatísticas e os detalhes dos hábitos não estão refletindo os dados semeados. O próximo passo é tentar identificar por que os hábitos concluídos não estão marcados como concluídos.

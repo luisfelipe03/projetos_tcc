@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math' as math;
 import 'package:uuid/uuid.dart';
 import '../models/habit.dart';
 import '../models/habit_completion.dart';
@@ -9,6 +10,40 @@ import '../models/habit_category.dart';
 import '../models/habit_color.dart';
 import '../models/habit_reminder.dart';
 import '../services/notification_service.dart';
+
+class HabitSeedResult {
+  final int habitsCreated;
+  final int completionsCreated;
+  final bool clearedExistingData;
+
+  const HabitSeedResult({
+    required this.habitsCreated,
+    required this.completionsCreated,
+    required this.clearedExistingData,
+  });
+}
+
+class _SeedHabitTemplate {
+  final String title;
+  final HabitFrequency frequency;
+  final HabitCategory category;
+  final HabitColor color;
+  final int createdDaysAgo;
+  final double completionRate;
+  final List<int> selectedWeekDays;
+  final int recentStreakDays;
+
+  const _SeedHabitTemplate({
+    required this.title,
+    required this.frequency,
+    required this.category,
+    required this.color,
+    required this.createdDaysAgo,
+    required this.completionRate,
+    this.selectedWeekDays = const [],
+    this.recentStreakDays = 0,
+  });
+}
 
 class HabitViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -628,5 +663,291 @@ class HabitViewModel extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+
+  /// Popula o banco com dados sintéticos para testes de UI/estatísticas.
+  Future<HabitSeedResult> seedFakeDataForDevelopment({
+    bool clearExistingData = true,
+  }) async {
+    try {
+      _setLoading(true);
+      _setError(null);
+
+      final uid = userId;
+      if (uid == null) {
+        throw Exception('User not authenticated');
+      }
+
+      if (clearExistingData) {
+        await _clearUserSeedData(uid);
+      }
+
+      final today = _normalizeDate(DateTime.now());
+      final templates = _buildSeedTemplates();
+
+      final habitsCollection = _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('habits');
+
+      final createdHabits = <Habit>[];
+      final habitBatch = _firestore.batch();
+
+      for (final template in templates) {
+        final createdAt = today.subtract(
+          Duration(days: template.createdDaysAgo),
+        );
+        final habit = Habit(
+          id: _uuid.v4(),
+          title: template.title,
+          frequency: template.frequency,
+          category: template.category,
+          habitColor: template.color,
+          reminder: null,
+          createdAt: createdAt,
+          selectedWeekDays: template.selectedWeekDays,
+        );
+
+        habitBatch.set(habitsCollection.doc(habit.id), habit.toMap());
+        createdHabits.add(habit);
+      }
+
+      await habitBatch.commit();
+
+      final completionsCollection = _firestore.collection('habitCompletions');
+      final completionDocs = <Map<String, dynamic>>[];
+
+      for (var i = 0; i < createdHabits.length; i++) {
+        final habit = createdHabits[i];
+        final template = templates[i];
+
+        for (
+          var day = _normalizeDate(habit.createdAt);
+          !day.isAfter(today);
+          day = day.add(const Duration(days: 1))
+        ) {
+          if (!habit.shouldShowOnDate(day)) {
+            continue;
+          }
+
+          final withinRecentStreak =
+              template.recentStreakDays > 0 &&
+              day.isAfter(
+                today.subtract(Duration(days: template.recentStreakDays)),
+              );
+
+          final shouldComplete = withinRecentStreak
+              ? true
+              : _seedCompletionDecision(
+                  habitId: habit.id,
+                  date: day,
+                  completionRate: template.completionRate,
+                );
+
+          if (!shouldComplete) {
+            continue;
+          }
+
+          final completion = HabitCompletion(
+            id: _uuid.v4(),
+            habitId: habit.id,
+            userId: uid,
+            completedAt: day,
+          );
+
+          completionDocs.add(completion.toMap());
+        }
+      }
+
+      await _insertCompletionDocsInBatches(
+        completionDocs,
+        completionsCollection,
+      );
+
+      await loadHabits();
+      await loadCompletionsForDate(today);
+
+      _setLoading(false);
+      return HabitSeedResult(
+        habitsCreated: createdHabits.length,
+        completionsCreated: completionDocs.length,
+        clearedExistingData: clearExistingData,
+      );
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      rethrow;
+    }
+  }
+
+  List<_SeedHabitTemplate> _buildSeedTemplates() {
+    return const [
+      _SeedHabitTemplate(
+        title: 'Drink 2L of water',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.health,
+        color: HabitColor.blue,
+        createdDaysAgo: 90,
+        completionRate: 0.92,
+        recentStreakDays: 14,
+      ),
+      _SeedHabitTemplate(
+        title: 'Morning meditation',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.personal,
+        color: HabitColor.green,
+        createdDaysAgo: 60,
+        completionRate: 0.78,
+        recentStreakDays: 9,
+      ),
+      _SeedHabitTemplate(
+        title: 'Workout routine',
+        frequency: HabitFrequency.weekly,
+        category: HabitCategory.health,
+        color: HabitColor.red,
+        createdDaysAgo: 75,
+        completionRate: 0.66,
+        selectedWeekDays: [1, 3, 5],
+      ),
+      _SeedHabitTemplate(
+        title: 'Study Flutter',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.study,
+        color: HabitColor.purple,
+        createdDaysAgo: 55,
+        completionRate: 0.58,
+      ),
+      _SeedHabitTemplate(
+        title: 'Read 20 pages',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.study,
+        color: HabitColor.orange,
+        createdDaysAgo: 45,
+        completionRate: 0.37,
+      ),
+      _SeedHabitTemplate(
+        title: 'Review weekly budget',
+        frequency: HabitFrequency.weekly,
+        category: HabitCategory.finance,
+        color: HabitColor.green,
+        createdDaysAgo: 85,
+        completionRate: 0.52,
+        selectedWeekDays: [7],
+      ),
+      _SeedHabitTemplate(
+        title: 'Monthly planning',
+        frequency: HabitFrequency.monthly,
+        category: HabitCategory.finance,
+        color: HabitColor.purple,
+        createdDaysAgo: 120,
+        completionRate: 0.12,
+      ),
+      _SeedHabitTemplate(
+        title: 'Call family',
+        frequency: HabitFrequency.weekly,
+        category: HabitCategory.social,
+        color: HabitColor.blue,
+        createdDaysAgo: 70,
+        completionRate: 0.44,
+        selectedWeekDays: [2, 6],
+      ),
+      _SeedHabitTemplate(
+        title: 'No sugar day',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.health,
+        color: HabitColor.orange,
+        createdDaysAgo: 25,
+        completionRate: 0.21,
+      ),
+      _SeedHabitTemplate(
+        title: 'Evening walk',
+        frequency: HabitFrequency.daily,
+        category: HabitCategory.personal,
+        color: HabitColor.red,
+        createdDaysAgo: 18,
+        completionRate: 0.0,
+      ),
+    ];
+  }
+
+  bool _seedCompletionDecision({
+    required String habitId,
+    required DateTime date,
+    required double completionRate,
+  }) {
+    if (completionRate <= 0) {
+      return false;
+    }
+    if (completionRate >= 1) {
+      return true;
+    }
+
+    final key = '${habitId}_${date.year}_${date.month}_${date.day}';
+    final random = math.Random(key.hashCode);
+    return random.nextDouble() < completionRate;
+  }
+
+  Future<void> _insertCompletionDocsInBatches(
+    List<Map<String, dynamic>> completionDocs,
+    CollectionReference<Map<String, dynamic>> completionsCollection,
+  ) async {
+    if (completionDocs.isEmpty) {
+      return;
+    }
+
+    const batchSize = 400;
+    for (var i = 0; i < completionDocs.length; i += batchSize) {
+      final end = math.min(i + batchSize, completionDocs.length);
+      final batch = _firestore.batch();
+
+      for (final data in completionDocs.sublist(i, end)) {
+        final docRef = completionsCollection.doc(data['id'] as String);
+        batch.set(docRef, data);
+      }
+
+      await batch.commit();
+    }
+  }
+
+  Future<void> _clearUserSeedData(String uid) async {
+    final habitSnapshot = await _firestore
+        .collection('users')
+        .doc(uid)
+        .collection('habits')
+        .get();
+
+    final completionSnapshot = await _firestore
+        .collection('habitCompletions')
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    await _deleteDocsInBatches(habitSnapshot.docs.map((doc) => doc.reference));
+    await _deleteDocsInBatches(
+      completionSnapshot.docs.map((doc) => doc.reference),
+    );
+
+    await _notificationService.cancelAllNotifications();
+
+    _habits.clear();
+    _completionsByDate.clear();
+    notifyListeners();
+  }
+
+  Future<void> _deleteDocsInBatches(
+    Iterable<DocumentReference<Map<String, dynamic>>> refs,
+  ) async {
+    const batchSize = 400;
+    final references = refs.toList();
+
+    for (var i = 0; i < references.length; i += batchSize) {
+      final end = math.min(i + batchSize, references.length);
+      final batch = _firestore.batch();
+
+      for (final ref in references.sublist(i, end)) {
+        batch.delete(ref);
+      }
+
+      await batch.commit();
+    }
   }
 }

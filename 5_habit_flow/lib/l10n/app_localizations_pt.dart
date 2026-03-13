@@ -344,6 +344,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settingsSupport => 'SUPORTE';
 
   @override
+  String get settingsDevelopment => 'DESENVOLVIMENTO';
+
+  @override
   String get settingsAbout => 'Sobre';
 
   @override
@@ -354,6 +357,24 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get settingsHelpSoon => 'Central de ajuda em breve';
+
+  @override
+  String get settingsSeedDatabase => 'Popular dados de teste';
+
+  @override
+  String get settingsSeedDatabaseSubtitle =>
+      'Cria hábitos falsos e histórico de conclusões';
+
+  @override
+  String get settingsSeederInProgress => 'Criando dados falsos...';
+
+  @override
+  String settingsSeederSuccess(int habits, int completions) {
+    return '$habits hábitos e $completions conclusões criados';
+  }
+
+  @override
+  String get settingsSeederFailed => 'Não foi possível criar dados falsos';
 
   @override
   String get settingsChooseLanguage => 'Escolha o idioma';

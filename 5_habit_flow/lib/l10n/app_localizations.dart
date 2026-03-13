@@ -710,6 +710,12 @@ abstract class AppLocalizations {
   /// **'SUPPORT'**
   String get settingsSupport;
 
+  /// No description provided for @settingsDevelopment.
+  ///
+  /// In en, this message translates to:
+  /// **'DEVELOPMENT'**
+  String get settingsDevelopment;
+
   /// No description provided for @settingsAbout.
   ///
   /// In en, this message translates to:
@@ -733,6 +739,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help center coming soon'**
   String get settingsHelpSoon;
+
+  /// No description provided for @settingsSeedDatabase.
+  ///
+  /// In en, this message translates to:
+  /// **'Populate Test Data'**
+  String get settingsSeedDatabase;
+
+  /// No description provided for @settingsSeedDatabaseSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Create fake habits and completion history'**
+  String get settingsSeedDatabaseSubtitle;
+
+  /// No description provided for @settingsSeederInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Creating fake data...'**
+  String get settingsSeederInProgress;
+
+  /// No description provided for @settingsSeederSuccess.
+  ///
+  /// In en, this message translates to:
+  /// **'{habits} habits and {completions} completions created'**
+  String settingsSeederSuccess(int habits, int completions);
+
+  /// No description provided for @settingsSeederFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to create fake data'**
+  String get settingsSeederFailed;
 
   /// No description provided for @settingsChooseLanguage.
   ///

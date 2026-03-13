@@ -144,10 +144,26 @@
   "settingsDarkMode": "Modo escuro",
   "settingsLanguage": "Idioma",
   "settingsSupport": "SUPORTE",
+  "settingsDevelopment": "DESENVOLVIMENTO",
   "settingsAbout": "Sobre",
   "settingsAboutContent": "Habit Flow\nVersão 2.4.0",
   "settingsHelpSupport": "Ajuda e suporte",
   "settingsHelpSoon": "Central de ajuda em breve",
+  "settingsSeedDatabase": "Popular dados de teste",
+  "settingsSeedDatabaseSubtitle": "Cria hábitos falsos e histórico de conclusões",
+  "settingsSeederInProgress": "Criando dados falsos...",
+  "settingsSeederSuccess": "{habits} hábitos e {completions} conclusões criados",
+  "@settingsSeederSuccess": {
+    "placeholders": {
+      "habits": {
+        "type": "int"
+      },
+      "completions": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSeederFailed": "Não foi possível criar dados falsos",
   "settingsChooseLanguage": "Escolha o idioma",
   "settingsLogOut": "Sair",
   "settingsLogoutConfirm": "Tem certeza de que deseja sair da conta?",

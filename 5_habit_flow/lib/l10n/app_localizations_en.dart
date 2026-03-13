@@ -340,6 +340,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSupport => 'SUPPORT';
 
   @override
+  String get settingsDevelopment => 'DEVELOPMENT';
+
+  @override
   String get settingsAbout => 'About';
 
   @override
@@ -350,6 +353,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsHelpSoon => 'Help center coming soon';
+
+  @override
+  String get settingsSeedDatabase => 'Populate Test Data';
+
+  @override
+  String get settingsSeedDatabaseSubtitle =>
+      'Create fake habits and completion history';
+
+  @override
+  String get settingsSeederInProgress => 'Creating fake data...';
+
+  @override
+  String settingsSeederSuccess(int habits, int completions) {
+    return '$habits habits and $completions completions created';
+  }
+
+  @override
+  String get settingsSeederFailed => 'Failed to create fake data';
 
   @override
   String get settingsChooseLanguage => 'Choose language';
