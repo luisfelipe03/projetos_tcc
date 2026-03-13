@@ -240,17 +240,28 @@ class _CreateHabitViewState extends State<CreateHabitView> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            l10n.commonCancel,
-            style: TextStyle(
-              color: isDark ? Colors.grey[400] : Colors.grey[600],
-              fontSize: 16,
+        leading: Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            style: TextButton.styleFrom(
+              minimumSize: const Size(0, 40),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              l10n.commonCancel,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: isDark ? Colors.grey[400] : Colors.grey[600],
+                fontSize: 16,
+              ),
             ),
           ),
         ),
-        leadingWidth: 80,
+        leadingWidth: 108,
         title: Text(
           _isEditMode ? l10n.habitFormTitleEdit : l10n.habitFormTitleCreate,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),

@@ -36,33 +36,38 @@ class CustomBottomNavBar extends StatelessWidget {
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(
-                icon: Icons.home_rounded,
-                label: l10n.navHome,
-                index: 0,
-                isActive: currentIndex == 0,
-                activeColor: activeColor,
-                isDark: isDark,
+              Expanded(
+                child: _buildNavItem(
+                  icon: Icons.home_rounded,
+                  label: l10n.navHome,
+                  index: 0,
+                  isActive: currentIndex == 0,
+                  activeColor: activeColor,
+                  isDark: isDark,
+                ),
               ),
-              _buildNavItem(
-                icon: Icons.bar_chart_rounded,
-                label: l10n.navStats,
-                index: 1,
-                isActive: currentIndex == 1,
-                activeColor: activeColor,
-                isDark: isDark,
+              Expanded(
+                child: _buildNavItem(
+                  icon: Icons.bar_chart_rounded,
+                  label: l10n.navStats,
+                  index: 1,
+                  isActive: currentIndex == 1,
+                  activeColor: activeColor,
+                  isDark: isDark,
+                ),
               ),
-              _buildNavItem(
-                icon: Icons.settings_rounded,
-                label: l10n.navSettings,
-                index: 2,
-                isActive: currentIndex == 2,
-                activeColor: activeColor,
-                isDark: isDark,
+              Expanded(
+                child: _buildNavItem(
+                  icon: Icons.settings_rounded,
+                  label: l10n.navSettings,
+                  index: 2,
+                  isActive: currentIndex == 2,
+                  activeColor: activeColor,
+                  isDark: isDark,
+                ),
               ),
             ],
           ),
@@ -83,9 +88,11 @@ class CustomBottomNavBar extends StatelessWidget {
       onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               icon,
@@ -97,6 +104,9 @@ class CustomBottomNavBar extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,

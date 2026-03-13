@@ -317,65 +317,97 @@ class _StatsViewState extends State<StatsView> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
-      child: Row(
-        children: [
-          Text(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 430;
+
+          final title = Text(
             l10n.statsTitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 48 / 1.5,
               fontWeight: FontWeight.w800,
             ),
+          );
+
+          final selector = _buildRangeSelector(isDark, isCompact: isCompact);
+
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                title,
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerRight, child: selector),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: 12),
+              selector,
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildRangeSelector(bool isDark, {required bool isCompact}) {
+    return PopupMenuButton<_StatsRange>(
+      onSelected: (value) {
+        setState(() {
+          _selectedRange = value;
+          _statsFuture = _loadStats();
+        });
+      },
+      color: isDark ? const Color(0xFF1E2A45) : const Color(0xFFE8ECF2),
+      itemBuilder: (context) => _StatsRange.values
+          .map(
+            (range) => PopupMenuItem<_StatsRange>(
+              value: range,
+              child: Text(_rangeLabel(context, range)),
+            ),
+          )
+          .toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1A2741) : const Color(0xFFE3E8EF),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.08)
+                : Colors.black.withValues(alpha: 0.04),
           ),
-          const Spacer(),
-          PopupMenuButton<_StatsRange>(
-            onSelected: (value) {
-              setState(() {
-                _selectedRange = value;
-                _statsFuture = _loadStats();
-              });
-            },
-            color: isDark ? const Color(0xFF1E2A45) : const Color(0xFFE8ECF2),
-            itemBuilder: (context) => _StatsRange.values
-                .map(
-                  (range) => PopupMenuItem<_StatsRange>(
-                    value: range,
-                    child: Text(_rangeLabel(context, range)),
-                  ),
-                )
-                .toList(),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: isDark
-                    ? const Color(0xFF1A2741)
-                    : const Color(0xFFE3E8EF),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.black.withValues(alpha: 0.04),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    _rangeLabel(context, _selectedRange),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: isDark ? Colors.white70 : const Color(0xFF344054),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(
-                    Icons.keyboard_arrow_down_rounded,
+        ),
+        child: SizedBox(
+          width: isCompact ? 168 : 180,
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  _rangeLabel(context, _selectedRange),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                     color: isDark ? Colors.white70 : const Color(0xFF344054),
                   ),
-                ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.keyboard_arrow_down_rounded,
+                color: isDark ? Colors.white70 : const Color(0xFF344054),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -538,28 +570,64 @@ class _StatsViewState extends State<StatsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                l10n.statsCategoryBreakdown,
-                style: TextStyle(
-                  fontSize: 22 / 1.1,
-                  fontWeight: FontWeight.w800,
-                  color: isDark ? Colors.white : const Color(0xFF0F172A),
-                ),
-              ),
-              const Spacer(),
-              Text(
-                l10n.statsWeeklyAvg,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? Colors.white.withValues(alpha: 0.42)
-                      : const Color(0xFF98A2B3),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 430;
+
+              final titleStyle = TextStyle(
+                fontSize: 22 / 1.1,
+                fontWeight: FontWeight.w800,
+                color: isDark ? Colors.white : const Color(0xFF0F172A),
+              );
+
+              final subtitleStyle = TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.42)
+                    : const Color(0xFF98A2B3),
+              );
+
+              if (isCompact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.statsCategoryBreakdown,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: titleStyle,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(l10n.statsWeeklyAvg, style: subtitleStyle),
+                  ],
+                );
+              }
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.statsCategoryBreakdown,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: titleStyle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      l10n.statsWeeklyAvg,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: subtitleStyle,
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 18),
           SizedBox(
@@ -632,7 +700,7 @@ class _StatsViewState extends State<StatsView> {
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
               showTitles: true,
-              reservedSize: 40,
+              reservedSize: 48,
               getTitlesWidget: (value, meta) {
                 final index = value.toInt();
                 if (index < 0 || index >= categories.length) {
@@ -641,14 +709,20 @@ class _StatsViewState extends State<StatsView> {
 
                 return SideTitleWidget(
                   axisSide: meta.axisSide,
-                  child: Text(
-                    categories[index].category.localizedLabel(l10n),
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w700,
-                      color: isDark
-                          ? Colors.white.withValues(alpha: 0.58)
-                          : const Color(0xFF667085),
+                  child: SizedBox(
+                    width: 72,
+                    child: Text(
+                      categories[index].category.localizedLabel(l10n),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? Colors.white.withValues(alpha: 0.58)
+                            : const Color(0xFF667085),
+                      ),
                     ),
                   ),
                 );
@@ -666,9 +740,9 @@ class _StatsViewState extends State<StatsView> {
             barRods: [
               BarChartRodData(
                 toY: metric.completionRate * 100,
-                width: 52,
+                width: 42,
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(18),
+                  top: Radius.circular(14),
                 ),
                 color: barColor,
               ),

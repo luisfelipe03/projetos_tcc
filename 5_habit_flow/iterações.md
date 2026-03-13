@@ -2976,3 +2976,75 @@ Made changes.
 
 ### Resultado:
 Todas as telas estão agora completamente internacionalizadas, sem textos hardcoded em inglês. Agora vamos ter que fazer alguns ajustes de layout para suportar os textos mais longos em português, especialmente nos botões. 
+
+## Iteração 32
+### Promt usado:
+```plaintext
+Agora vamos ajustar o layout para suportar os textos em português. Ajuste a navbar inferior, ele ficou decentralizado com o texto em português. Na tela de estatísticas, o seletor de período tem um overflow e no gráfico de barras também tem um overflow. Na tela de criação/edição de hábito, o botão de cancelar ficou com quebra de linha mas não causou overflow, então ajuste o layout para evitar a quebra de linha. 
+```
+
+#### Output recebido:
+```markdown
+Vou localizar os pontos exatos de overflow e desalinhamento nesses três arquivos para aplicar correções responsivas sem mexer no comportamento.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart)
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart#1-1), lines 1 to 980
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart#200-200), lines 200 to 360
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#1-1), lines 1 to 260
+
+Agora vou aplicar correções responsivas em três pontos: distribuição igual da navbar, cabeçalho/cartão da estatística sem overflow e botão `Cancelar` sem quebra na criação de hábito.
+
+Generating patch (88 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart)
+
+
+Generating patch (301 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart)
+
+
+Generating patch (40 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart)
+
+
+As correções principais já entraram nos três pontos do print. Vou validar erros de compilação e fazer uma checagem rápida de strings para garantir que não introduzi regressão visual/estática.
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/widgets/home_widgets.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart), no problems found
+
+Searched for regex `mainAxisAlignment: MainAxisAlignment\.spaceAround|leadingWidth: 80|fontSize: 17,\n\s*fontWeight: FontWeight\.w700,\n\s*color: isDark\n\s*\? Colors\.white\.withValues\(alpha: 0\.58\)` (`**/lib/{views,widgets}/**`), no results
+
+Ajustei o layout para suportar melhor os textos em português nos 3 pontos que você mostrou.
+
+**O que foi corrigido**
+1. Navbar inferior desalinhada:
+- Arquivo: home_widgets.dart
+- Troquei os itens para largura igual com `Expanded` (em vez de distribuição por largura variável).
+- Mantive rótulos em linha única com `maxLines: 1`, `overflow: TextOverflow.ellipsis` e `textAlign: center`.
+- Ajustei o padding horizontal para manter os 3 itens centralizados no conjunto.
+
+2. Overflow no seletor de período da tela de estatísticas:
+- Arquivo: stats_view.dart
+- O cabeçalho agora é responsivo com `LayoutBuilder`:
+  - Em telas compactas, título e seletor quebram para duas linhas (sem overflow).
+  - Em telas maiores, continuam lado a lado.
+- O chip do período recebeu largura controlada e texto com ellipsis.
+
+3. Overflow no card do gráfico de barras (título + “Média semanal” e labels):
+- Arquivo: stats_view.dart
+- A linha “Desempenho por categoria” + “Média semanal” agora adapta para `Column` em telas estreitas.
+- Labels do eixo X do gráfico agora têm largura limitada, ellipsis e fonte menor.
+- Reduzi largura das barras para dar mais espaço horizontal aos rótulos.
+
+4. Quebra de linha no botão “Cancelar” da criação/edição:
+- Arquivo: create_habit_view.dart
+- Ajustei `leadingWidth`, constraints/padding do `TextButton` e forçei texto em linha única (`maxLines: 1`, `softWrap: false`, `overflow: ellipsis`).
+
+**Validação**
+- Sem erros de análise nos arquivos alterados (`get_errors` retornou limpo).
+
+Se quiser, posso fazer um passe extra para também ficar robusto com `textScaleFactor` alto (acessibilidade), porque isso costuma gerar novos overflows mesmo com layout já responsivo.
+
+Made changes.
+```
+
+### Resultado:
+O layout foi ajustado para suportar os textos em português sem causar overflow ou desalinhamento. A navbar inferior agora distribui os itens de forma igual, o seletor de período na tela de estatísticas é responsivo e o botão "Cancelar" na criação/edição de hábito não tem mais quebra de linha. O aplicativo agora estar visualmente consistente e funcional tanto em inglês quanto em português.
