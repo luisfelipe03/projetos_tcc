@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/intl.dart' as intl;
 import '../../models/habit.dart';
 import '../../models/habit_completion.dart';
+import '../../models/day_of_week.dart';
 import '../../viewmodels/habit_viewmodel.dart';
 import 'package:fl_chart/fl_chart.dart';
+import '../../l10n/l10n.dart';
 import 'create_habit_view.dart';
 
 class HabitDetailsView extends StatefulWidget {
@@ -36,20 +39,21 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Future<void> _deleteHabit() async {
+    final l10n = context.l10n;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Habit'),
-        content: const Text('Are you sure you want to delete this habit?'),
+        title: Text(l10n.homeDeleteHabitTitle),
+        content: Text(l10n.homeDeleteHabitMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),
@@ -65,7 +69,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
       if (!mounted) return;
       navigator.pop(); // Volta para a tela anterior
       messenger.showSnackBar(
-        const SnackBar(content: Text('Habit deleted successfully')),
+        SnackBar(content: Text(l10n.homeHabitDeleted)),
       );
     }
   }
@@ -75,13 +79,14 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final viewModel = context.watch<HabitViewModel>();
+    final l10n = context.l10n;
 
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          title: const Text('HABIT DETAILS'),
+          title: Text(l10n.habitDetailsTitle),
           centerTitle: true,
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -111,8 +116,8 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'HABIT DETAILS',
+        title: Text(
+          l10n.habitDetailsTitle,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -124,13 +129,13 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
           PopupMenuButton(
             icon: const Icon(Icons.more_vert),
             itemBuilder: (context) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'edit',
                 child: Row(
                   children: [
-                    Icon(Icons.edit, size: 20),
-                    SizedBox(width: 12),
-                    Text('Edit'),
+                    const Icon(Icons.edit, size: 20),
+                    const SizedBox(width: 12),
+                    Text(l10n.commonEdit),
                   ],
                 ),
               ),
@@ -221,6 +226,8 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildStreakCard(int streak, bool isDark) {
+    final l10n = context.l10n;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -250,8 +257,8 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'CURRENT STREAK',
+              Text(
+                l10n.habitDetailsCurrentStreak,
                 style: TextStyle(
                   color: Colors.white70,
                   fontSize: 12,
@@ -261,7 +268,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
               ),
               const SizedBox(height: 4),
               Text(
-                '$streak Days',
+                l10n.habitDetailsStreakDays(streak),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 32,
@@ -276,6 +283,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildThisWeek(bool isDark, HabitViewModel viewModel) {
+    final l10n = context.l10n;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
@@ -302,8 +310,8 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'This Week',
+            Text(
+              l10n.habitDetailsThisWeek,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             Container(
@@ -334,15 +342,10 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: weekDays.asMap().entries.map((entry) {
               final day = entry.value;
-              final dayName = [
-                'MON',
-                'TUE',
-                'WED',
-                'THU',
-                'FRI',
-                'SAT',
-                'SUN',
-              ][entry.key];
+              final dayName = DayOfWeek
+                  .values[entry.key]
+                  .localizedShortLabel(l10n)
+                  .toUpperCase();
 
               final shouldShow = widget.habit.shouldShowOnDate(day);
               final isToday =
@@ -432,13 +435,14 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildMonthlyOverview(double completionRate, bool isDark) {
+    final l10n = context.l10n;
     final percentage = (completionRate * 100).toInt();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Monthly Overview',
+        Text(
+          l10n.habitDetailsMonthlyOverview,
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
@@ -465,7 +469,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
                         ),
                       ),
                       Text(
-                        'Completion Rate',
+                        l10n.habitDetailsCompletionRate,
                         style: TextStyle(
                           fontSize: 14,
                           color: isDark ? Colors.grey[400] : Colors.grey[600],
@@ -513,8 +517,11 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildCompletionChart(bool isDark) {
+    final localeName = Localizations.localeOf(context).toString();
     // Dados de exemplo para o gráfico (últimos 30 dias)
     final now = DateTime.now();
+    final startDate = now.subtract(const Duration(days: 29));
+    final middleDate = now.subtract(const Duration(days: 15));
     final dataPoints = <FlSpot>[];
 
     for (int i = 29; i >= 0; i--) {
@@ -550,13 +557,22 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
                 reservedSize: 22,
                 getTitlesWidget: (value, meta) {
                   if (value == 0) {
-                    return const Text('Oct 1', style: TextStyle(fontSize: 10));
+                    return Text(
+                      intl.DateFormat.MMMd(localeName).format(startDate),
+                      style: const TextStyle(fontSize: 10),
+                    );
                   }
                   if (value == 14) {
-                    return const Text('Oct 15', style: TextStyle(fontSize: 10));
+                    return Text(
+                      intl.DateFormat.MMMd(localeName).format(middleDate),
+                      style: const TextStyle(fontSize: 10),
+                    );
                   }
                   if (value == 29) {
-                    return const Text('Today', style: TextStyle(fontSize: 10));
+                    return Text(
+                      context.l10n.commonToday,
+                      style: const TextStyle(fontSize: 10),
+                    );
                   }
                   return const Text('');
                 },
@@ -607,13 +623,15 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildStatsGrid(int totalDays, int bestStreak, bool isDark) {
+    final l10n = context.l10n;
+
     return Row(
       children: [
         Expanded(
           child: _buildStatCard(
             icon: Icons.calendar_today,
             value: totalDays.toString(),
-            label: 'TOTAL DAYS',
+            label: l10n.habitDetailsTotalDays,
             isDark: isDark,
           ),
         ),
@@ -622,7 +640,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
           child: _buildStatCard(
             icon: Icons.emoji_events,
             value: bestStreak.toString(),
-            label: 'BEST STREAK',
+            label: l10n.statsBestStreak.toUpperCase(),
             isDark: isDark,
           ),
         ),
@@ -683,6 +701,8 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
   }
 
   Widget _buildActionButtons(bool isDark) {
+    final l10n = context.l10n;
+
     return Row(
       children: [
         Expanded(
@@ -700,7 +720,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
               }
             },
             icon: const Icon(Icons.edit),
-            label: const Text('Edit'),
+            label: Text(l10n.commonEdit),
             style: OutlinedButton.styleFrom(
               foregroundColor: isDark
                   ? const Color(0xFF3B82F6)
@@ -722,7 +742,7 @@ class _HabitDetailsViewState extends State<HabitDetailsView> {
           child: OutlinedButton.icon(
             onPressed: _deleteHabit,
             icon: const Icon(Icons.delete),
-            label: const Text('Delete'),
+            label: Text(l10n.commonDelete),
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.red,
               side: const BorderSide(color: Colors.red),

@@ -2820,3 +2820,43 @@ Made changes.
 
 ### Resultado:
 A tela de configurações foi implementada com sucesso, seguindo o design do protótipo e utilizando `SharedPreferences` para persistir as preferências do usuário. As mudanças de tema, idioma e notificações agora são aplicadas globalmente no aplicativo, e o botão de voltar na tela de configurações retorna o usuário para a tela inicial. 
+
+## Iteração 30
+### Promt usado:
+```plaintext
+Vamos fazer a internacionalização do aplicativo. A internacionalização (i18n) é o processo de adaptar o aplicativo para diferentes idiomas e regiões, permitindo que usuários de diferentes partes do mundo possam usar o aplicativo em seu idioma nativo. Para isso, precisamos criar arquivos de tradução para cada idioma suportado e configurar o aplicativo para usar essas traduções com base na preferência do usuário ou na configuração do dispositivo. Implemente a internacionalização no aplicativo, criando os arquivos de tradução necessários e configurando o aplicativo para usar essas traduções corretamente. No protótipo, o aplicativo deve suportar pelo menos inglês e português, então comece por esses dois idiomas.
+```
+
+#### Output recebido:
+```markdown
+Read changed files in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow)
+
+Read memory
+
+Created memory file [](file:///Users/felipe/Library/Application%20Support/Code/User/globalStorage/github.copilot-chat/memory-tool/memories/debugging.md)
+
+A internacionalização das telas de hábito foi concluída nesta rodada.
+
+- Localizei a tela de criação/edição em create_habit_view.dart.
+- Localizei a tela de detalhes em habit_details_view.dart.
+- Adicionei novas chaves de tradução em app_en.arb e app_pt.arb.
+- Regenerei as classes de localização (`gen_l10n`) em app_localizations.dart, app_localizations_en.dart e app_localizations_pt.dart.
+- Corrigi conflito de símbolo `DateFormat` na tela de detalhes usando alias `intl` em habit_details_view.dart.
+
+O que foi coberto nas telas:
+- Títulos, seções, botões (`Cancel`, `Reset`, `Save/Update`, `Edit/Delete`), mensagens de sucesso/erro, confirmação de exclusão, labels semanais e textos do overview.
+- Nomes de categoria/frequência e dias da semana agora usam os helpers de localização já existentes em l10n.dart.
+- O indicador AM/PM do horário agora respeita `MaterialLocalizations`/formato 24h do dispositivo.
+
+Validação:
+- `flutter gen-l10n` executado com l10n.yaml.
+- Análise estática sem erros nos arquivos alterados (create_habit_view.dart, habit_details_view.dart, l10n.dart, `main.dart`, widget_test.dart).
+- Não rodei suíte de testes completa, apenas validação estática. 
+
+Próximos passos naturais:
+1. Rodar o app e validar visualmente os fluxos de criar/editar/detalhes em `en` e `pt`.
+2. Se quiser, eu posso fazer uma passada final para localizar mensagens de erro diretamente no `HabitViewModel` (hoje estão mapeadas na UI).
+````
+
+### Resultado:
+A internacionalização foi feita de forma parcial, cobrindo apenas a tela home, estatísticas e configurações. As telas de criação/edição e detalhes dos hábitos ainda estão com textos hardcoded em inglês, então é necessário completar a internacionalização nessas telas para que o aplicativo esteja totalmente localizado em inglês e português. E a internationalização dos textos causo oververflow em alguns widgets, então é necessário ajustar o layout para suportar os textos mais longos em português.

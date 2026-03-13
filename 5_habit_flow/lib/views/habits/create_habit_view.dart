@@ -8,6 +8,7 @@ import '../../models/habit_color.dart';
 import '../../models/habit_reminder.dart';
 import '../../models/reminder_repeat.dart';
 import '../../models/day_of_week.dart';
+import '../../l10n/l10n.dart';
 
 class CreateHabitView extends StatefulWidget {
   final Habit? habit; // Habit opcional para edição
@@ -89,6 +90,31 @@ class _CreateHabitViewState extends State<CreateHabitView> {
     });
   }
 
+  String _localizedHabitError(String? rawError) {
+    final l10n = context.l10n;
+    final normalizedError = rawError
+        ?.replaceFirst('Exception: ', '')
+        .trim();
+
+    switch (normalizedError) {
+      case 'User not authenticated':
+        return l10n.habitErrorUnauthenticated;
+      case 'Habit title cannot be empty':
+        return l10n.habitFormNameRequired;
+      case 'Habit not found':
+        return l10n.habitErrorNotFound;
+      default:
+        return _isEditMode
+            ? l10n.habitFormUpdateFailed
+            : l10n.habitFormCreateFailed;
+    }
+  }
+
+  String _dayChipLabel(DayOfWeek day) {
+    final label = day.localizedShortLabel(context.l10n).toUpperCase();
+    return label.length <= 3 ? label : label.substring(0, 3);
+  }
+
   Future<void> _selectTime() async {
     final time = await showTimePicker(
       context: context,
@@ -119,6 +145,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
     }
 
     final habitViewModel = context.read<HabitViewModel>();
+    final l10n = context.l10n;
 
     // Cria o reminder se estiver ativo
     HabitReminder? reminder;
@@ -127,8 +154,8 @@ class _CreateHabitViewState extends State<CreateHabitView> {
       if (_reminderRepeat == ReminderRepeat.weekly) {
         if (_selectedDays.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Select at least one day for weekly reminders'),
+            SnackBar(
+              content: Text(l10n.habitFormWeeklyReminderDaysError),
               backgroundColor: Colors.red,
             ),
           );
@@ -177,8 +204,8 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         SnackBar(
           content: Text(
             _isEditMode
-                ? 'Habit updated successfully!'
-                : 'Habit created successfully!',
+                ? l10n.habitFormUpdatedSuccess
+                : l10n.habitFormCreatedSuccess,
           ),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -191,12 +218,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            habitViewModel.error ??
-                (_isEditMode
-                    ? 'Failed to update habit'
-                    : 'Failed to create habit'),
-          ),
+          content: Text(_localizedHabitError(habitViewModel.error)),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -211,6 +233,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final l10n = context.l10n;
 
     return Scaffold(
       backgroundColor: isDark
@@ -222,7 +245,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            'Cancel',
+            l10n.commonCancel,
             style: TextStyle(
               color: isDark ? Colors.grey[400] : Colors.grey[600],
               fontSize: 16,
@@ -231,7 +254,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         ),
         leadingWidth: 80,
         title: Text(
-          _isEditMode ? 'Edit Habit' : 'New Habit',
+          _isEditMode ? l10n.habitFormTitleEdit : l10n.habitFormTitleCreate,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         ),
         centerTitle: true,
@@ -239,7 +262,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
           TextButton(
             onPressed: _resetForm,
             child: Text(
-              'Reset',
+              l10n.commonReset,
               style: TextStyle(
                 color: isDark
                     ? const Color(0xFFA855F7)
@@ -256,11 +279,11 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _buildSectionLabel('HABIT NAME'),
+            _buildSectionLabel(l10n.habitFormSectionName),
             const SizedBox(height: 12),
             _buildTitleField(),
             const SizedBox(height: 28),
-            _buildSectionLabel('FREQUENCY'),
+            _buildSectionLabel(l10n.habitFormSectionFrequency),
             const SizedBox(height: 12),
             _buildFrequencySelector(),
             if (_selectedFrequency == HabitFrequency.weekly) ...[
@@ -268,11 +291,11 @@ class _CreateHabitViewState extends State<CreateHabitView> {
               _buildHabitWeekDaySelector(),
             ],
             const SizedBox(height: 28),
-            _buildSectionLabel('CATEGORY'),
+            _buildSectionLabel(l10n.habitFormSectionCategory),
             const SizedBox(height: 12),
             _buildCategorySelector(),
             const SizedBox(height: 28),
-            _buildSectionLabel('REMINDER'),
+            _buildSectionLabel(l10n.habitFormSectionReminder),
             const SizedBox(height: 12),
             _buildReminderCard(),
             if (_reminderEnabled &&
@@ -281,7 +304,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
               _buildWeekDaySelector(),
             ],
             const SizedBox(height: 28),
-            _buildSectionLabel('HABIT COLOR'),
+            _buildSectionLabel(l10n.habitFormSectionColor),
             const SizedBox(height: 12),
             _buildColorSelector(),
             const SizedBox(height: 40),
@@ -307,6 +330,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
 
   Widget _buildTitleField() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -321,7 +345,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         controller: _titleController,
         style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
-          hintText: 'Morning Yoga',
+          hintText: l10n.habitFormNameHint,
           hintStyle: TextStyle(
             color: Colors.grey[400],
             fontSize: 20,
@@ -336,7 +360,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         ),
         validator: (value) {
           if (value == null || value.trim().isEmpty) {
-            return 'Please enter a habit name';
+            return l10n.habitFormNameRequired;
           }
           return null;
         },
@@ -379,6 +403,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   Widget _buildFrequencyButton(HabitFrequency frequency, IconData icon) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedFrequency == frequency;
+    final l10n = context.l10n;
 
     return GestureDetector(
       onTap: () {
@@ -415,7 +440,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
             ),
             const SizedBox(width: 8),
             Text(
-              frequency.displayName,
+              frequency.localizedLabel(l10n),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
@@ -475,6 +500,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isSelected = _selectedCategory == category;
+    final l10n = context.l10n;
 
     return GestureDetector(
       onTap: () {
@@ -510,7 +536,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
             ),
             const SizedBox(height: 8),
             Text(
-              category.displayName,
+              category.localizedLabel(l10n),
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -525,6 +551,11 @@ class _CreateHabitViewState extends State<CreateHabitView> {
 
   Widget _buildReminderCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final materialL10n = MaterialLocalizations.of(context);
+    final use24HourFormat = MediaQuery.alwaysUse24HourFormatOf(context);
+    final periodLabel = _selectedTime.period == DayPeriod.am
+        ? materialL10n.anteMeridiemAbbreviation
+        : materialL10n.postMeridiemAbbreviation;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -564,14 +595,15 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(
-                    _selectedTime.period == DayPeriod.am ? 'AM' : 'PM',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[500],
-                      fontWeight: FontWeight.w500,
+                  if (!use24HourFormat)
+                    Text(
+                      periodLabel,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[500],
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -594,6 +626,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
 
   Widget _buildWeekDaySelector() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -609,7 +642,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Repeat on',
+            l10n.habitFormRepeatOn,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -648,9 +681,9 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                   ),
                   child: Center(
                     child: Text(
-                      day.shortName[0],
+                      _dayChipLabel(day),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.white : Colors.grey[600],
                       ),
@@ -667,6 +700,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
 
   Widget _buildHabitWeekDaySelector() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -682,7 +716,7 @@ class _CreateHabitViewState extends State<CreateHabitView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Which days should this habit be done?',
+            l10n.habitFormWeeklyDaysPrompt,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -721,9 +755,9 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                   ),
                   child: Center(
                     child: Text(
-                      day.shortName[0],
+                      _dayChipLabel(day),
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isSelected ? Colors.white : Colors.grey[600],
                       ),
@@ -782,6 +816,8 @@ class _CreateHabitViewState extends State<CreateHabitView> {
   Widget _buildSaveButton(bool isDark) {
     return Consumer<HabitViewModel>(
       builder: (context, viewModel, child) {
+        final l10n = context.l10n;
+
         return Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -827,7 +863,9 @@ class _CreateHabitViewState extends State<CreateHabitView> {
                           const Icon(Icons.save, color: Colors.white),
                           const SizedBox(width: 8),
                           Text(
-                            _isEditMode ? 'Update Habit' : 'Save Habit',
+                            _isEditMode
+                                ? l10n.habitFormUpdateAction
+                                : l10n.habitFormSaveAction,
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 18,

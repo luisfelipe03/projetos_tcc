@@ -42,7 +42,9 @@ class SettingsViewModel extends ChangeNotifier {
     final storedTheme = prefs.getString(_themeModeKey);
     _themeMode = _themeModeFromString(storedTheme);
     _notificationsEnabled = prefs.getBool(_notificationsEnabledKey) ?? true;
-    _languageCode = prefs.getString(_languageCodeKey) ?? 'en';
+    _languageCode = _resolveLanguageCode(
+      prefs.getString(_languageCodeKey) ?? _deviceLanguageCode(),
+    );
     Intl.defaultLocale = _languageCode;
 
     _isLoaded = true;
@@ -73,11 +75,13 @@ class SettingsViewModel extends ChangeNotifier {
   }
 
   Future<void> setLanguageCode(String languageCode) async {
-    if (_languageCode == languageCode) {
+    final resolvedLanguageCode = _resolveLanguageCode(languageCode);
+
+    if (_languageCode == resolvedLanguageCode) {
       return;
     }
 
-    _languageCode = languageCode;
+    _languageCode = resolvedLanguageCode;
     Intl.defaultLocale = _languageCode;
 
     final prefs = await SharedPreferences.getInstance();
@@ -88,7 +92,7 @@ class SettingsViewModel extends ChangeNotifier {
   Future<void> resetToDefaults() async {
     _themeMode = ThemeMode.system;
     _notificationsEnabled = true;
-    _languageCode = 'en';
+    _languageCode = _deviceLanguageCode();
     Intl.defaultLocale = _languageCode;
 
     final prefs = await SharedPreferences.getInstance();
@@ -119,6 +123,22 @@ class SettingsViewModel extends ChangeNotifier {
         return 'dark';
       case ThemeMode.system:
         return 'system';
+    }
+  }
+
+  String _deviceLanguageCode() {
+    final deviceLanguageCode =
+        WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    return _resolveLanguageCode(deviceLanguageCode);
+  }
+
+  String _resolveLanguageCode(String? languageCode) {
+    switch (languageCode) {
+      case 'pt':
+        return 'pt';
+      case 'en':
+      default:
+        return 'en';
     }
   }
 }

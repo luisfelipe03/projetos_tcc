@@ -9,6 +9,8 @@ import 'package:habit_flow/views/onboarding_view.dart';
 import 'package:habit_flow/views/habits/habit_details_view.dart';
 import 'package:habit_flow/services/notification_service.dart';
 
+import 'l10n/app_localizations.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
@@ -75,14 +77,15 @@ class HabitFlowApp extends StatelessWidget {
         builder: (context, settings, _) {
           return MaterialApp(
             navigatorKey: navigatorKey,
-            title: 'Habit Flow',
+            onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
             debugShowCheckedModeBanner: false,
             theme: _buildLightTheme(),
             darkTheme: _buildDarkTheme(),
             themeMode: settings.themeMode,
             locale: settings.locale,
-            supportedLocales: const [Locale('en'), Locale('pt')],
+            supportedLocales: AppLocalizations.supportedLocales,
             localizationsDelegates: const [
+              AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

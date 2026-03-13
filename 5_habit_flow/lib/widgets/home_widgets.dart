@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/l10n.dart';
+
 /// Widget customizado de Bottom Navigation Bar
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -19,6 +21,7 @@ class CustomBottomNavBar extends StatelessWidget {
     final activeColor = isDark
         ? const Color(0xFFA855F7)
         : const Color(0xFF5B7FFF);
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -39,7 +42,7 @@ class CustomBottomNavBar extends StatelessWidget {
             children: [
               _buildNavItem(
                 icon: Icons.home_rounded,
-                label: 'Home',
+                label: l10n.navHome,
                 index: 0,
                 isActive: currentIndex == 0,
                 activeColor: activeColor,
@@ -47,7 +50,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: Icons.bar_chart_rounded,
-                label: 'Stats',
+                label: l10n.navStats,
                 index: 1,
                 isActive: currentIndex == 1,
                 activeColor: activeColor,
@@ -55,7 +58,7 @@ class CustomBottomNavBar extends StatelessWidget {
               ),
               _buildNavItem(
                 icon: Icons.settings_rounded,
-                label: 'Settings',
+                label: l10n.navSettings,
                 index: 2,
                 isActive: currentIndex == 2,
                 activeColor: activeColor,
@@ -135,14 +138,20 @@ class HorizontalCalendar extends StatelessWidget {
           final date = DateTime.now().subtract(Duration(days: 3 - index));
           final isSelected = DateUtils.isSameDay(date, selectedDate);
 
-          return _buildDateCard(date, isSelected, isDark);
+          return _buildDateCard(context, date, isSelected, isDark);
         },
       ),
     );
   }
 
-  Widget _buildDateCard(DateTime date, bool isSelected, bool isDark) {
-    final dayName = DateFormat('EEE').format(date);
+  Widget _buildDateCard(
+    BuildContext context,
+    DateTime date,
+    bool isSelected,
+    bool isDark,
+  ) {
+    final localeName = Localizations.localeOf(context).toLanguageTag();
+    final dayName = DateFormat('EEE', localeName).format(date);
     final dayNumber = DateFormat('d').format(date);
     final activeColor = isDark
         ? const Color(0xFFA855F7)
@@ -218,6 +227,7 @@ class DailyProgressCard extends StatelessWidget {
     final activeColor = isDark
         ? const Color(0xFFA855F7)
         : const Color(0xFF5B7FFF);
+    final l10n = context.l10n;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -239,9 +249,9 @@ class DailyProgressCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Daily Progress',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Text(
+                l10n.dailyProgressTitle,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               Text(
                 '${(percentage * 100).toInt()}%',
@@ -267,7 +277,7 @@ class DailyProgressCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '$completedHabits of $totalHabits habits completed',
+            l10n.dailyProgressSummary(completedHabits, totalHabits),
             style: TextStyle(
               fontSize: 14,
               color: isDark ? Colors.grey[400] : Colors.grey[600],

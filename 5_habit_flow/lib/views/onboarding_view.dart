@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:habit_flow/views/auth/login_view.dart';
 
+import '../l10n/l10n.dart';
+
 class OnboardingView extends StatelessWidget {
   const OnboardingView({super.key});
 
@@ -37,17 +39,17 @@ class OnboardingView extends StatelessWidget {
                           SizedBox(height: constraints.maxHeight * 0.05),
 
                           // Imagem com badges flutuantes
-                          _buildHeroImage(isDarkMode, constraints),
+                          _buildHeroImage(context, isDarkMode, constraints),
 
                           const Spacer(flex: 2),
 
                           // Título
-                          _buildTitle(isDarkMode),
+                          _buildTitle(context, isDarkMode),
 
                           const SizedBox(height: 16),
 
                           // Descrição
-                          _buildDescription(isDarkMode),
+                          _buildDescription(context, isDarkMode),
 
                           const Spacer(flex: 3),
 
@@ -67,7 +69,7 @@ class OnboardingView extends StatelessWidget {
                           const SizedBox(height: 20),
 
                           // Rodapé
-                          _buildFooter(isDarkMode),
+                          _buildFooter(context, isDarkMode),
 
                           const SizedBox(height: 24),
                         ],
@@ -83,7 +85,12 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroImage(bool isDarkMode, BoxConstraints constraints) {
+  Widget _buildHeroImage(
+    BuildContext context,
+    bool isDarkMode,
+    BoxConstraints constraints,
+  ) {
+    final l10n = context.l10n;
     final imageHeight = constraints.maxHeight * 0.35;
     final imageWidth = constraints.maxWidth * 0.85;
 
@@ -123,7 +130,7 @@ class OnboardingView extends StatelessWidget {
             top: imageHeight * 0.45,
             child: _buildBadge(
               icon: Icons.menu_book_rounded,
-              label: 'Study',
+              label: l10n.onboardingBadgeStudy,
               iconColor: const Color(0xFF5B8DEF),
               isDarkMode: isDarkMode,
             ),
@@ -135,7 +142,7 @@ class OnboardingView extends StatelessWidget {
             top: imageHeight * 0.15,
             child: _buildBadge(
               icon: Icons.fitness_center,
-              label: 'Health',
+              label: l10n.onboardingBadgeHealth,
               iconColor: const Color(0xFF4ADE80),
               isDarkMode: isDarkMode,
             ),
@@ -199,7 +206,9 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildTitle(bool isDarkMode) {
+  Widget _buildTitle(BuildContext context, bool isDarkMode) {
+    final l10n = context.l10n;
+
     return RichText(
       textAlign: TextAlign.center,
       text: TextSpan(
@@ -211,15 +220,15 @@ class OnboardingView extends StatelessWidget {
         ),
         children: [
           TextSpan(
-            text: 'Master Your\n',
+            text: l10n.onboardingTitleStart,
             style: TextStyle(
               color: isDarkMode
                   ? Colors.white.withValues(alpha: 0.95)
                   : const Color(0xFF1F2937),
             ),
           ),
-          const TextSpan(
-            text: 'Routine.',
+          TextSpan(
+            text: l10n.onboardingTitleAccent,
             style: TextStyle(color: Color(0xFF8B5CF6)),
           ),
         ],
@@ -227,11 +236,13 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildDescription(bool isDarkMode) {
+  Widget _buildDescription(BuildContext context, bool isDarkMode) {
+    final l10n = context.l10n;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
       child: Text(
-        'Build lasting habits and track your progress with our vibrant student-focused platform.',
+        l10n.onboardingDescription,
         textAlign: TextAlign.center,
         style: TextStyle(
           fontSize: 15,
@@ -274,9 +285,9 @@ class OnboardingView extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        child: const Text(
-          'Get Started',
-          style: TextStyle(
+        child: Text(
+          context.l10n.onboardingGetStarted,
+          style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
             letterSpacing: 0.3,
@@ -294,9 +305,9 @@ class OnboardingView extends StatelessWidget {
       style: TextButton.styleFrom(
         foregroundColor: isDarkMode ? Colors.white : const Color(0xFF1F2937),
       ),
-      child: const Text(
-        'I already have an account',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+      child: Text(
+        context.l10n.onboardingExistingAccount,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
       ),
     );
   }
@@ -337,9 +348,9 @@ class OnboardingView extends StatelessWidget {
     );
   }
 
-  Widget _buildFooter(bool isDarkMode) {
+  Widget _buildFooter(BuildContext context, bool isDarkMode) {
     return Text(
-      'JOIN 10K+ STUDENTS TODAY',
+      context.l10n.onboardingFooterStudents,
       style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.w600,

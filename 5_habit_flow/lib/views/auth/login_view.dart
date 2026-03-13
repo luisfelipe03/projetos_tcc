@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../l10n/l10n.dart';
 import '../../viewmodels/auth_viewmodel.dart';
 import '../home_view.dart';
 
@@ -64,6 +66,16 @@ class _LoginViewState extends State<LoginView>
     );
   }
 
+  void _showInfo(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   Future<void> _handleAuth() async {
     if (_formKey.currentState?.validate() != true) {
       return;
@@ -87,7 +99,7 @@ class _LoginViewState extends State<LoginView>
       );
 
       if (success) {
-        _showSuccess('Account created successfully!');
+        _showSuccess(context.l10n.authAccountCreatedSuccess);
       }
     } else {
       // Login
@@ -97,7 +109,7 @@ class _LoginViewState extends State<LoginView>
       );
 
       if (success) {
-        _showSuccess('Welcome back!');
+        _showSuccess(context.l10n.authWelcomeBackSuccess);
       }
     }
 
@@ -114,7 +126,7 @@ class _LoginViewState extends State<LoginView>
         (route) => false,
       );
     } else if (authViewModel.errorMessage != null) {
-      _showError(authViewModel.errorMessage!);
+      _showError(_localizedAuthMessage(authViewModel.errorMessage!));
       authViewModel.clearError();
     }
   }
@@ -189,8 +201,8 @@ class _LoginViewState extends State<LoginView>
                       // Título
                       Text(
                         _tabController.index == 0
-                            ? 'Welcome Back'
-                            : 'Create Account',
+                            ? context.l10n.authWelcomeBack
+                            : context.l10n.authCreateAccount,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 32,
@@ -206,8 +218,8 @@ class _LoginViewState extends State<LoginView>
                       // Subtítulo
                       Text(
                         _tabController.index == 0
-                            ? 'Let\'s continue your habit journey'
-                            : 'Start building your habits today',
+                            ? context.l10n.authWelcomeSubtitle
+                            : context.l10n.authCreateSubtitle,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -239,10 +251,10 @@ class _LoginViewState extends State<LoginView>
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // TODO: Implementar recuperação de senha
+                            _showInfo(context.l10n.authForgotPasswordSoon);
                           },
                           child: Text(
-                            'Forgot Password?',
+                            context.l10n.authForgotPassword,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -274,7 +286,7 @@ class _LoginViewState extends State<LoginView>
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
-                              'Or continue with',
+                              context.l10n.authOrContinueWith,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: isDarkMode
@@ -363,9 +375,9 @@ class _LoginViewState extends State<LoginView>
             ? Colors.white.withValues(alpha: 0.4)
             : const Color(0xFF9CA3AF),
         labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        tabs: const [
-          Tab(text: 'Login'),
-          Tab(text: 'Sign Up'),
+        tabs: [
+          Tab(text: context.l10n.authTabLogin),
+          Tab(text: context.l10n.authTabSignUp),
         ],
       ),
     );
@@ -376,7 +388,7 @@ class _LoginViewState extends State<LoginView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Email',
+          context.l10n.authEmailLabel,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -387,10 +399,14 @@ class _LoginViewState extends State<LoginView>
         TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          validator: (value) => Provider.of<AuthViewModel>(
-            context,
-            listen: false,
-          ).validateEmail(value),
+          validator: (value) {
+            final message = Provider.of<AuthViewModel>(
+              context,
+              listen: false,
+            ).validateEmail(value);
+
+            return message == null ? null : _localizedAuthMessage(message);
+          },
           style: TextStyle(
             fontSize: 15,
             color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
@@ -439,7 +455,7 @@ class _LoginViewState extends State<LoginView>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Password',
+          context.l10n.authPasswordLabel,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
@@ -450,10 +466,14 @@ class _LoginViewState extends State<LoginView>
         TextFormField(
           controller: _passwordController,
           obscureText: _obscurePassword,
-          validator: (value) => Provider.of<AuthViewModel>(
-            context,
-            listen: false,
-          ).validatePassword(value),
+          validator: (value) {
+            final message = Provider.of<AuthViewModel>(
+              context,
+              listen: false,
+            ).validatePassword(value);
+
+            return message == null ? null : _localizedAuthMessage(message);
+          },
           style: TextStyle(
             fontSize: 15,
             color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
@@ -552,7 +572,9 @@ class _LoginViewState extends State<LoginView>
                 ),
               )
             : Text(
-                _tabController.index == 0 ? 'Log In' : 'Sign Up',
+                _tabController.index == 0
+                    ? context.l10n.authLoginButton
+                    : context.l10n.authSignUpButton,
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -566,7 +588,7 @@ class _LoginViewState extends State<LoginView>
   Widget _buildSocialButtons(bool isDarkMode) {
     return _buildSocialButton(
       icon: '🇬',
-      label: 'Google',
+      label: context.l10n.authGoogleButton,
       isDarkMode: isDarkMode,
       onPressed: _handleGoogleSignIn,
     );
@@ -588,13 +610,13 @@ class _LoginViewState extends State<LoginView>
     if (!mounted) return;
 
     if (success) {
-      _showSuccess('Successfully signed in with Google!');
+      _showSuccess(context.l10n.authGoogleSuccess);
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const HomeView()),
         (route) => false,
       );
     } else if (authViewModel.errorMessage != null) {
-      _showError(authViewModel.errorMessage!);
+      _showError(_localizedAuthMessage(authViewModel.errorMessage!));
       authViewModel.clearError();
     }
   }
@@ -672,25 +694,69 @@ class _LoginViewState extends State<LoginView>
               : const Color(0xFF6B7280),
         ),
         children: [
-          const TextSpan(text: 'By continuing, you agree to our '),
+          TextSpan(text: context.l10n.authTermsPrefix),
           TextSpan(
-            text: 'Terms of Service',
+            text: context.l10n.authTermsService,
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
-          const TextSpan(text: ' and '),
+          TextSpan(text: context.l10n.authTermsAnd),
           TextSpan(
-            text: 'Privacy Policy',
+            text: context.l10n.authTermsPrivacy,
             style: TextStyle(
               fontWeight: FontWeight.w600,
               color: isDarkMode ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
-          const TextSpan(text: '.'),
+          TextSpan(text: context.l10n.authTermsSuffix),
         ],
       ),
     );
+  }
+
+  String _localizedAuthMessage(String message) {
+    final l10n = context.l10n;
+
+    switch (message) {
+      case 'Email is required':
+        return l10n.authErrorEmailRequired;
+      case 'Enter a valid email':
+      case 'The email address is invalid':
+        return l10n.authErrorInvalidEmail;
+      case 'Password is required':
+        return l10n.authErrorPasswordRequired;
+      case 'Password must be at least 6 characters':
+        return l10n.authErrorPasswordMinLength;
+      case 'The password is too weak':
+        return l10n.authErrorWeakPassword;
+      case 'An account already exists for this email':
+        return l10n.authErrorEmailAlreadyInUse;
+      case 'Email/password accounts are not enabled':
+      case 'Google sign-in is not enabled':
+        return l10n.authErrorGoogleDisabled;
+      case 'No user found for this email':
+        return l10n.authErrorUserNotFound;
+      case 'Wrong password':
+        return l10n.authErrorWrongPassword;
+      case 'This user account has been disabled':
+        return l10n.authErrorUserDisabled;
+      case 'Invalid email or password':
+        return l10n.authErrorInvalidCredential;
+      case 'An account already exists with the same email but different sign-in credentials':
+        return l10n.authErrorAccountExistsDifferentCredential;
+      case 'The credential is malformed or has expired':
+        return l10n.authErrorGoogleCredentialMalformed;
+    }
+
+    if (message.startsWith('An error occurred during sign up:') ||
+        message.startsWith('An error occurred during sign in:') ||
+        message.startsWith('An error occurred during Google sign in:') ||
+        message.startsWith('An unexpected error occurred:')) {
+      return l10n.authErrorUnexpected;
+    }
+
+    return message;
   }
 }

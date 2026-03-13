@@ -4,20 +4,20 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../models/habit.dart';
 import '../models/habit_category.dart';
 import '../models/habit_completion.dart';
 import '../viewmodels/habit_viewmodel.dart';
 
 enum _StatsRange {
-  last7Days(7, 'Last 7 Days'),
-  last30Days(30, 'Last 30 Days'),
-  last90Days(90, 'Last 90 Days');
+  last7Days(7),
+  last30Days(30),
+  last90Days(90);
 
   final int days;
-  final String label;
 
-  const _StatsRange(this.days, this.label);
+  const _StatsRange(this.days);
 }
 
 class StatsView extends StatefulWidget {
@@ -313,13 +313,15 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildHeader(bool isDark) {
+    final l10n = context.l10n;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 18),
       child: Row(
         children: [
-          const Text(
-            'Statistics',
-            style: TextStyle(fontSize: 48 / 1.5, fontWeight: FontWeight.w800),
+          Text(
+            l10n.statsTitle,
+            style: const TextStyle(fontSize: 48 / 1.5, fontWeight: FontWeight.w800),
           ),
           const Spacer(),
           PopupMenuButton<_StatsRange>(
@@ -334,7 +336,7 @@ class _StatsViewState extends State<StatsView> {
                 .map(
                   (range) => PopupMenuItem<_StatsRange>(
                     value: range,
-                    child: Text(range.label),
+                    child: Text(_rangeLabel(context, range)),
                   ),
                 )
                 .toList(),
@@ -354,7 +356,7 @@ class _StatsViewState extends State<StatsView> {
               child: Row(
                 children: [
                   Text(
-                    _selectedRange.label,
+                    _rangeLabel(context, _selectedRange),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -376,10 +378,13 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildMetricsCarousel(_StatsData stats, bool isDark) {
+    final l10n = context.l10n;
     final completionPercent = (stats.completionRate * 100).round();
     final deltaPercent = (stats.completionDelta * 100).round();
     final deltaPrefix = deltaPercent > 0 ? '+' : '';
-    final trendSubtitle = '$deltaPrefix$deltaPercent% vs previous period';
+    final trendSubtitle = l10n.statsVsPreviousPeriod(
+      '$deltaPrefix$deltaPercent',
+    );
 
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -389,7 +394,7 @@ class _StatsViewState extends State<StatsView> {
           _buildMetricCard(
             isDark: isDark,
             width: 244,
-            title: 'Completion',
+            title: l10n.statsCompletion,
             value: '$completionPercent%',
             subtitle: trendSubtitle,
             icon: Icons.donut_large_rounded,
@@ -399,9 +404,9 @@ class _StatsViewState extends State<StatsView> {
           _buildMetricCard(
             isDark: isDark,
             width: 244,
-            title: 'Best Streak',
+            title: l10n.statsBestStreak,
             value: stats.bestStreak.toString(),
-            subtitle: '${stats.bestStreak} days in a row',
+            subtitle: l10n.statsDaysInRow(stats.bestStreak),
             icon: Icons.local_fire_department_rounded,
             accent: const Color(0xFFFF8A1E),
           ),
@@ -409,9 +414,9 @@ class _StatsViewState extends State<StatsView> {
           _buildMetricCard(
             isDark: isDark,
             width: 244,
-            title: 'Check-ins',
+            title: l10n.statsCheckIns,
             value: stats.totalCompletedCheckIns.toString(),
-            subtitle: '${stats.totalTrackedHabits} habits tracked',
+            subtitle: l10n.statsHabitsTracked(stats.totalTrackedHabits),
             icon: Icons.task_alt_rounded,
             accent: const Color(0xFF4B8DFF),
           ),
@@ -505,6 +510,7 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildCategoryBreakdownCard(_StatsData stats, bool isDark) {
+    final l10n = context.l10n;
     final categories = stats.categoryMetrics.take(4).toList();
 
     return Container(
@@ -532,7 +538,7 @@ class _StatsViewState extends State<StatsView> {
           Row(
             children: [
               Text(
-                'Category Breakdown',
+                l10n.statsCategoryBreakdown,
                 style: TextStyle(
                   fontSize: 22 / 1.1,
                   fontWeight: FontWeight.w800,
@@ -541,7 +547,7 @@ class _StatsViewState extends State<StatsView> {
               ),
               const Spacer(),
               Text(
-                'Weekly Avg',
+                l10n.statsWeeklyAvg,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -558,7 +564,7 @@ class _StatsViewState extends State<StatsView> {
             child: categories.isEmpty
                 ? Center(
                     child: Text(
-                      'No category data for this period',
+                      l10n.statsNoCategoryData,
                       style: TextStyle(
                         color: isDark ? Colors.white54 : Colors.black54,
                         fontWeight: FontWeight.w500,
@@ -573,6 +579,7 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildCategoryChart(List<_CategoryMetric> categories, bool isDark) {
+    final l10n = context.l10n;
     final maxPercent = categories
         .map((c) => c.completionRate * 100)
         .fold<double>(0, (prev, next) => math.max(prev, next));
@@ -632,7 +639,7 @@ class _StatsViewState extends State<StatsView> {
                 return SideTitleWidget(
                   axisSide: meta.axisSide,
                   child: Text(
-                    categories[index].category.displayName,
+                    categories[index].category.localizedLabel(l10n),
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -670,6 +677,7 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildTopPerformingSection(_StatsData stats, bool isDark) {
+    final l10n = context.l10n;
     final items = stats.topPerforming.take(3).toList();
 
     return Padding(
@@ -680,7 +688,7 @@ class _StatsViewState extends State<StatsView> {
           Row(
             children: [
               Text(
-                'Top Performing',
+                l10n.statsTopPerforming,
                 style: TextStyle(
                   fontSize: 40 / 1.5,
                   fontWeight: FontWeight.w800,
@@ -689,7 +697,7 @@ class _StatsViewState extends State<StatsView> {
               ),
               const Spacer(),
               Text(
-                'View All',
+                l10n.statsViewAll,
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -708,7 +716,7 @@ class _StatsViewState extends State<StatsView> {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Complete your first habit to see performance insights.',
+                l10n.statsTopPerformingEmpty,
                 style: TextStyle(
                   fontSize: 15,
                   color: isDark ? Colors.white70 : const Color(0xFF667085),
@@ -766,7 +774,10 @@ class _StatsViewState extends State<StatsView> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${item.habit.category.displayName} • ${item.bestStreak} day streak',
+                            l10n.statsCategoryStreak(
+                              item.habit.category.localizedLabel(l10n),
+                              item.bestStreak,
+                            ),
                             style: TextStyle(
                               fontSize: 18 / 1.3,
                               fontWeight: FontWeight.w500,
@@ -810,6 +821,8 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildEmptyState(bool isDark) {
+    final l10n = context.l10n;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 28),
@@ -823,7 +836,7 @@ class _StatsViewState extends State<StatsView> {
             ),
             const SizedBox(height: 14),
             Text(
-              'No habits yet',
+              l10n.statsEmptyTitle,
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
@@ -832,7 +845,7 @@ class _StatsViewState extends State<StatsView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Create habits to unlock your performance stats and trend charts.',
+              l10n.statsEmptySubtitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -848,6 +861,8 @@ class _StatsViewState extends State<StatsView> {
   }
 
   Widget _buildErrorState(bool isDark) {
+    final l10n = context.l10n;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -861,7 +876,7 @@ class _StatsViewState extends State<StatsView> {
             ),
             const SizedBox(height: 12),
             Text(
-              'Could not load statistics',
+              l10n.statsErrorTitle,
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -870,7 +885,7 @@ class _StatsViewState extends State<StatsView> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Pull down to try again.',
+              l10n.statsErrorSubtitle,
               style: TextStyle(
                 fontSize: 15,
                 color: isDark ? Colors.white54 : const Color(0xFF64748B),
@@ -879,12 +894,25 @@ class _StatsViewState extends State<StatsView> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _refreshStats,
-              child: const Text('Try Again'),
+              child: Text(l10n.statsTryAgain),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _rangeLabel(BuildContext context, _StatsRange range) {
+    final l10n = context.l10n;
+
+    switch (range) {
+      case _StatsRange.last7Days:
+        return l10n.statsRangeLast7Days;
+      case _StatsRange.last30Days:
+        return l10n.statsRangeLast30Days;
+      case _StatsRange.last90Days:
+        return l10n.statsRangeLast90Days;
+    }
   }
 
   Color _categoryColor(HabitCategory category) {

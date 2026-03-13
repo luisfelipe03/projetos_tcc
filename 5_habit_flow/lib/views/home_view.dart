@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+
+import '../l10n/l10n.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/habit_viewmodel.dart';
 import '../models/habit.dart';
@@ -128,11 +130,13 @@ class _HomeViewState extends State<HomeView> {
 
   Widget _buildHeader(AuthViewModel authViewModel, bool isDark) {
     final now = DateTime.now();
-    final dateStr = DateFormat('EEEE, MMM d').format(now);
+    final localeName = Localizations.localeOf(context).toLanguageTag();
+    final dateStr = DateFormat('EEEE, MMM d', localeName).format(now);
+    final l10n = context.l10n;
     final userName =
         authViewModel.user?.displayName ??
         authViewModel.user?.email?.split('@')[0] ??
-        'User';
+      l10n.homeUserFallback;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -185,7 +189,7 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Hi, $userName',
+                  l10n.homeGreeting(userName),
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w700,
@@ -217,6 +221,8 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildEmptyState(bool isDark) {
+    final l10n = context.l10n;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -228,7 +234,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 16),
           Text(
-            'No habits yet',
+            l10n.homeEmptyTitle,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -237,7 +243,7 @@ class _HomeViewState extends State<HomeView> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Tap the + button to create your first habit',
+            l10n.homeEmptySubtitle,
             style: TextStyle(
               fontSize: 16,
               color: isDark ? Colors.grey[600] : Colors.grey[500],
@@ -264,6 +270,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Widget _buildHabitCard(Habit habit, HabitViewModel viewModel, bool isDark) {
+    final l10n = context.l10n;
     final isCompleted = viewModel.isHabitCompletedOnDate(
       habit.id,
       _selectedDate,
@@ -364,7 +371,7 @@ class _HomeViewState extends State<HomeView> {
                             const SizedBox(width: 8),
                           ],
                           Text(
-                            habit.frequency.displayName,
+                            habit.frequency.localizedLabel(l10n),
                             style: TextStyle(
                               fontSize: 13,
                               color: isDark
@@ -395,6 +402,7 @@ class _HomeViewState extends State<HomeView> {
   }
 
   void _showHabitOptions(Habit habit, HabitViewModel viewModel) {
+    final l10n = context.l10n;
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -410,7 +418,7 @@ class _HomeViewState extends State<HomeView> {
           children: [
             ListTile(
               leading: const Icon(Icons.edit),
-              title: const Text('Edit Habit'),
+              title: Text(l10n.homeEditHabit),
               onTap: () async {
                 Navigator.pop(context);
                 final result = await Navigator.push(
@@ -427,8 +435,8 @@ class _HomeViewState extends State<HomeView> {
             ),
             ListTile(
               leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text(
-                'Delete Habit',
+              title: Text(
+                l10n.homeDeleteHabit,
                 style: TextStyle(color: Colors.red),
               ),
               onTap: () async {
@@ -441,7 +449,7 @@ class _HomeViewState extends State<HomeView> {
                   if (!mounted) return;
                   messenger.showSnackBar(
                     SnackBar(
-                      content: const Text('Habit deleted'),
+                      content: Text(l10n.homeHabitDeleted),
                       backgroundColor: Colors.red,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
@@ -459,20 +467,22 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<bool?> _showDeleteConfirmation() {
+    final l10n = context.l10n;
+
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Delete Habit'),
-        content: const Text('Are you sure you want to delete this habit?'),
+        title: Text(l10n.homeDeleteHabitTitle),
+        content: Text(l10n.homeDeleteHabitMessage),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
             style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            child: Text(l10n.commonDelete),
           ),
         ],
       ),

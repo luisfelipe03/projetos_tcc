@@ -1,0 +1,210 @@
+{
+  "@@locale": "pt",
+  "appTitle": "Habit Flow",
+  "commonCancel": "Cancelar",
+  "commonDelete": "Excluir",
+  "commonEdit": "Editar",
+  "commonOk": "OK",
+  "commonReset": "Redefinir",
+  "commonToday": "Hoje",
+  "navHome": "Início",
+  "navStats": "Estatísticas",
+  "navSettings": "Configurações",
+  "onboardingBadgeStudy": "Estudo",
+  "onboardingBadgeHealth": "Saúde",
+  "onboardingTitleStart": "Domine sua\n",
+  "onboardingTitleAccent": "rotina.",
+  "onboardingDescription": "Crie hábitos duradouros e acompanhe seu progresso com uma plataforma vibrante pensada para estudantes.",
+  "onboardingGetStarted": "Começar",
+  "onboardingExistingAccount": "Já tenho uma conta",
+  "onboardingFooterStudents": "JUNTE-SE A MAIS DE 10 MIL ESTUDANTES HOJE",
+  "authWelcomeBack": "Bem-vindo de volta",
+  "authCreateAccount": "Criar conta",
+  "authWelcomeSubtitle": "Vamos continuar sua jornada de hábitos",
+  "authCreateSubtitle": "Comece hoje a construir seus hábitos",
+  "authForgotPassword": "Esqueceu a senha?",
+  "authForgotPasswordSoon": "A recuperação de senha estará disponível em breve.",
+  "authOrContinueWith": "Ou continue com",
+  "authTabLogin": "Entrar",
+  "authTabSignUp": "Cadastrar",
+  "authEmailLabel": "E-mail",
+  "authPasswordLabel": "Senha",
+  "authLoginButton": "Entrar",
+  "authSignUpButton": "Cadastrar",
+  "authGoogleButton": "Google",
+  "authTermsPrefix": "Ao continuar, você concorda com nossos ",
+  "authTermsService": "Termos de Serviço",
+  "authTermsAnd": " e ",
+  "authTermsPrivacy": "Política de Privacidade",
+  "authTermsSuffix": ".",
+  "authAccountCreatedSuccess": "Conta criada com sucesso!",
+  "authWelcomeBackSuccess": "Bem-vindo de volta!",
+  "authGoogleSuccess": "Login com Google realizado com sucesso!",
+  "authErrorEmailRequired": "O e-mail é obrigatório",
+  "authErrorInvalidEmail": "Digite um e-mail válido",
+  "authErrorPasswordRequired": "A senha é obrigatória",
+  "authErrorPasswordMinLength": "A senha deve ter pelo menos 6 caracteres",
+  "authErrorWeakPassword": "A senha é muito fraca",
+  "authErrorEmailAlreadyInUse": "Já existe uma conta para este e-mail",
+  "authErrorOperationNotAllowed": "Este método de login não está habilitado",
+  "authErrorUserNotFound": "Nenhum usuário encontrado para este e-mail",
+  "authErrorWrongPassword": "Senha incorreta",
+  "authErrorUserDisabled": "Esta conta de usuário foi desativada",
+  "authErrorInvalidCredential": "E-mail ou senha inválidos",
+  "authErrorAccountExistsDifferentCredential": "Já existe uma conta com este e-mail usando outra credencial de login",
+  "authErrorGoogleCredentialMalformed": "A credencial do Google está inválida ou expirou",
+  "authErrorGoogleDisabled": "O login com Google não está habilitado",
+  "authErrorUnexpected": "Ocorreu um erro inesperado. Tente novamente.",
+  "homeUserFallback": "Usuário",
+  "homeGreeting": "Olá, {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "homeEmptyTitle": "Ainda não há hábitos",
+  "homeEmptySubtitle": "Toque no botão + para criar seu primeiro hábito",
+  "homeEditHabit": "Editar hábito",
+  "homeDeleteHabit": "Excluir hábito",
+  "homeHabitDeleted": "Hábito excluído",
+  "homeDeleteHabitTitle": "Excluir hábito",
+  "homeDeleteHabitMessage": "Tem certeza de que deseja excluir este hábito?",
+  "dailyProgressTitle": "Progresso diário",
+  "dailyProgressSummary": "{completed} de {total} hábitos concluídos",
+  "@dailyProgressSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTitle": "Estatísticas",
+  "statsRangeLast7Days": "Últimos 7 dias",
+  "statsRangeLast30Days": "Últimos 30 dias",
+  "statsRangeLast90Days": "Últimos 90 dias",
+  "statsCompletion": "Conclusão",
+  "statsBestStreak": "Melhor sequência",
+  "statsCheckIns": "Check-ins",
+  "statsVsPreviousPeriod": "{delta}% vs período anterior",
+  "@statsVsPreviousPeriod": {
+    "placeholders": {
+      "delta": {}
+    }
+  },
+  "statsDaysInRow": "{days} dias seguidos",
+  "@statsDaysInRow": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsHabitsTracked": "{count} hábitos acompanhados",
+  "@statsHabitsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCategoryBreakdown": "Desempenho por categoria",
+  "statsWeeklyAvg": "Média semanal",
+  "statsNoCategoryData": "Sem dados de categoria neste período",
+  "statsTopPerforming": "Melhores hábitos",
+  "statsViewAll": "Ver tudo",
+  "statsTopPerformingEmpty": "Conclua seu primeiro hábito para ver insights de desempenho.",
+  "statsEmptyTitle": "Ainda não há hábitos",
+  "statsEmptySubtitle": "Crie hábitos para desbloquear estatísticas e gráficos de tendência.",
+  "statsErrorTitle": "Não foi possível carregar as estatísticas",
+  "statsErrorSubtitle": "Puxe para baixo para tentar novamente.",
+  "statsTryAgain": "Tentar novamente",
+  "statsCategoryStreak": "{category} • sequência de {days} dias",
+  "@statsCategoryStreak": {
+    "placeholders": {
+      "category": {},
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsTitle": "Configurações",
+  "settingsAccount": "CONTA",
+  "settingsProfile": "Perfil",
+  "settingsProfileSubtitle": "Gerencie seus dados pessoais",
+  "settingsProfileSoon": "Tela de perfil em breve",
+  "settingsPreferences": "PREFERÊNCIAS",
+  "settingsNotifications": "Notificações",
+  "settingsNotificationsDescription": "Ative notificações para receber lembretes dos seus hábitos.",
+  "settingsEnableNotifications": "Ativar notificações",
+  "settingsDarkMode": "Modo escuro",
+  "settingsLanguage": "Idioma",
+  "settingsSupport": "SUPORTE",
+  "settingsAbout": "Sobre",
+  "settingsAboutContent": "Habit Flow\nVersão 2.4.0",
+  "settingsHelpSupport": "Ajuda e suporte",
+  "settingsHelpSoon": "Central de ajuda em breve",
+  "settingsChooseLanguage": "Escolha o idioma",
+  "settingsLogOut": "Sair",
+  "settingsLogoutConfirm": "Tem certeza de que deseja sair da conta?",
+  "habitFormTitleCreate": "Novo hábito",
+  "habitFormTitleEdit": "Editar hábito",
+  "habitFormSectionName": "NOME DO HÁBITO",
+  "habitFormSectionFrequency": "FREQUÊNCIA",
+  "habitFormSectionCategory": "CATEGORIA",
+  "habitFormSectionReminder": "LEMBRETE",
+  "habitFormSectionColor": "COR DO HÁBITO",
+  "habitFormNameHint": "Yoga matinal",
+  "habitFormNameRequired": "Digite um nome para o hábito",
+  "habitFormRepeatOn": "Repetir em",
+  "habitFormWeeklyDaysPrompt": "Em quais dias este hábito deve ser feito?",
+  "habitFormSaveAction": "Salvar hábito",
+  "habitFormUpdateAction": "Atualizar hábito",
+  "habitFormCreatedSuccess": "Hábito criado com sucesso!",
+  "habitFormUpdatedSuccess": "Hábito atualizado com sucesso!",
+  "habitFormWeeklyReminderDaysError": "Selecione pelo menos um dia para lembretes semanais",
+  "habitFormCreateFailed": "Não foi possível criar o hábito",
+  "habitFormUpdateFailed": "Não foi possível atualizar o hábito",
+  "habitErrorUnauthenticated": "Você precisa entrar na conta para gerenciar hábitos",
+  "habitErrorNotFound": "Hábito não encontrado",
+  "habitDetailsTitle": "DETALHES DO HÁBITO",
+  "habitDetailsCurrentStreak": "SEQUÊNCIA ATUAL",
+  "habitDetailsStreakDays": "{days, plural, =1{1 dia} other{{days} dias}}",
+  "@habitDetailsStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitDetailsThisWeek": "Esta semana",
+  "habitDetailsMonthlyOverview": "Visão mensal",
+  "habitDetailsCompletionRate": "Taxa de conclusão",
+  "habitDetailsTotalDays": "TOTAL DE DIAS",
+  "languageOptionEnglish": "Inglês",
+  "languageOptionPortuguese": "Português",
+  "categoryHealth": "Saúde",
+  "categoryPersonal": "Pessoal",
+  "categoryStudy": "Estudo",
+  "categorySocial": "Social",
+  "categoryFinance": "Finanças",
+  "frequencyDaily": "Diário",
+  "frequencyWeekly": "Semanal",
+  "frequencyMonthly": "Mensal",
+  "dayMonday": "Segunda-feira",
+  "dayTuesday": "Terça-feira",
+  "dayWednesday": "Quarta-feira",
+  "dayThursday": "Quinta-feira",
+  "dayFriday": "Sexta-feira",
+  "daySaturday": "Sábado",
+  "daySunday": "Domingo",
+  "dayShortMonday": "Seg",
+  "dayShortTuesday": "Ter",
+  "dayShortWednesday": "Qua",
+  "dayShortThursday": "Qui",
+  "dayShortFriday": "Sex",
+  "dayShortSaturday": "Sáb",
+  "dayShortSunday": "Dom"
+}

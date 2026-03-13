@@ -1,0 +1,210 @@
+{
+  "@@locale": "en",
+  "appTitle": "Habit Flow",
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "commonEdit": "Edit",
+  "commonOk": "OK",
+  "commonReset": "Reset",
+  "commonToday": "Today",
+  "navHome": "Home",
+  "navStats": "Stats",
+  "navSettings": "Settings",
+  "onboardingBadgeStudy": "Study",
+  "onboardingBadgeHealth": "Health",
+  "onboardingTitleStart": "Master Your\n",
+  "onboardingTitleAccent": "Routine.",
+  "onboardingDescription": "Build lasting habits and track your progress with our vibrant student-focused platform.",
+  "onboardingGetStarted": "Get Started",
+  "onboardingExistingAccount": "I already have an account",
+  "onboardingFooterStudents": "JOIN 10K+ STUDENTS TODAY",
+  "authWelcomeBack": "Welcome Back",
+  "authCreateAccount": "Create Account",
+  "authWelcomeSubtitle": "Let's continue your habit journey",
+  "authCreateSubtitle": "Start building your habits today",
+  "authForgotPassword": "Forgot Password?",
+  "authForgotPasswordSoon": "Password recovery will be available soon.",
+  "authOrContinueWith": "Or continue with",
+  "authTabLogin": "Login",
+  "authTabSignUp": "Sign Up",
+  "authEmailLabel": "Email",
+  "authPasswordLabel": "Password",
+  "authLoginButton": "Log In",
+  "authSignUpButton": "Sign Up",
+  "authGoogleButton": "Google",
+  "authTermsPrefix": "By continuing, you agree to our ",
+  "authTermsService": "Terms of Service",
+  "authTermsAnd": " and ",
+  "authTermsPrivacy": "Privacy Policy",
+  "authTermsSuffix": ".",
+  "authAccountCreatedSuccess": "Account created successfully!",
+  "authWelcomeBackSuccess": "Welcome back!",
+  "authGoogleSuccess": "Successfully signed in with Google!",
+  "authErrorEmailRequired": "Email is required",
+  "authErrorInvalidEmail": "Enter a valid email",
+  "authErrorPasswordRequired": "Password is required",
+  "authErrorPasswordMinLength": "Password must be at least 6 characters",
+  "authErrorWeakPassword": "The password is too weak",
+  "authErrorEmailAlreadyInUse": "An account already exists for this email",
+  "authErrorOperationNotAllowed": "This sign-in method is not enabled",
+  "authErrorUserNotFound": "No user found for this email",
+  "authErrorWrongPassword": "Wrong password",
+  "authErrorUserDisabled": "This user account has been disabled",
+  "authErrorInvalidCredential": "Invalid email or password",
+  "authErrorAccountExistsDifferentCredential": "An account already exists with the same email but different sign-in credentials",
+  "authErrorGoogleCredentialMalformed": "The Google credential is malformed or has expired",
+  "authErrorGoogleDisabled": "Google sign-in is not enabled",
+  "authErrorUnexpected": "An unexpected error occurred. Please try again.",
+  "homeUserFallback": "User",
+  "homeGreeting": "Hi, {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "homeEmptyTitle": "No habits yet",
+  "homeEmptySubtitle": "Tap the + button to create your first habit",
+  "homeEditHabit": "Edit Habit",
+  "homeDeleteHabit": "Delete Habit",
+  "homeHabitDeleted": "Habit deleted",
+  "homeDeleteHabitTitle": "Delete Habit",
+  "homeDeleteHabitMessage": "Are you sure you want to delete this habit?",
+  "dailyProgressTitle": "Daily Progress",
+  "dailyProgressSummary": "{completed} of {total} habits completed",
+  "@dailyProgressSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "statsTitle": "Statistics",
+  "statsRangeLast7Days": "Last 7 Days",
+  "statsRangeLast30Days": "Last 30 Days",
+  "statsRangeLast90Days": "Last 90 Days",
+  "statsCompletion": "Completion",
+  "statsBestStreak": "Best Streak",
+  "statsCheckIns": "Check-ins",
+  "statsVsPreviousPeriod": "{delta}% vs previous period",
+  "@statsVsPreviousPeriod": {
+    "placeholders": {
+      "delta": {}
+    }
+  },
+  "statsDaysInRow": "{days} days in a row",
+  "@statsDaysInRow": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "statsHabitsTracked": "{count} habits tracked",
+  "@statsHabitsTracked": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "statsCategoryBreakdown": "Category Breakdown",
+  "statsWeeklyAvg": "Weekly Avg",
+  "statsNoCategoryData": "No category data for this period",
+  "statsTopPerforming": "Top Performing",
+  "statsViewAll": "View All",
+  "statsTopPerformingEmpty": "Complete your first habit to see performance insights.",
+  "statsEmptyTitle": "No habits yet",
+  "statsEmptySubtitle": "Create habits to unlock your performance stats and trend charts.",
+  "statsErrorTitle": "Could not load statistics",
+  "statsErrorSubtitle": "Pull down to try again.",
+  "statsTryAgain": "Try Again",
+  "statsCategoryStreak": "{category} • {days} day streak",
+  "@statsCategoryStreak": {
+    "placeholders": {
+      "category": {},
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsTitle": "Settings",
+  "settingsAccount": "ACCOUNT",
+  "settingsProfile": "Profile",
+  "settingsProfileSubtitle": "Manage your personal details",
+  "settingsProfileSoon": "Profile screen coming soon",
+  "settingsPreferences": "PREFERENCES",
+  "settingsNotifications": "Notifications",
+  "settingsNotificationsDescription": "Enable notifications to receive reminders for your habits.",
+  "settingsEnableNotifications": "Enable notifications",
+  "settingsDarkMode": "Dark Mode",
+  "settingsLanguage": "Language",
+  "settingsSupport": "SUPPORT",
+  "settingsAbout": "About",
+  "settingsAboutContent": "Habit Flow\nVersion 2.4.0",
+  "settingsHelpSupport": "Help & Support",
+  "settingsHelpSoon": "Help center coming soon",
+  "settingsChooseLanguage": "Choose language",
+  "settingsLogOut": "Log Out",
+  "settingsLogoutConfirm": "Are you sure you want to log out?",
+  "habitFormTitleCreate": "New Habit",
+  "habitFormTitleEdit": "Edit Habit",
+  "habitFormSectionName": "HABIT NAME",
+  "habitFormSectionFrequency": "FREQUENCY",
+  "habitFormSectionCategory": "CATEGORY",
+  "habitFormSectionReminder": "REMINDER",
+  "habitFormSectionColor": "HABIT COLOR",
+  "habitFormNameHint": "Morning Yoga",
+  "habitFormNameRequired": "Please enter a habit name",
+  "habitFormRepeatOn": "Repeat on",
+  "habitFormWeeklyDaysPrompt": "Which days should this habit be done?",
+  "habitFormSaveAction": "Save Habit",
+  "habitFormUpdateAction": "Update Habit",
+  "habitFormCreatedSuccess": "Habit created successfully!",
+  "habitFormUpdatedSuccess": "Habit updated successfully!",
+  "habitFormWeeklyReminderDaysError": "Select at least one day for weekly reminders",
+  "habitFormCreateFailed": "Failed to create habit",
+  "habitFormUpdateFailed": "Failed to update habit",
+  "habitErrorUnauthenticated": "You need to be signed in to manage habits",
+  "habitErrorNotFound": "Habit not found",
+  "habitDetailsTitle": "HABIT DETAILS",
+  "habitDetailsCurrentStreak": "CURRENT STREAK",
+  "habitDetailsStreakDays": "{days, plural, =1{1 Day} other{{days} Days}}",
+  "@habitDetailsStreakDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "habitDetailsThisWeek": "This Week",
+  "habitDetailsMonthlyOverview": "Monthly Overview",
+  "habitDetailsCompletionRate": "Completion Rate",
+  "habitDetailsTotalDays": "TOTAL DAYS",
+  "languageOptionEnglish": "English",
+  "languageOptionPortuguese": "Portuguese",
+  "categoryHealth": "Health",
+  "categoryPersonal": "Personal",
+  "categoryStudy": "Study",
+  "categorySocial": "Social",
+  "categoryFinance": "Finance",
+  "frequencyDaily": "Daily",
+  "frequencyWeekly": "Weekly",
+  "frequencyMonthly": "Monthly",
+  "dayMonday": "Monday",
+  "dayTuesday": "Tuesday",
+  "dayWednesday": "Wednesday",
+  "dayThursday": "Thursday",
+  "dayFriday": "Friday",
+  "daySaturday": "Saturday",
+  "daySunday": "Sunday",
+  "dayShortMonday": "Mon",
+  "dayShortTuesday": "Tue",
+  "dayShortWednesday": "Wed",
+  "dayShortThursday": "Thu",
+  "dayShortFriday": "Fri",
+  "dayShortSaturday": "Sat",
+  "dayShortSunday": "Sun"
+}

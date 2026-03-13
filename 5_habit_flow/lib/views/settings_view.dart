@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../l10n/l10n.dart';
 import '../services/notification_service.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/habit_viewmodel.dart';
@@ -17,8 +18,12 @@ class SettingsView extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final authViewModel = context.watch<AuthViewModel>();
     final settingsViewModel = context.watch<SettingsViewModel>();
+    final l10n = context.l10n;
 
-    final strings = _stringsForLanguage(settingsViewModel.languageCode);
+    final strings = _SettingsStrings.fromL10n(
+      l10n,
+      settingsViewModel.languageCode,
+    );
 
     return Container(
       color: _pageBackground(isDark),
@@ -79,7 +84,7 @@ class SettingsView extends StatelessWidget {
                       icon: Icons.language,
                       iconColor: const Color(0xFFF97316),
                       title: strings.language,
-                      trailingText: settingsViewModel.languageLabel,
+                        trailingText: strings.currentLanguage,
                       onTap: () {
                         _showLanguageSheet(
                           context,
@@ -420,7 +425,7 @@ class SettingsView extends StatelessWidget {
                   settingsViewModel,
                   currentCode: settingsViewModel.languageCode,
                   code: 'en',
-                  label: 'English',
+                  label: context.l10n.languageOptionEnglish,
                   isDark: isDark,
                 ),
                 const SizedBox(height: 8),
@@ -429,7 +434,7 @@ class SettingsView extends StatelessWidget {
                   settingsViewModel,
                   currentCode: settingsViewModel.languageCode,
                   code: 'pt',
-                  label: 'Portuguese',
+                  label: context.l10n.languageOptionPortuguese,
                   isDark: isDark,
                 ),
               ],
@@ -624,7 +629,7 @@ class SettingsView extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: Text(context.l10n.commonOk),
             ),
           ],
         );
@@ -642,59 +647,6 @@ class SettingsView extends StatelessWidget {
     return isDark ? const Color(0xFF071533) : const Color(0xFFF3F4F8);
   }
 
-  _SettingsStrings _stringsForLanguage(String languageCode) {
-    switch (languageCode) {
-      case 'pt':
-        return const _SettingsStrings(
-          settings: 'Configurações',
-          account: 'CONTA',
-          profile: 'Perfil',
-          profileSubtitle: 'Gerencie seus dados pessoais',
-          profileSoon: 'Tela de perfil em breve',
-          preferences: 'PREFERÊNCIAS',
-          notifications: 'Notificações',
-          notificationsDescription:
-              'Ative notificações para receber lembretes dos seus hábitos.',
-          enableNotifications: 'Ativar notificações',
-          darkMode: 'Modo escuro',
-          language: 'Idioma',
-          support: 'SUPORTE',
-          about: 'Sobre',
-          aboutContent: 'Habit Flow\nVersão 2.4.0',
-          helpSupport: 'Ajuda e Suporte',
-          helpSoon: 'Central de ajuda em breve',
-          chooseLanguage: 'Escolha o idioma',
-          logOut: 'Sair',
-          logoutConfirm: 'Tem certeza que deseja sair da conta?',
-          cancel: 'Cancelar',
-        );
-      case 'en':
-      default:
-        return const _SettingsStrings(
-          settings: 'Settings',
-          account: 'ACCOUNT',
-          profile: 'Profile',
-          profileSubtitle: 'Manage your personal details',
-          profileSoon: 'Profile screen coming soon',
-          preferences: 'PREFERENCES',
-          notifications: 'Notifications',
-          notificationsDescription:
-              'Enable notifications to receive reminders for your habits.',
-          enableNotifications: 'Enable notifications',
-          darkMode: 'Dark Mode',
-          language: 'Language',
-          support: 'SUPPORT',
-          about: 'About',
-          aboutContent: 'Habit Flow\nVersion 2.4.0',
-          helpSupport: 'Help & Support',
-          helpSoon: 'Help center coming soon',
-          chooseLanguage: 'Choose language',
-          logOut: 'Log Out',
-          logoutConfirm: 'Are you sure you want to log out?',
-          cancel: 'Cancel',
-        );
-    }
-  }
 }
 
 class _SettingsStrings {
@@ -718,6 +670,7 @@ class _SettingsStrings {
   final String logOut;
   final String logoutConfirm;
   final String cancel;
+  final String currentLanguage;
 
   const _SettingsStrings({
     required this.settings,
@@ -740,5 +693,34 @@ class _SettingsStrings {
     required this.logOut,
     required this.logoutConfirm,
     required this.cancel,
+    required this.currentLanguage,
   });
+
+  factory _SettingsStrings.fromL10n(dynamic l10n, String languageCode) {
+    return _SettingsStrings(
+      settings: l10n.settingsTitle,
+      account: l10n.settingsAccount,
+      profile: l10n.settingsProfile,
+      profileSubtitle: l10n.settingsProfileSubtitle,
+      profileSoon: l10n.settingsProfileSoon,
+      preferences: l10n.settingsPreferences,
+      notifications: l10n.settingsNotifications,
+      notificationsDescription: l10n.settingsNotificationsDescription,
+      enableNotifications: l10n.settingsEnableNotifications,
+      darkMode: l10n.settingsDarkMode,
+      language: l10n.settingsLanguage,
+      support: l10n.settingsSupport,
+      about: l10n.settingsAbout,
+      aboutContent: l10n.settingsAboutContent,
+      helpSupport: l10n.settingsHelpSupport,
+      helpSoon: l10n.settingsHelpSoon,
+      chooseLanguage: l10n.settingsChooseLanguage,
+      logOut: l10n.settingsLogOut,
+      logoutConfirm: l10n.settingsLogoutConfirm,
+      cancel: l10n.commonCancel,
+      currentLanguage: languageCode == 'pt'
+          ? l10n.languageOptionPortuguese
+          : l10n.languageOptionEnglish,
+    );
+  }
 }
