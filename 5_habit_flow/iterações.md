@@ -3131,3 +3131,41 @@ Made changes.
 
 ### Resultado:
 O layout da tela de configurações foi ajustado para ficar mais proporcional e alinhado com o design do protótipo, com cards menores, espaçamento reduzido e tipografia ajustada. Além disso, a cor de fundo da Home foi padronizada para combinar com as outras telas,criando uma experiência visual mais consistente em todo o aplicativo. 
+
+## Iteração 34
+### Promt usado:
+```plaintext
+Remova o botão fab das telas de estatísticas e configurações, ele não tem função nessas telas e está causando uma distração visual. O botão fab deve permanecer apenas na tela home, onde ele é usado para criar um novo hábito. 
+```
+
+#### Output recebido:
+```markdown
+Vou verificar o home_view.dart atualizado para confirmar onde o FAB está sendo renderizado e aplicar a condição para exibir apenas na aba Home.
+
+Read [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart#1-1), lines 1 to 240
+
+Vou fazer uma alteração pontual no `Scaffold` da Home: tornar o `floatingActionButton` condicional para aparecer somente quando `currentIndex == 0` (aba Home).
+
+Generating patch (47 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart)
+
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart), no problems found
+
+Feito. O FAB agora aparece somente na aba Home e fica oculto nas abas de Estatísticas e Configurações.
+
+Arquivo alterado:
+- home_view.dart
+
+Mudança aplicada:
+- `floatingActionButton` no `Scaffold` ficou condicional:
+  - mostra quando `_currentNavIndex == 0`
+  - retorna `null` nas outras abas
+
+Validação:
+- Sem erros de análise em home_view.dart.
+
+Made changes.
+```
+
+### Resultado:
+O botão FAB foi removido das telas de estatísticas e configurações, permanecendo apenas natela home onde é utilizado para criar um novo hábito. Isso ajuda a reduzir a distração visual nessas telas e mantém o foco na funcionalidade principal de cada seção.

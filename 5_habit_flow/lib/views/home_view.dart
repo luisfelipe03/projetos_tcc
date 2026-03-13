@@ -67,21 +67,25 @@ class _HomeViewState extends State<HomeView> {
         currentIndex: _currentNavIndex,
         onTap: _onNavTap,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateHabitView()),
-          );
-          if (context.mounted) {
-            context.read<HabitViewModel>().loadHabits();
-          }
-        },
-        backgroundColor: isDark
-            ? const Color(0xFFA855F7)
-            : const Color(0xFF5B7FFF),
-        elevation: 6,
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
-      ),
+      floatingActionButton: _currentNavIndex == 0
+          ? FloatingActionButton(
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const CreateHabitView(),
+                  ),
+                );
+                if (context.mounted) {
+                  context.read<HabitViewModel>().loadHabits();
+                }
+              },
+              backgroundColor: isDark
+                  ? const Color(0xFFA855F7)
+                  : const Color(0xFF5B7FFF),
+              elevation: 6,
+              child: const Icon(Icons.add, color: Colors.white, size: 28),
+            )
+          : null,
     );
   }
 
