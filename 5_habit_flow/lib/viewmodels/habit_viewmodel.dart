@@ -62,6 +62,41 @@ class HabitViewModel extends ChangeNotifier {
 
   String? get userId => _auth.currentUser?.uid;
 
+  bool _isMissingIndexError(Object error) {
+    if (error is! FirebaseException) {
+      return false;
+    }
+
+    final message = error.message?.toLowerCase() ?? '';
+    return error.code == 'failed-precondition' && message.contains('index');
+  }
+
+  Future<List<HabitCompletion>> _getAllUserCompletions() async {
+    final uid = userId;
+    if (uid == null) {
+      throw Exception('User not authenticated');
+    }
+
+    final querySnapshot = await _firestore
+        .collection('habitCompletions')
+        .where('userId', isEqualTo: uid)
+        .get();
+
+    return querySnapshot.docs
+        .map((doc) => HabitCompletion.fromMap(doc.data()))
+        .toList();
+  }
+
+  bool _isCompletionInRange(
+    HabitCompletion completion,
+    DateTime startInclusive,
+    DateTime endExclusive,
+  ) {
+    final completionDate = _normalizeDate(completion.completedAt);
+    return !completionDate.isBefore(startInclusive) &&
+        completionDate.isBefore(endExclusive);
+  }
+
   /// Busca um hábito específico por ID
   Habit? getHabitById(String habitId) {
     try {
@@ -99,16 +134,35 @@ class HabitViewModel extends ChangeNotifier {
         throw Exception('User not authenticated');
       }
 
-      final querySnapshot = await _firestore
-          .collection('habitCompletions')
-          .where('userId', isEqualTo: userId)
-          .where('habitId', isEqualTo: habitId)
-          .orderBy('completedAt', descending: true)
-          .get();
+      try {
+        final querySnapshot = await _firestore
+            .collection('habitCompletions')
+            .where('userId', isEqualTo: userId)
+            .where('habitId', isEqualTo: habitId)
+            .orderBy('completedAt', descending: true)
+            .get();
 
-      return querySnapshot.docs
-          .map((doc) => HabitCompletion.fromMap(doc.data()))
-          .toList();
+        return querySnapshot.docs
+            .map((doc) => HabitCompletion.fromMap(doc.data()))
+            .toList();
+      } on FirebaseException catch (e) {
+        if (!_isMissingIndexError(e)) {
+          rethrow;
+        }
+
+        debugPrint(
+          'Missing index for getHabitCompletions; using client-side filter fallback.',
+        );
+
+        final completions = await _getAllUserCompletions();
+        final filtered =
+            completions
+                .where((completion) => completion.habitId == habitId)
+                .toList()
+              ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+
+        return filtered;
+      }
     } catch (e) {
       _setError(e.toString());
       return [];
@@ -492,19 +546,42 @@ class HabitViewModel extends ChangeNotifier {
       final startOfDay = normalizedDate;
       final endOfDay = normalizedDate.add(const Duration(days: 1));
 
-      final querySnapshot = await _firestore
-          .collection('habitCompletions')
-          .where('userId', isEqualTo: userId)
-          .where(
-            'completedAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
-          )
-          .where('completedAt', isLessThan: Timestamp.fromDate(endOfDay))
-          .get();
+      List<HabitCompletion> completions;
 
-      final completions = querySnapshot.docs
-          .map((doc) => HabitCompletion.fromMap(doc.data()))
-          .toList();
+      try {
+        final querySnapshot = await _firestore
+            .collection('habitCompletions')
+            .where('userId', isEqualTo: userId)
+            .where(
+              'completedAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay),
+            )
+            .where('completedAt', isLessThan: Timestamp.fromDate(endOfDay))
+            .get();
+
+        completions = querySnapshot.docs
+            .map((doc) => HabitCompletion.fromMap(doc.data()))
+            .toList();
+      } on FirebaseException catch (e) {
+        if (!_isMissingIndexError(e)) {
+          rethrow;
+        }
+
+        debugPrint(
+          'Missing index for loadCompletionsForDate; using client-side filter fallback.',
+        );
+
+        final allCompletions = await _getAllUserCompletions();
+        completions = allCompletions
+            .where(
+              (completion) => _isCompletionInRange(
+                completion,
+                normalizedDate,
+                normalizedDate.add(const Duration(days: 1)),
+              ),
+            )
+            .toList();
+      }
 
       _completionsByDate[dateKey] = completions;
       notifyListeners();
@@ -528,19 +605,42 @@ class HabitViewModel extends ChangeNotifier {
         endDate,
       ).add(const Duration(days: 1));
 
-      final querySnapshot = await _firestore
-          .collection('habitCompletions')
-          .where('userId', isEqualTo: userId)
-          .where(
-            'completedAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
-          )
-          .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
-          .get();
+      List<HabitCompletion> completions;
 
-      final completions = querySnapshot.docs
-          .map((doc) => HabitCompletion.fromMap(doc.data()))
-          .toList();
+      try {
+        final querySnapshot = await _firestore
+            .collection('habitCompletions')
+            .where('userId', isEqualTo: userId)
+            .where(
+              'completedAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+            )
+            .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
+            .get();
+
+        completions = querySnapshot.docs
+            .map((doc) => HabitCompletion.fromMap(doc.data()))
+            .toList();
+      } on FirebaseException catch (e) {
+        if (!_isMissingIndexError(e)) {
+          rethrow;
+        }
+
+        debugPrint(
+          'Missing index for loadCompletionsForDateRange; using client-side filter fallback.',
+        );
+
+        final allCompletions = await _getAllUserCompletions();
+        completions = allCompletions
+            .where(
+              (completion) => _isCompletionInRange(
+                completion,
+                normalizedStart,
+                normalizedEnd,
+              ),
+            )
+            .toList();
+      }
 
       // Agrupa por data
       _completionsByDate.clear();
@@ -573,19 +673,40 @@ class HabitViewModel extends ChangeNotifier {
         endDate,
       ).add(const Duration(days: 1));
 
-      final querySnapshot = await _firestore
-          .collection('habitCompletions')
-          .where('userId', isEqualTo: userId)
-          .where(
-            'completedAt',
-            isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
-          )
-          .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
-          .get();
+      try {
+        final querySnapshot = await _firestore
+            .collection('habitCompletions')
+            .where('userId', isEqualTo: userId)
+            .where(
+              'completedAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(normalizedStart),
+            )
+            .where('completedAt', isLessThan: Timestamp.fromDate(normalizedEnd))
+            .get();
 
-      return querySnapshot.docs
-          .map((doc) => HabitCompletion.fromMap(doc.data()))
-          .toList();
+        return querySnapshot.docs
+            .map((doc) => HabitCompletion.fromMap(doc.data()))
+            .toList();
+      } on FirebaseException catch (e) {
+        if (!_isMissingIndexError(e)) {
+          rethrow;
+        }
+
+        debugPrint(
+          'Missing index for getCompletionsInRange; using client-side filter fallback.',
+        );
+
+        final allCompletions = await _getAllUserCompletions();
+        return allCompletions
+            .where(
+              (completion) => _isCompletionInRange(
+                completion,
+                normalizedStart,
+                normalizedEnd,
+              ),
+            )
+            .toList();
+      }
     } catch (e) {
       _setError(e.toString());
       return [];

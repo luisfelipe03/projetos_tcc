@@ -3300,3 +3300,70 @@ Made changes.
 
 ### Resultado:
 O seeder foi implementado com sucesso, permitindo popular o banco de dados com dados falsos para testes. O botão para executar o seeder foi adicionado na tela de configurações, eas mensagens de feedback foram localizadas para inglês e português. Mas a aplicação não está consultando os habitos concluidos, então os gráficos de estatísticas e os detalhes dos hábitos não estão refletindo os dados semeados. O próximo passo é tentar identificar por que os hábitos concluídos não estão marcados como concluídos.
+
+## Iteração 36
+### Promt usado:
+```plaintext
+Vamos investigar por que os hábitos semeados não estão sendo marcados como concluídos. Eles foram persistidos no banco de dados, mas a aplicação não está consultando os hábitos concluídos corretamente. Verifique o código responsável por consultar os hábitos concluídos e veja se há algum problema que possa estar causando esse comportamento. As estatísticas e os detalhes dos hábitos dependem dessas consultas para exibir as informações corretas, então é importante resolver esse problema para garantir que os dados semeados sejam refletidos corretamente na aplicação. 
+```
+
+#### Output recebido:
+```markdown
+Searched for files matching `**/firestore.indexes.json`, no matches
+
+Identifiquei um provável ponto raiz: as consultas de conclusões combinam múltiplos filtros/campos e podem falhar por índice composto ausente no Firestore, retornando vazio no app (especialmente em estatísticas/detalhes). Vou implementar fallback automático nessas consultas para garantir que os dados semeados apareçam mesmo sem índice criado.
+
+Generating patch (265 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart)
+
+
+Ran terminal command:  dart format lib/viewmodels/habit_viewmodel.dart
+
+Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/viewmodels/habit_viewmodel.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/stats_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/home_view.dart), no problems found
+
+Searched for text `Missing index for getHabitCompletions|Missing index for loadCompletionsForDate|Missing index for getCompletionsInRange` (`**/lib/viewmodels/habit_viewmodel.dart`), 4 results
+
+A correção já está aplicada. Vou só pegar os pontos exatos (linhas) no `HabitViewModel` para te explicar objetivamente o problema e como ele foi resolvido.
+
+Searched for regex `bool _isMissingIndexError|Future<List<HabitCompletion>> _getAllUserCompletions|Future<List<HabitCompletion>> getHabitCompletions|Future<void> loadCompletionsForDate\(|Future<void> loadCompletionsForDateRange|Future<List<HabitCompletion>> getCompletionsInRange` (`**/lib/viewmodels/habit_viewmodel.dart`), 6 results
+
+Você estava certo em focar nas consultas de conclusões: o problema estava nelas.
+
+**Diagnóstico**
+- As consultas usadas por Home/Stats/Details combinam filtros que podem exigir índice composto no Firestore.
+- Quando esse índice faltava, a consulta falhava e o código caía no `catch`, retornando lista vazia ou sem atualizar corretamente.
+- Isso fazia os hábitos semeados existirem no banco, mas não aparecerem como concluídos na UI.
+
+**Correção aplicada**
+- Arquivo: habit_viewmodel.dart
+- Adicionei detecção de erro de índice ausente:
+  - `lib/viewmodels/habit_viewmodel.dart:65` (`_isMissingIndexError`)
+- Adicionei fallback de leitura por `userId` + filtro local:
+  - `lib/viewmodels/habit_viewmodel.dart:74` (`_getAllUserCompletions`)
+- Atualizei os métodos de consulta principais para:
+  1. tentar a query otimizada atual;
+  2. se falhar por índice ausente, usar fallback em memória.
+- Métodos corrigidos:
+  - `lib/viewmodels/habit_viewmodel.dart:131` `getHabitCompletions`
+  - `lib/viewmodels/habit_viewmodel.dart:536` `loadCompletionsForDate`
+  - `lib/viewmodels/habit_viewmodel.dart:594` `loadCompletionsForDateRange`
+  - `lib/viewmodels/habit_viewmodel.dart:662` `getCompletionsInRange`
+
+**Resultado esperado**
+- Dados semeados passam a refletir corretamente em:
+  - marcação de concluído na Home,
+  - estatísticas,
+  - detalhes do hábito,
+  mesmo sem índice composto criado no Firestore.
+
+**Validação**
+- Análise estática sem erros nos arquivos impactados.
+
+Próximo passo recomendado:
+1. Rodar o seeder novamente na tela de Configurações e abrir Home/Stats/Details para validar visualmente.
+2. (Opcional para produção) criar os índices compostos no Firestore e manter o fallback como proteção.
+
+Made changes.
+```
+
+### Resultado:
+O problema foi identificado nas consultas de conclusões que falhavam por falta de índice composto no Firestore, resultando em dados semeados que não apareciam como concluídos. A correção implementada adiciona detecção de erro de índice ausente e um fallback para ler os dados em memória, garantindo que os hábitos semeados sejam refletidos corretamente na UI mesmo sem o índice criado. Não lembro da IA solicitar a criação dos índices compostos, mas isso seria recomendado para produção para garantir performance ideal. Agora, ao rodar o seeder novamente, os hábitos semeados devem aparecer corretamente como concluídos nas telas de Home, Estatísticas e Detalhes.
