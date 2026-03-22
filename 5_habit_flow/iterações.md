@@ -1,5 +1,9 @@
+# Registro de Iterações
+
+---
+
 ## Iteração 1
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Quero que você seja o meu desenvolvedor do meu projeto. Vou começar explicando o que eu quero e você vai me ajudar a implementar. Vamos implementar um app de acompanhamento de hábitos chamado Habit Flow, onde o usuário pode adicionar, editar e remover hábitos, além de marcar os dias em que cumpriu cada hábito. Vamos desenvolver todo o front end usando flutter de acordo com o prototipo que vou te enviando. Para começar eu já tenho o projeto flutter criado, com a estrutura básica. Vamos limpar o código inicial que o flutter cria e deixar apenas a estrutura básica do app usando o padrão mvvm, com a tela inicial em branco.
 ```
@@ -46,8 +50,10 @@ Made changes.
 ### Resultado:
 Nessa primeira iteração, a IA conseguiu implementar as mudanças solicitadas sem dificuldades. Realizou a limpeza do código inicial do Flutter, criou a estrutura MVVM com as pastas necessárias e implementou uma tela inicial em branco. A IA também solicitou o protótipo da próxima tela para continuar o desenvolvimento, demonstrando proatividade.
 
+---
+
 ## Iteração 2
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos criar a primeira tela do app, uma tela de apresentação antes do usuário fazer o login ou se cadastrar. Vou lhe enviar o prototipo dessa tela. Quero que você implemente essa tela de acordo com o prototipo. A aplicação vai ter um tema claro e um tema escuro, então implemente a tela considerando ambos os temas. Siga fielmente o prototipo que vou lhe enviar, respeitando as cores, fontes, tamanhos e espaçamentos. No diretório assets/images/ você vai encontrar as imagens que devem ser usadas na tela. Adicione os pacote necessarios para fontes e icones no pubspec.yaml se precisar.
 ``` 
@@ -116,8 +122,15 @@ Made changes.
 ### Resultado:
 Nessa segunda iteração, a IA conseguiu implementar a tela de apresentação de forma razoável, seguindo o protótipo fornecido. Ela criou a tela de onboarding com todos os elementos visuais, configurou o tema claro e escuro no main.dart e atualizou o pubspec.yaml para incluir os assets necessários. Mas a aplicação já apresenta um erro na aplicação de overfloweds na tela de onboarding, o que indica que a IA não conseguiu ajustar corretamente o layout para diferentes tamanhos de tela. E também não respeitou totalmente as cores do protótipo, utilizando tons solidos ao invés dos tons com gradiente e nos badges fluantes onde tem os textos 'study' e 'Health' não respeitou as cores também deixando fixo nos dois temas. Mas no geral, a IA conseguiu implementar a maior parte dos requisitos solicitados.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 2_1" src="imgs/2/Iteração 2_1.png" />
+<img width="300" alt="Iteração 2_2" src="imgs/2/Iteração 2_2.png" />
+
+---
+
 ## Iteração 3
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos corrigir alguns problemas na tela de onboarding que você implementou. A tela está apresentando erros de overfloweds em alguns tamanhos de tela, então quero que você ajuste o layout para que ele fique responsivo e não apresente mais esses erros. Além disso, as cores usadas na tela não estão exatamente iguais as do prototipo, que usam gradientes. Quero que você ajuste as cores para que fiquem exatamente iguais as do prototipo, usando gradientes onde for necessario. Verifique todos os elementos da tela para garantir que estão de acordo com o prototipo, incluindo tamanhos, fontes e espaçamentos. E nos badges flutuantes com os textos 'Study' e 'Health', ajuste as cores para que fiquem iguais as do prototipo, no tema light os badges os dois tom claro e no dark tom escuro.
 ```
@@ -233,8 +246,15 @@ Made changes.
 ### Resultado:
 Nessa terceira iteração, a IA enfrentou dificuldades para corrigir os problemas na tela de onboarding. Inicialmente, tentou fazer várias substituições e edições no arquivo existente, mas acabou corrompendo o código devido a duplicações e formatações incorretas. Após várias tentativas, a IA conseguiu criar um novo arquivo funcional e transferir o conteúdo corretamente. Tive que apagar o arquivo antigo e renomear o novo para resolver os problemas. A interface ainda apresenta inconsistências em relação ao protótipo, mas a IA conseguiu implementar as correções solicitadas.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 3_1" src="imgs/3/Iteração 3_1.png" />
+<img width="300" alt="Iteração 3_2" src="imgs/3/Iteração 3_2.png" />
+
+---
+
 ## Iteração 4
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Beleza foi ajustado o problema de overfloweds, mas ainda falta ajustar as cores da tela para que fiquem exatamente iguais as do prototipo. No tema claro o texto "Master your" não está legivel, então ajuste a cor para que fique mais escuro. No tema escuro o background está muito roxo, ajuste para que fique mais próximo do preto.
 ```
@@ -287,8 +307,15 @@ Made changes.
 ### Resultado:
 Nessa quarta iteração, a IA conseguiu ajustar as cores da tela de onboarding conforme solicitado. No tema claro, alterou a cor do texto "Master Your" para um tom mais escuro, melhorando a legibilidade. No tema escuro, ajustou o fundo para um tom mais próximo do preto, reduzindo o excesso de roxo. A IA realizou as mudanças necessárias sem apresentar erros e confirmou que as cores agora estão alinhadas com o protótipo.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 4_1" src="imgs/4/Iteração 4_1.png" />
+<img width="300" alt="Iteração 4_2" src="imgs/4/Iteração 4_2.png" />
+
+---
+
 ## Iteração 5
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ótimo! Agora a tela de onboarding está perfeita e fiel ao prototipo. Vamos seguir com o formulário de login. Vou lhe enviar o prototipo dessa tela para você implementar. Essa tela tem uma particularidade que vai acabar aumento um pouco o grau de dificuldade, quando o usuário clicar no botão Get Started na tela de onboarding, a tela de login deve aparecer com uma animação de baixo para cima, como se estivesse deslizando para cima. Quero que você implemente essa animação de transição entre as telas. Siga fielmente o prototipo que vou lhe enviar, respeitando as cores, fontes, tamanhos e espaçamentos. No diretório assets/images/ você vai encontrar as imagens que devem ser usadas na tela. Adicione os pacote necessarios para fontes e icones no pubspec.yaml se precisar.
 ```
@@ -376,8 +403,17 @@ Made changes.
 ### Resultado:
 Nessa quinta iteração, a IA conseguiu implementar a tela de login bem parecida com o protótipo fornecido. Criou a tela de login com todos os elementos visuais, incluindo o formulário de login, botões sociais e o design do bottom sheet. Mas ainda falta melhorar alguns detalhes visuais para que fique exatamente igual ao protótipo. A IA também implementou a animação de transição de slide up entre a tela de onboarding e a tela de login, e ficou funcional mas a animação poderia ser mais suave. No geral, a IA conseguiu atender à maioria dos requisitos solicitados.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 5_1" src="imgs/5/Iteração 5_1.png" />
+<img width="300" alt="Iteração 5_2" src="imgs/5/Iteração 5_2.png" />
+<img width="300" alt="Iteração 5_3" src="imgs/5/Iteração 5_3.png" />
+<img width="300" alt="Iteração 5_4" src="imgs/5/Iteração 5_4.png" />
+
+---
+
 ## Iteração 6
-### Promt usado:
+### Prompt usado:
 ```plaintext
 A tela de login ficou boa, mas ainda falta ajustar alguns detalhes visuais. A imagem que deveria ficar no topo do formulario não está aparecendo, então ajuste para que a imagem fique visível. Além disso tente suavizar um pouco a animação de transição entre as telas, deixando ela mais fluida. E na tela de onbording, tem o botão "I already have an account", implemente a navegação para que quando o usuário clicar nesse botão ele também seja levado para a tela de login, usando a mesma animação de transição de baixo para cima. e quando o usuário clicar no "Get Started" na tela de onboarding, é levado para o cadastro na tela de login, então implemente essa navegação também. E quando o usuário estiver no cadastro mude o texto "Welcome Back" para um que faça mais sentido para o cadastro.
 ```
@@ -482,8 +518,15 @@ Made changes.
 ### Resultado:
 Nessa sexta iteração, a IA conseguiu ajustar boa parte dos detalhes solicitados na tela de login e na navegação a partir da tela de onboarding. Só a imagem de fundo que ainda não está aparecendo, mas o uso do botão "I already have an account" agora leva o usuário para a tela de login corretamente, assim como o botão "Get Started" leva para a aba de cadastro. A animação de transição foi suavizada, e os títulos mudam dinamicamente conforme a aba selecionada. A IA conseguiu implementar a maioria dos ajustes solicitados, melhorando a experiência do usuário.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 6_1" src="imgs/6/Iteração 6_1.png" />
+<img width="300" alt="Iteração 6_2" src="imgs/6/Iteração 6_2.png" />
+
+---
+
 ## Iteração 7
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Quase tudo certo agora! Só falta ajustar a imagem de fundo que ainda não está aparecendo. Em anexo tem um screenshot do prototipo para você ver como deve ficar e de como está ficando atualmente. Ajuste para que a imagem fique exatamente igual ao prototipo.
 ```
@@ -519,8 +562,14 @@ Made changes.
 ### Resultado:
 A IA continua sem conseguir ajustar a imagem de fundo na tela de login para que fique visível conforme o protótipo.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 7" src="imgs/7/Iteração 7.png" />
+
+---
+
 ## Iteração 8
-### Promt usado:
+### Prompt usado:
 ```plaintext
 A imagem de fundo ainda não está aparecendo. O problema não é o BoxFit, alinhamento ou opacidade, o problema é o posicionamento da imagem. Vamos imaginar que a tela de login é dividida em duas partes, a parte de baixo onde tem o formulário e a parte de cima onde tem a imagem, o que está acontecendo é que a imagem está ficando posicionada atrás do formulário, então precisamos ajustar o layout para que a imagem fique na parte de cima da tela, e o formulário fique na parte de baixo, como se fossem dois blocos separados. Ajuste o layout para que isso aconteça e a imagem fique visível.
 ```
@@ -564,8 +613,14 @@ Made changes.
 ### Resultado:
 Nessa oitava iteração, a IA conseguiu ajustar o layout da tela de login para que a imagem de fundo fique visível na parte superior, enquanto o formulário de login fica na parte inferior. Mas não ficou legal a disposição da imagem, ela ficou muito pequena e não preencheu a parte superior da tela, ficando com um grande espaço vazio em volta. A IA conseguiu resolver o problema de posicionamento, mas ainda falta ajustar o tamanho da imagem para que fique mais proporcional e preencha melhor a área destinada a ela.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 8" src="imgs/8/Iteração 8.png" />
+
+---
+
 ## Iteração 9
-### Promt usado:
+### Prompt usado:
 ```plaintext
 A imagem de fundo agora está aparecendo, mas ela ficou muito pequena e não preencheu a parte superior da tela, ficando com um grande espaço vazio em volta. Ajuste o tamanho da imagem para que ela fique mais proporcional e deve preencher toda a parte superior da tela mesmo que distorça a imagem.
 ```
@@ -597,8 +652,14 @@ Made changes.
 ### Resultado:
 Nessa nona iteração, a IA conseguiu ajustar o tamanho da imagem de fundo para que preencha completamente a parte superior da tela, mesmo que isso distorça a imagem. A IA removeu o SafeArea e os paddings laterais, e alterou o BoxFit para cover, garantindo que a imagem ocupe todo o espaço disponível. Agora a tela de login está mais fiel ao protótipo, com a imagem preenchendo adequadamente a área destinada a ela. Mas ainda mantem uma tarja verde na parte superior, que acaba não ficando tão legal, mas isso é algo que pode ser ajustado posteriormente.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 9" src="imgs/9/Iteração 9.png" />
+
+---
+
 ## Iteração 10
-### Promt usado:
+### Prompt usado:
 ```plaintext
 A tela de login agora está com a imagem preenchendo a parte superior, mas ainda tem uma tarja verde que não fica tão legal. Estique a imagem para que ela preencha toda a parte superior da tela, ou deixe a tarja na cor do gradiende da imagem para que fique mais harmônico. Em anexo tem um screenshot de como está ficando e do prototipo para você comparar.
 ```
@@ -624,8 +685,14 @@ Made changes.
 ### Resultado:
 Nessa décima iteração, a IA conseguiu remover a tarja verde da parte superior da tela de login, ajustando a imagem para que preencha completamente a área destinada a ela. A IA utilizou o BoxFit.cover e alinhamento central para garantir que a imagem cubra toda a área sem deixar espaços vazios, resultando em uma tela de login mais harmônica e fiel ao protótipo. Agora a tela de login está visualmente mais agradável, com a imagem das plantas ocupando toda a parte superior, sem a presença da tarja verde que antes estava presente. Agora vou focar na funcionalidade de login e cadastro, implementando a lógica de autenticação e integração com o firebase para permitir que os usuários possam criar contas e fazer login no app. Vou começar implementando a funcionalidade de cadastro, permitindo que os usuários criem uma conta usando email e senha. Depois disso, vou implementar a funcionalidade de login, permitindo que os usuários façam login com suas credenciais. E por fim, vou integrar o login social usando Google para oferecer mais opções de autenticação aos usuários.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 10" src="imgs/10/Iteração 10.png" />
+
+---
+
 ## Iteração 11
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos implementar a funcionalidade de cadastro usando email e senha. Quero que você implemente a lógica de autenticação usando o Firebase Authentication para permitir que os usuários criem uma conta no app. Implemente a validação dos campos de email e senha, garantindo que o email seja válido e a senha tenha pelo menos 6 caracteres. E quando o usuário clicar no botão "Log In" na aba de cadastro, ele deve ser registrado no Firebase e redirecionado para a tela principal do app. Se houver algum erro durante o cadastro, como email já em uso ou senha fraca, exiba uma mensagem de erro apropriada para o usuário.
 ```
@@ -749,8 +816,19 @@ Made changes.
 ### Resultado:
 Resultado impressionante! A IA conseguiu implementar a funcionalidade de cadastro e login usando Firebase Authentication, em apenas uma iteração. Ela adicionou as dependências necessárias, criou um ViewModel para gerenciar a autenticação, atualizou a tela de login para incluir validação de campos e tratamento de erros, e configurou a navegação para a tela principal após o login bem-sucedido. A IA também forneceu um resumo detalhado das mudanças feitas e os próximos passos que eu tive que fazer manualmente para configurar o Firebase no projeto. Agora os usuários poderão criar contas e fazer login usando email e senha, com mensagens de erro claras em caso de problemas. Excelente trabalho!
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 11_1" src="imgs/11/Iteração 11_1.png" />
+<img width="300" alt="Iteração 11_2" src="imgs/11/Iteração 11_2.png" />
+<img width="300" alt="Iteração 11_3" src="imgs/11/Iteração 11_3.png" />
+<img width="300" alt="Iteração 11_4" src="imgs/11/Iteração 11_4.png" />
+<img width="300" alt="Iteração 11_5" src="imgs/11/Iteração 11_5.png" />
+<img width="300" alt="Iteração 11_6" src="imgs/11/Iteração 11_6.png" />
+
+---
+
 ## Iteração 12
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Remova o botão de login social do Apple, pois não vamos conseguir implementar essa funcionalidade agora. Deixe apenas o botão de login com Google na tela. 
 ```
@@ -785,8 +863,14 @@ Made changes.
 ### Resultado:
 Essa iteração foi mais simples, a IA conseguiu remover o botão de login com Apple da tela de login, deixando apenas o botão de login com Google.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 12" src="imgs/12/Iteração 12.png" />
+
+---
+
 ## Iteração 13
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora implemente a funcionalidade de login social usando Google. Implemente a lógica de autenticação usando o Firebase Authentication para permitir que os usuários façam login com suas contas do Google. E quando o usuário clicar no botão de login com Google, ele deve ser autenticado usando o Firebase e redirecionado para a tela principal do app. Se houver algum erro durante o login, como conta do Google não encontrada ou erro de rede, exiba uma mensagem de erro apropriada para o usuário. A opção de login com Google já está ativada no console do Firebase.
 ```
@@ -888,8 +972,16 @@ Made changes.
 ### Resultado:
 Nessa décima terceira iteração, a IA conseguiu implementar a funcionalidade de login social usando Google com Firebase Authentication. Ela adicionou a dependência necessária, atualizou o AuthViewModel para incluir o método de login com Google, e conectou esse método ao botão correspondente na tela de login. A IA também implementou o tratamento de erros específicos do Google Sign-In e garantiu que o usuário seja redirecionado para a tela principal após um login bem-sucedido. No iPhone, tive que fazer algumas configurações adicionais para que o login com Google funcionasse corretamente, mas após isso tudo está funcionando perfeitamente. Agora os usuários podem autenticar usando suas contas do Google, proporcionando uma experiência de login mais rápida e conveniente.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 13_1" src="imgs/13/Iteração 13_1.png" />
+<img width="300" alt="Iteração 13_2" src="imgs/13/Iteração 13_2.png" />
+<img width="300" alt="Iteração 13_3" src="imgs/13/Iteração 13_3.png" />
+
+---
+
 ## Iteração 14
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora que a funcionalidade de login e cadastro está implementada, vamos dar uma melhorada no código antes de começar a implementar as próximas telas. Eu rodei no terminal o comando "flutter analyze" para verificar se há algum problema no código, e ele me retornou alguns warnings de método depreciado, faça os devidos ajustes para corrigir esses warnings e deixar o código mais limpo e atualizado. 
 
@@ -1049,8 +1141,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA conseguiu corrigir todos os warnings de método depreciado `withOpacity` substituindo por `withValues(alpha: ...)` nos arquivos afetados. Ela fez um total de 37 substituições, garantindo que o código esteja atualizado com a API mais recente do Flutter e não gere mais warnings ao executar `flutter analyze`. Agora o código está mais limpo e atualizado, pronto para as próximas implementações!
 
+---
+
 ## Iteração 15
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Vamos começar a implementar o core do aplicativo, que é a tela principal onde o usuário verá seus hábitos e poderá interagir com eles. Antes de começar a implementar a tela principal, quero que você crie um modelo de dados para representar um hábito. O modelo deve conter os seguintes campos: id (uuid), title (string), frequency (enum: daily, weekly, monthly), category (enum: Health, Personal, Study, Social, Finance), reminderTime (DateTime), habit color (enum: red, blue, green, purple, orange), createdAt (DateTime) e isCompleted (bool). Vamos persistir os hábitos usando o Firebase Firestore, então certifique-se de que o modelo seja compatível com a estrutura de dados do Firestore. 
 ```
@@ -1174,8 +1268,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA conseguiu criar um modelo de dados para representar um hábito, com todos os campos solicitados e compatível com a estrutura de dados do Firebase Firestore. Ela criou enums para frequência, categoria e cor do hábito, e implementou o modelo principal com métodos para conversão entre Map e DocumentSnapshot, além de um método copyWith para facilitar a atualização dos hábitos. A IA também adicionou a dependência do Cloud Firestore no pubspec.yaml. Agora o modelo de dados está pronto para ser usado na implementação da tela principal do aplicativo, onde os usuários poderão visualizar e interagir com seus hábitos.
 
+---
+
 ## Iteração 16
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Vamos melhorar um pouco o atributo reminderTime do modelo de hábito. Em vez de ser um DateTime, vamos criar um novo modelo chamado HabitReminder que terá os seguintes campos: time (TimeOfDay), repeat (enum: none, daily, weekly, monthly) e daysOfWeek (List<enum: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday>). O campo daysOfWeek só deve ser preenchido se o repeat for igual a weekly. E o campo time deve ser obrigatório. Faça as devidas alterações no modelo de hábito para utilizar esse novo modelo de reminder. E comece a criar o sistema de notificações usando o pacote flutter_local_notifications para enviar notificações de lembrete para os hábitos com reminder configurado. Implemente a lógica para agendar as notificações com base no tipo de repetição selecionado (diário, semanal, mensal) e nos dias da semana, se aplicável. E certifique-se de que as notificações sejam enviadas no horário correto, mesmo que o aplicativo esteja fechado ou em segundo plano.
 ```
@@ -1268,8 +1364,10 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA conseguiu criar um novo modelo chamado HabitReminder para representar os lembretes dos hábitos, com os campos time, repeat e daysOfWeek. Ela atualizou o modelo de hábito para utilizar esse novo modelo de reminder. Além disso, a IA implementou o sistema de notificações usando o pacote flutter_local_notifications, criando um serviço de notificações que pode ser utilizado para agendar notificações com base no tipo de repetição selecionado e nos dias da semana, se aplicável. A IA também adicionou uma documentação completa sobre o sistema de notificações em um arquivo NOTIFICATIONS_README.md, explicando como usar o serviço e configurar as notificações para Android e iOS. Agora o sistema de notificações está completo e pronto para ser integrado à tela principal do aplicativo!
 
+---
+
 ## Iteração 17
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos começar a implementar primeiro a tela de cadastro de hábitos. Nessa tela, o usuário poderá criar um novo hábito preenchendo um formulário com os campos do modelo de hábito que criamos anteriormente. O formulário deve conter campos para o título do hábito, a frequência, a categoria, a cor, o horário do lembrete e as opções de repetição. E quando o usuário salvar o hábito, ele deve ser persistido no Firebase Firestore e uma notificação deve ser agendada com base nas configurações de lembrete selecionadas. Implemente a lógica para lidar com a criação do hábito, validação dos campos do formulário e integração com o Firestore e o sistema de notificações. Em anexo está o design da tela de cadastro de hábitos para você se basear.
 ```
@@ -1413,8 +1511,19 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA conseguiu implementar a tela de cadastro de hábitos, permitindo que o usuário crie um novo hábito preenchendo um formulário com os campos do modelo de hábito. O formulário ficou completo, seguindo o design fornecido, e inclui validações em tempo real, um seletor de dias da semana para hábitos semanais, um time picker para os lembretes e suporte a temas claro/escuro. A IA também integrou a lógica para persistir os hábitos no Firebase Firestore e agendar notificações com base nas configurações de lembrete selecionadas. Além disso, pela segunda vez, a IA criou uma documentação detalhada sobre a implementação da tela de criação de hábitos e um guia de testes para facilitar a validação da funcionalidade. Agora a tela de cadastro de hábitos está completa e listando os hábitos na home.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 17_1" src="imgs/17/Iteração 17_1.png" />
+<img width="300" alt="Iteração 17_2" src="imgs/17/Iteração 17_2.png" />
+<img width="300" alt="Iteração 17_3" src="imgs/17/Iteração 17_3.png" />
+<img width="300" alt="Iteração 17_4" src="imgs/17/Iteração 17_4.png" />
+<img width="300" alt="Iteração 17_5" src="imgs/17/Iteração 17_5.png" />
+<img width="300" alt="Iteração 17_6" src="imgs/17/Iteração 17_6.png" />
+
+---
+
 ## Iteração 18
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora que a tela de cadastro de hábitos está implementada, vamos começar a implementar a tela principal onde o usuário verá a lista de hábitos criados. Nessa tela, o usuário poderá ver todos os seus hábitos, um seletor de data, uma barra de progresso indicando quantos hábitos foram concluídos no dia, uma barra de navageção inferior para acessar outras telas do aplicativo e um botão para criar um novo hábito qe=ue continua sendo o FAB. Implemente a lógica para buscar os hábitos do usuário no Firebase Firestore e exibi-los em uma lista. E implemente a funcionalidade para marcar um hábito como concluído, que deve atualizar o status do hábito no Firestore e atualizar a barra de progresso. Em anexo está o design da tela principal para você se basear. Vamos apenas fazer uma modificação nos design em comparação com o protótipo, na barra de navegação inferior, ao invés de ter 4 ícones (Home, Estatísticas, calendario e configuração), vamos deixar apenas 3 ícones (Home, estatística e Configurações), para deixar o design mais clean e simples.
 ```
@@ -1593,8 +1702,18 @@ Quando uma atividade é marcada como concluída, o status do hábito é atualiza
 
 Mas tem algumas melhorias a serem feitas, como por exemplo, o ajuste da atividade de marcar um hábito como concluído, que atualmente não está funcionando corretamente, mas devido a lógica do model, quando criamos um hábito, ele é utilizado para todos os dias, e quando marcamos ele como concluído, ele é marcado como concluído para todos os dias, o que não é o comportamento esperado. O ideal seria criar uma nova coleção no Firestore para armazenar o status de conclusão dos hábitos por dia, e assim quando marcamos um hábito como concluído, ele só é marcado como concluído para aquele dia específico. 
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 18_1" src="imgs/18/Iteração 18_1.png" />
+<img width="300" alt="Iteração 18_2" src="imgs/18/Iteração 18_2.png" />
+<img width="300" alt="Iteração 18_3" src="imgs/18/Iteração 18_3.png" />
+<img width="300" alt="Iteração 18_4" src="imgs/18/Iteração 18_4.png" />
+<img width="300" alt="Iteração 18_5" src="imgs/18/Iteração 18_5.png" />
+
+---
+
 ## Iteração 19
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ficou muito boa a tela principal, mas tem um problema na lógica de marcar um hábito como concluído. Atualmente, quando marcamos um hábito como concluído, ele é marcado como concluído para todos os dias, o que não é o comportamento esperado. O ideal seria criar uma nova coleção no Firestore para armazenar o status de conclusão dos hábitos por dia, e assim quando marcamos um hábito como concluído, ele só é marcado como concluído para aquele dia específico. Implemente essa lógica de forma que o status de conclusão dos hábitos seja armazenado corretamente no Firestore e que a interface seja atualizada de acordo com o status de cada hábito para cada dia. 
 ```
@@ -1744,8 +1863,15 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou um novo sistema de conclusão de hábitos por data, criando uma nova coleção no Firestore para armazenar as conclusões de forma independente para cada dia. O modelo HabitCompletion foi criado para representar cada conclusão individual, e a lógica do HabitViewModel foi atualizada para lidar com a marcação e verificação de conclusões por data. A interface da HomeView também foi ajustada para refletir o status correto dos hábitos com base na data selecionada. Agora, quando um hábito é marcado como concluído, ele só é marcado como concluído para aquele dia específico, permitindo um rastreamento mais preciso do progresso do usuário ao longo do tempo.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 19_1" src="imgs/19/Iteração 19_1.png" />
+<img width="300" alt="Iteração 19_2" src="imgs/19/Iteração 19_2.png" />
+
+---
+
 ## Iteração 20
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Muito bom o sistema de conclusão por data! Agora vamos fazer um ajuste na tela home, os hábitos que são de dias específicos da semana, como por exemplo um hábito que só deve ser feito às segundas, quartas e sextas, atualmente estão aparecendo todos os dias, o que não é o comportamento esperado. O ideal seria ajustar a lógica para que os hábitos só apareçam nos dias corretos da semana, de acordo com a configuração de frequência do hábito. Implemente essa lógica para filtrar os hábitos exibidos na tela home de acordo com os dias da semana configurados para cada hábito. 
 ```
@@ -1877,8 +2003,16 @@ Made changes.
 ### Resultado:
 Nessa iteração, a IA implementou a lógica para filtrar os hábitos exibidos na tela home de acordo com os dias da semana configurados para cada hábito. O modelo Habit foi atualizado para incluir um campo `selectedWeekDays`, que armazena os dias da semana em que o hábito deve ser realizado. A lógica de exibição na HomeView foi ajustada para mostrar apenas os hábitos que são válidos para a data selecionada, garantindo que os hábitos semanais apareçam apenas nos dias configurados. Agora, se um hábito é configurado para ser feito às segundas, quartas e sextas, ele só aparecerá nesses dias específicos, proporcionando uma experiência mais personalizada e relevante para o usuário.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 20_1" src="imgs/20/Iteração 20_1.png" />
+<img width="300" alt="Iteração 20_2" src="imgs/20/Iteração 20_2.png" />
+<img width="300" alt="Iteração 20_3" src="imgs/20/Iteração 20_3.png" />
+
+---
+
 ## Iteração 21
-### Promt usado:****
+### Prompt usado:****
 ```plaintext
 Ótimo! Agora que a tela principal está funcionando corretamente, vamos fazer algumas correções antes de começar as próximas implementações. Rode o comando do flutter analysis para verificar se há algum erro ou warning no código, e corrija todos eles:
 Analyzing 5_habit_flow...                                               
@@ -1968,8 +2102,10 @@ Made changes.
 ### Resultado:
 O código foi corrigido parcialmente, ainda contem duas issues relacionadas ao uso de `BuildContext` após operações assíncronas. Essas issues ocorrem porque o código está tentando usar o `BuildContext` para mostrar um `SnackBar` ou navegar para outra tela após uma operação assíncrona, sem verificar se o widget ainda está montado. Para corrigir isso, é necessário adicionar uma verificação de `mounted` antes de usar o `BuildContext`, garantindo que o widget ainda esteja na árvore de widgets antes de tentar acessar o contexto. E também acho que não fui muito claro no ajuste do tamanho do ícone de check, o que eu quis dizer é para diminuir o tamanho do box do checkbox, e não o tamanho do ícone de check em si, então o ideal seria diminuir o tamanho do checkbox para que fique mais proporcional ao card do hábito.
 
+---
+
 ## Iteração 22
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ótimo! Agora vamos corrigir as issues relacionadas ao uso de BuildContext após operações assíncronas. Para isso, precisamos adicionar uma verificação de mounted antes de usar o BuildContext para mostrar um SnackBar ou navegar para outra tela. Implemente essa correção em ambos os arquivos home_view.dart e exclua o home_view_new.dart, já que ele não está mais sendo utilizado. E também ajuste o tamanho do checkbox para que fique mais proporcional ao card do hábito, diminuindo o tamanho do box do checkbox e não o tamanho do ícone de check em si. 
 
@@ -2034,8 +2170,14 @@ Made changes.
 ### Resultado:
 As issues relacionadas ao uso de BuildContext após operações assíncronas foram corrigidas, garantindo que o ScaffoldMessenger seja capturado antes da operação assíncrona e usado posteriormente para mostrar SnackBars. O arquivo home_view_new.dart foi completamente removido do projeto, e o tamanho do checkbox foi ajustado para ficar mais proporcional ao card do hábito, mantendo o tamanho do ícone de check inalterado. Agora o código está limpo de warnings e com uma interface visualmente mais equilibrada!
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 22" src="imgs/22/Iteração 22.png" />
+
+---
+
 ## Iteração 23
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Pronto agora com o código limpo de warnings e com a interface visualmente mais equilibrada, vamos começar a ajustar um detalhe na listagem de hábitos na tela home. Quando um hábito é criado ele é listado no dias anteriores ao dia que ele foi criado, o que não é o ideial pois atrabalha as métricas de hábitos concluídos por dia, então o ideal seria ajustar a lógica para que os hábitos só sejam listados a partir da data de criação do hábito, ou seja, se um hábito foi criado no dia 20/10, ele só deve aparecer na listagem a partir do dia 20/10 em diante. Implemente essa lógica para filtrar os hábitos exibidos na tela home de acordo com a data de criação do hábito. 
 ```
@@ -2088,8 +2230,10 @@ Made changes.
 ### Resultado:
 O problema foi solucionado com facilidade criando apenas uma verificação simples no método `shouldShowOnDate()` do modelo Habit para garantir que os hábitos só sejam listados a partir da data de criação. 
 
+---
+
 ## Iteração 24
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ótimo! Agora que os hábitos só são listados a partir da data de criação, e não vai mais atrapalhar as métricas de hábitos concluídos por dia, vamos começar a implementar a funcionalidade de detalhes do hábito. Quando o usuário clicar em um hábito na tela home, ou na notificação de lembrete, ele deve ser direcionado para uma tela de detalhes do hábito, onde ele pode ver mais informações sobre o hábito, como sequência de dias que o hábito foi concluído, dias da semana que o hábito é feito, gráficos de desempenho, total de dias concluídos e o record de sequência de dias, alem dos botões de editar e excluir o hábito. Em anexo vai ter os screenshots do protótipo da tela de detalhes do hábito para te ajudar a implementar a interface. 
 ```
@@ -2210,8 +2354,15 @@ Made changes.
 ### Resultado:
 A tela de detalhes do hábito foi implementada com sucesso, incluindo a navegação correta, fidelidade ao design do protótipo. As estatísticas ainda tem que ser testadas para garantir que estão calculando corretamente, mas a estrutura e a interface estão completas. Não foi implementado a navegação a partir da notificação de lembrete como solicitado, mas isso pode ser adicionado posteriormente. O código está limpo de warnings e pronto para ser testado! 
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 24_1" src="imgs/24/Iteração 24_1.png" />
+<img width="300" alt="Iteração 24_2" src="imgs/24/Iteração 24_2.png" />
+
+---
+
 ## Iteração 25
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ótimo! Agora que a tela de detalhes do hábito está implementada, vamos adicionar a funcionalidade de editar o hábito. Quando o usuário clicar no botão de editar na tela de detalhes do hábito, ele deve ser direcionado para a tela de criação de hábito, mas com os campos preenchidos com as informações do hábito que ele deseja editar. O usuário deve poder editar qualquer campo do hábito, como nome, categoria, frequência, dias da semana, horário do lembrete, etc. Depois que o usuário fizer as alterações e salvar, ele deve ser redirecionado de volta para a tela de detalhes do hábito, onde as informações atualizadas do hábito devem ser exibidas. Implemente essa funcionalidade de edição de hábito seguindo essas especificações. 
 ```
@@ -2355,8 +2506,10 @@ Made changes.
 ### Resultado:
 Foi implementada a funcionalidade de edição de hábito, permitindo que o usuário edite qualquer campo do hábito e veja as informações atualizadas na tela de detalhes. O método `updateHabit()` foi adicionado ao ViewModel para lidar com a lógica de atualização, e a `CreateHabitView` foi modificada para suportar tanto criação quanto edição de hábitos. Mas a navegação para a tela de edição foi implementada mas não está funcionando, existe duas opções de botões para editar o hábito, um na barra de ações e outro no menu de 3 pontos, ambos estão configurados para navegar para a tela de edição, mas nenhum dos dois está funcionando, então é necessário corrigir isso para que o usuário possa acessar a tela de edição.
 
+---
+
 ## Iteração 26
-### Promt usado:
+### Prompt usado:
 ```plaintext
 A navegação para a tela de edição de hábito foi implementada, mas não está funcionando. Existem dois botões para editar o hábito, um em detalhes do habito e outro no menu de 3 pontos na tela home no card do habito, ambos estão configurados para navegar para a tela de edição, mas nenhum dos dois está funcionando. Corrija a navegação para que o usuário possa acessar a tela de edição do hábito ao clicar em qualquer um dos dois botões.
 ```
@@ -2416,8 +2569,18 @@ Made changes.
 ### Resultado:
 Foi corrigida a navegação para a tela de edição de hábito tanto no botão "Edit" da tela de detalhes quanto na opção "Edit Habit" do menu na tela home. Agora, ao clicar em qualquer um dos botões, o usuário será direcionado para a tela de edição com os campos pré-preenchidos com as informações do hábito selecionado, e após salvar as alterações, os dados serão recarregados corretamente. A funcionalidade de edição está agora completamente acessível a partir de ambos os pontos na interface!
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 26_1" src="imgs/26/Iteração 26_1.png" />
+<img width="300" alt="Iteração 26_2" src="imgs/26/Iteração 26_2.png" />
+<img width="300" alt="Iteração 26_3" src="imgs/26/Iteração 26_3.png" />
+<img width="300" alt="Iteração 26_4" src="imgs/26/Iteração 26_4.png" />
+<img width="300" alt="Iteração 26_5" src="imgs/26/Iteração 26_5.png" />
+
+---
+
 ## Iteração 27
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Ótimo! Agora que a tela de edição do hábito está implementada finalizamos toda parte do hábito, vamos adicionar a funcionalidade de navegação a partir da notificação de lembrete. Quando o usuário clicar na notificação de lembrete, ele deve ser direcionado para a tela de detalhes do hábito correspondente. Para isso, precisamos garantir que a notificação envie o ID do hábito e que a tela de detalhes consiga receber esse ID para carregar as informações corretas. Implemente essa funcionalidade para que a navegação a partir da notificação de lembrete funcione corretamente.
 ```
@@ -2490,8 +2653,15 @@ Made changes.
 ### Resultado:
 A navegação a partir das notificações de lembrete foi implementada com sucesso. Agora, quando o usuário clicar em uma notificação, ele será direcionado para a tela de detalhes do hábito correspondente, onde poderá ver todas as informações e estatísticas do hábito.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 27_1" src="imgs/27/Iteração 27_1.png" />
+<img width="300" alt="Iteração 27_2" src="imgs/27/Iteração 27_2.png" />
+
+---
+
 ## Iteração 28
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Completamos os hábitos, agora os proximos passos são implementar a tela de estatísticas e configurações. Vamos começar pela tela de estatísticas. A tela de estatísticas deve mostrar gráficos e métricas relacionadas ao desempenho do usuário com seus hábitos, como a taxa de conclusão por categoria, hábitos mais consistentes e por ai vai. Em anexo estão os screenshots do protótipo da tela de estatísticas para te ajudar a implementar a interface. Implemente a tela de estatísticas seguindo o design do protótipo e utilizando os dados disponíveis para calcular as métricas e gerar os gráficos. 
 ```
@@ -2599,8 +2769,16 @@ Made changes.
 ### Resultado:
 A tela de estatísticas foi implementada com sucesso, seguindo o design do protótipo e utilizando dados reais para calcular as métricas e gerar os gráficos. A interface agora inclui um header com seletor de período, cards de métricas, gráfico de barras para breakdown por categoria e uma seção de top performing habits. O ViewModel foi atualizado para fornecer os dados necessários para a tela. Ainda não temos dados reais para testar os gráficos, mas a estrutura está pronta para ser alimentada com dados reais e validada em runtime.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 28_1" src="imgs/28/Iteração 28_1.png" />
+<img width="300" alt="Iteração 28_2" src="imgs/28/Iteração 28_2.png" />
+<img width="300" alt="Iteração 28_3" src="imgs/28/Iteração 28_3.png" />
+
+---
+
 ## Iteração 29
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos fazer a tela de configurações. A tela de configurações deve permitir que o usuário personalize as preferências do aplicativo, como tema (claro/escuro), notificações, idioma, etc. Em anexo estão os screenshots do protótipo da tela de configurações para te ajudar a implementar a interface. Implemente a tela de configurações seguindo o design do protótipo e utilizando os dados disponíveis para salvar as preferências do usuário e aplicar as mudanças no aplicativo. 
 ```
@@ -2821,8 +2999,18 @@ Made changes.
 ### Resultado:
 A tela de configurações foi implementada com sucesso, seguindo o design do protótipo e utilizando `SharedPreferences` para persistir as preferências do usuário. As mudanças de tema, idioma e notificações agora são aplicadas globalmente no aplicativo, e o botão de voltar na tela de configurações retorna o usuário para a tela inicial. 
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 29_1" src="imgs/29/Iteração 29_1.png" />
+<img width="300" alt="Iteração 29_2" src="imgs/29/Iteração 29_2.png" />
+<img width="300" alt="Iteração 29_3" src="imgs/29/Iteração 29_3.png" />
+<img width="300" alt="Iteração 29_4" src="imgs/29/Iteração 29_4.png" />
+<img width="300" alt="Iteração 29_5" src="imgs/29/Iteração 29_5.png" />
+
+---
+
 ## Iteração 30
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Vamos fazer a internacionalização do aplicativo. A internacionalização (i18n) é o processo de adaptar o aplicativo para diferentes idiomas e regiões, permitindo que usuários de diferentes partes do mundo possam usar o aplicativo em seu idioma nativo. Para isso, precisamos criar arquivos de tradução para cada idioma suportado e configurar o aplicativo para usar essas traduções com base na preferência do usuário ou na configuração do dispositivo. Implemente a internacionalização no aplicativo, criando os arquivos de tradução necessários e configurando o aplicativo para usar essas traduções corretamente. No protótipo, o aplicativo deve suportar pelo menos inglês e português, então comece por esses dois idiomas.
 ```
@@ -2861,8 +3049,16 @@ Próximos passos naturais:
 ### Resultado:
 A internacionalização foi feita de forma parcial, cobrindo apenas a tela home, estatísticas e configurações. As telas de criação/edição e detalhes dos hábitos ainda estão com textos hardcoded em inglês, então é necessário completar a internacionalização nessas telas para que o aplicativo esteja totalmente localizado em inglês e português. E a internationalização dos textos causo oververflow em alguns widgets, então é necessário ajustar o layout para suportar os textos mais longos em português.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 30_1" src="imgs/30/Iteração 30_1.png" />
+<img width="300" alt="Iteração 30_2" src="imgs/30/Iteração 30_2.png" />
+<img width="300" alt="Iteração 30_3" src="imgs/30/Iteração 30_3.png" />
+
+---
+
 ## Iteração 31
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Vamos completar a internacionalização das telas de criação/edição, detalhes dos hábitos e login/onboarding. Continue da mesma forma que fez para as outras telas, criando as chaves de tradução necessárias, atualizando os arquivos de localização e corrigindo os textos hardcoded. 
 ```
@@ -2964,8 +3160,19 @@ Made changes.
 ### Resultado:
 Todas as telas estão agora completamente internacionalizadas, sem textos hardcoded em inglês. Agora vamos ter que fazer alguns ajustes de layout para suportar os textos mais longos em português, especialmente nos botões. 
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 31_1" src="imgs/31/Iteração 31_1.png" />
+<img width="300" alt="Iteração 31_2" src="imgs/31/Iteração 31_2.png" />
+<img width="300" alt="Iteração 31_3" src="imgs/31/Iteração 31_3.png" />
+<img width="300" alt="Iteração 31_4" src="imgs/31/Iteração 31_4.png" />
+<img width="300" alt="Iteração 31_5" src="imgs/31/Iteração 31_5.png" />
+<img width="300" alt="Iteração 31_6" src="imgs/31/Iteração 31_6.png" />
+
+---
+
 ## Iteração 32
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora vamos ajustar o layout para suportar os textos em português. Ajuste a navbar inferior, ele ficou decentralizado com o texto em português. Na tela de estatísticas, o seletor de período tem um overflow e no gráfico de barras também tem um overflow. Na tela de criação/edição de hábito, o botão de cancelar ficou com quebra de linha mas não causou overflow, então ajuste o layout para evitar a quebra de linha. 
 ```
@@ -3036,8 +3243,17 @@ Made changes.
 ### Resultado:
 O layout foi ajustado para suportar os textos em português sem causar overflow ou desalinhamento. A navbar inferior agora distribui os itens de forma igual, o seletor de período na tela de estatísticas é responsivo e o botão "Cancelar" na criação/edição de hábito não tem mais quebra de linha. O aplicativo agora estar visualmente consistente e funcional tanto em inglês quanto em português.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 32_1" src="imgs/32/Iteração 32_1.png" />
+<img width="300" alt="Iteração 32_2" src="imgs/32/Iteração 32_2.png" />
+<img width="300" alt="Iteração 32_3" src="imgs/32/Iteração 32_3.png" />
+<img width="300" alt="Iteração 32_4" src="imgs/32/Iteração 32_4.png" />
+
+---
+
 ## Iteração 33
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Finalmente terminamos a implementação de todas as telas e funcionalidades do aplicativo, incluindo a internacionalização e ajustes de layout. Mas ainda tem ajustes a fazer para deixar o aplicativo mais polido. Na tela de configurações, os elementos grandes causando uma deproporção visual, então ajuste o layout para que os cards de preferências fiquem menores e mais alinhados com o design do protótipo. Em anexo estão os screenshots do protótipo da tela de configurações para te ajudar a ajustar o layout. Outra coisa a tela home está usando uma cor de background diferente das outras telas padronize a cor de background.
 ```
@@ -3119,8 +3335,16 @@ Made changes.
 ### Resultado:
 O layout da tela de configurações foi ajustado para ficar mais proporcional e alinhado com o design do protótipo, com cards menores, espaçamento reduzido e tipografia ajustada. Além disso, a cor de fundo da Home foi padronizada para combinar com as outras telas,criando uma experiência visual mais consistente em todo o aplicativo. 
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 33_1" src="imgs/33/Iteração 33_1.png" />
+<img width="300" alt="Iteração 33_2" src="imgs/33/Iteração 33_2.png" />
+<img width="300" alt="Iteração 33_3" src="imgs/33/Iteração 33_3.png" />
+
+---
+
 ## Iteração 34
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Remova o botão fab das telas de estatísticas e configurações, ele não tem função nessas telas e está causando uma distração visual. O botão fab deve permanecer apenas na tela home, onde ele é usado para criar um novo hábito. 
 ```
@@ -3157,8 +3381,15 @@ Made changes.
 ### Resultado:
 O botão FAB foi removido das telas de estatísticas e configurações, permanecendo apenas natela home onde é utilizado para criar um novo hábito. Isso ajuda a reduzir a distração visual nessas telas e mantém o foco na funcionalidade principal de cada seção.
 
+#### Screenshots:
+
+<img width="300" alt="Iteração 34_1" src="imgs/34/Iteração 34_1.png" />
+<img width="300" alt="Iteração 34_2" src="imgs/34/Iteração 34_2.png" />
+
+---
+
 ## Iteração 35
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Agora para testar nossa aplicação, vamos desenvolver um seeder para popular o banco de dados com dados falsos. O seeder deve criar uma série de hábitos falsos com diferentes categorias, frequências e status de conclusão para que possamos testar a visualização de dados nas telas de estatísticas e detalhes dos hábitos. Implemente esse seeder e ele deve ser executado através de um botão na tela de configurações, para que possamos popular o banco de dados facilmente durante o desenvolvimento e testes. Garanta que o seeder crie uma variedade de hábitos para cobrir diferentes cenários de visualização, como hábitos com alta frequência, hábitos concluídos e não concluídos, e hábitos de diferentes categorias.
 ```
@@ -3288,8 +3519,16 @@ Made changes.
 ### Resultado:
 O seeder foi implementado com sucesso, permitindo popular o banco de dados com dados falsos para testes. O botão para executar o seeder foi adicionado na tela de configurações, eas mensagens de feedback foram localizadas para inglês e português. Mas a aplicação não está consultando os habitos concluidos, então os gráficos de estatísticas e os detalhes dos hábitos não estão refletindo os dados semeados. O próximo passo é tentar identificar por que os hábitos concluídos não estão marcados como concluídos.
 
+#### Screenshots:
+
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.02" src="imgs/35/Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.02.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.05" src="imgs/35/Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.05.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.12" src="imgs/35/Simulator Screenshot - iPhone 17 Pro - 2026-03-12 at 23.08.12.png" />
+
+---
+
 ## Iteração 36
-### Promt usado:
+### Prompt usado:
 ```plaintext
 Vamos investigar por que os hábitos semeados não estão sendo marcados como concluídos. Eles foram persistidos no banco de dados, mas a aplicação não está consultando os hábitos concluídos corretamente. Verifique o código responsável por consultar os hábitos concluídos e veja se há algum problema que possa estar causando esse comportamento. As estatísticas e os detalhes dos hábitos dependem dessas consultas para exibir as informações corretas, então é importante resolver esse problema para garantir que os dados semeados sejam refletidos corretamente na aplicação. 
 ```
@@ -3354,3 +3593,11 @@ Made changes.
 
 ### Resultado:
 O problema foi identificado nas consultas de conclusões que falhavam por falta de índice composto no Firestore, resultando em dados semeados que não apareciam como concluídos. A correção implementada adiciona detecção de erro de índice ausente e um fallback para ler os dados em memória, garantindo que os hábitos semeados sejam refletidos corretamente na UI mesmo sem o índice criado. Não lembro da IA solicitar a criação dos índices compostos, mas isso seria recomendado para produção para garantir performance ideal. Agora, ao rodar o seeder novamente, os hábitos semeados devem aparecer corretamente como concluídos nas telas de Home, Estatísticas e Detalhes.
+
+#### Screenshots:
+
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.00" src="imgs/36/Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.00.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.06" src="imgs/36/Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.06.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.08" src="imgs/36/Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.08.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.16" src="imgs/36/Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.16.png" />
+<img width="300" alt="Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.19" src="imgs/36/Simulator Screenshot - iPhone 17 Pro - 2026-03-13 at 08.01.19.png" />
