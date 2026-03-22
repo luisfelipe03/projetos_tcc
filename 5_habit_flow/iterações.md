@@ -2914,19 +2914,6 @@ Vou aplicar um patch pequeno e focado no login: remover o `hintText` em inglês 
 Generating patch (51 lines) in [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_en.arb), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/l10n/app_pt.arb), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart)
 
 
-```
-
-```
-
-```
-
-```
-
-```
-
-```
-
-
 Ran terminal command:  flutter gen-l10n
 
 Checked [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/auth/login_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/onboarding_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/create_habit_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/views/habits/habit_details_view.dart), [](file:///Users/felipe/Developer/projetos_tcc/5_habit_flow/lib/main.dart), no problems found
