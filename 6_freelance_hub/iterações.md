@@ -747,3 +747,66 @@ Splash → Onboarding → Login ⇆ Signup
 **Próximo passo:** virar pra fase de **integração Firebase** — o usuário já criou o projeto `freelance-hub-c53e2` e quer rodar `flutterfire configure`. Marca transição UI → backend. Vai ser a Iteração 12.
 
 ---
+
+## Iteração 12
+### Prompt usado:
+```plaintext
+Como Iteração 12, faça a **integração inicial do Firebase** (pure plumbing — só base, sem auth/firestore/storage ainda):
+
+1. Instalar `flutterfire_cli` globalmente.
+2. Rodar `flutterfire configure --project=freelance-hub-c53e2 --platforms=android,ios --yes`. Esperado: registrar apps Android+iOS no projeto Firebase `freelance-hub-c53e2`, gerar `lib/firebase_options.dart` com `DefaultFirebaseOptions`, `android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, `firebase.json` na raiz, e atualizar `android/app/build.gradle.kts`, `android/settings.gradle.kts`, `ios/Runner.xcodeproj/project.pbxproj` pra registrar os plugins/configs nativos.
+3. Adicionar `firebase_core: ^3.6.0` ao `pubspec.yaml`.
+4. Atualizar `lib/main.dart`:
+   - `Future<void> main() async`.
+   - `WidgetsFlutterBinding.ensureInitialized()`.
+   - `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` antes de `runApp`.
+5. Rodar `flutter pub get`.
+6. Garantir que `flutter analyze` continua 0 issues e que os 10 testes existentes continuam passando (testes montam widgets via `pumpWidget` direto, não passam pelo `main()`, então o `Firebase.initializeApp` não é disparado em teste — não precisa mockar).
+
+Esta iteração NÃO inclui:
+- Firebase Auth (próxima iteração)
+- Cloud Firestore (depois)
+- Storage / FCM / Functions (depois)
+- Login real (continua navegando pra HomeView sem autenticar)
+```
+
+### Output recebido:
+```markdown
+- Instalou `flutterfire_cli 1.3.2` globalmente via `dart pub global activate`. Notou que `$HOME/.pub-cache/bin` não está no PATH e usou `export PATH="$PATH":"$HOME/.pub-cache/bin"` inline pras chamadas subsequentes.
+- Confirmou que o Firebase CLI já estava logado (`firebase projects:list` retornou `freelance-hub-c53e2` na lista).
+- Rodou `flutterfire configure --project=freelance-hub-c53e2 --platforms=android,ios --yes`:
+  - Registrou novo Firebase Android app: `1:769113492542:android:6c80e2652778acdfca956f`
+  - Registrou novo Firebase iOS app: `1:769113492542:ios:f831c693d4e92aa7ca956f`
+  - Gerou `lib/firebase_options.dart`, `android/app/google-services.json`, `ios/Runner/GoogleService-Info.plist`, `firebase.json` (raiz)
+  - Atualizou `android/app/build.gradle.kts` (plugin google-services), `android/settings.gradle.kts` (classpath), `ios/Runner.xcodeproj/project.pbxproj` (registra GoogleService-Info.plist no bundle)
+- Editou `pubspec.yaml`: adicionou `firebase_core: ^3.6.0` ao bloco `dependencies`.
+- Editou `lib/main.dart`:
+  - Adicionou imports de `package:firebase_core/firebase_core.dart` e `'firebase_options.dart'`.
+  - Mudou assinatura pra `Future<void> main() async`.
+  - Adicionou `WidgetsFlutterBinding.ensureInitialized()` e `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)` antes do `runApp`.
+- Validação:
+  - `flutter pub get` → `Got dependencies!` (firebase_core 3.6.0 instalado + transitive deps).
+  - `flutter analyze` → `No issues found! (ran in 1.7s)`.
+  - `flutter test` → `10 tests, all passed` (mesmos 10 da iteração 11 — Firebase init não dispara porque tests não chamam `main()`).
+```
+
+### Resultado:
+Iteração de infra limpa, sem retentativas. Pontos relevantes:
+
+- **PATH não setado** após `pub global activate` é um gotcha conhecido do Dart. A IA detectou pela mensagem de warning do pub e usou `export PATH=...` inline pras chamadas seguintes — sem precisar editar `.zshrc` do usuário (que seria intrusivo). O usuário pode adicionar permanentemente depois se quiser usar `flutterfire` diretamente no terminal.
+- **`--yes` + `--platforms` no flutterfire** evitou o modo interativo (que pergunta plataforma por plataforma). Útil pra automação.
+- **Tests continuam verdes sem mock do Firebase**: a estratégia atual do `widget_test.dart` é montar widgets isolados via `MaterialApp(home: SomeView())` ou `pumpWidget(FreelanceHubApp())`. Em nenhum caso o `main()` real é chamado, então `Firebase.initializeApp` nunca dispara em ambiente de teste. Quando começar a usar Firebase Auth / Firestore dentro das views, vou precisar de mocks (`firebase_auth_mocks`, `fake_cloud_firestore` ou Riverpod overrides).
+- **Arquivos gerados commitados**: `firebase_options.dart`, `google-services.json`, `GoogleService-Info.plist`, `firebase.json` — todos vão pro repo. Padrão da comunidade Firebase: essas chaves não são "secret" no sentido tradicional (são restritas por package/bundle ID + App Check + Security Rules); a real segurança vem das Rules + RBAC nos backends. Pra um TCC, é OK e segue a recomendação oficial.
+
+**Notas pra próxima iteração:**
+- O `flutter run` em iOS vai precisar de `pod install` pelos novos plugins nativos. Hot restart NÃO basta — stop + run completo na primeira vez.
+- `pubspec.lock` foi regenerado com várias deps transitivas do firebase_core (`plugin_platform_interface`, `firebase_core_platform_interface`, `firebase_core_web`, etc.).
+- O app continua funcionando exatamente como antes — Firebase está inicializado mas nenhuma view o consome ainda.
+
+**Próximo passo:** **Iteração 13 — Firebase Auth**:
+- Adicionar `firebase_auth` ao pubspec.
+- Substituir o navegação placeholder do Login (que só pulava pra HomeView) por `signInWithEmailAndPassword`.
+- Substituir o submit do Signup por `createUserWithEmailAndPassword` + criar doc em `users/{uid}` com o role selecionado (mas Firestore ainda não tá instalado — pode persistir só na memória até a iteração de Firestore, ou já adicionar Firestore junto).
+- Decisão deferida: fazer Iteração 13 só de Auth, ou Iteração 13 = Auth + Firestore (pra já ter user role persistido)?
+
+---

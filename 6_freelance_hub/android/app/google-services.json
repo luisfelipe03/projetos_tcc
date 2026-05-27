@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "769113492542",
+    "project_id": "freelance-hub-c53e2",
+    "storage_bucket": "freelance-hub-c53e2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:769113492542:android:6c80e2652778acdfca956f",
+        "android_client_info": {
+          "package_name": "com.example.freelance_hub"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAxfYoleYD5Q56EKYgMSq5Z0n16A6OkEdo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
