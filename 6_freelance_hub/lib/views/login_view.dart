@@ -347,28 +347,33 @@ class _HeroCard extends StatelessWidget {
           Positioned(
             right: 24,
             top: 24,
-            child: Row(
-              children: List.generate(
-                3,
-                (i) => Container(
-                  margin: EdgeInsets.only(left: i == 0 ? 0 : -8),
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: [
-                      const Color(0xFFE3DFFF),
-                      const Color(0xFFA0F3D4),
-                      const Color(0xFFFFC107),
-                    ][i].withValues(alpha: 0.85),
-                    border: Border.all(color: Colors.white, width: 2),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
+            child: SizedBox(
+              width: 92,
+              height: 36,
+              child: Stack(
+                children: List.generate(3, (i) {
+                  return Positioned(
+                    left: 28.0 * i,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: [
+                          const Color(0xFFE3DFFF),
+                          const Color(0xFFA0F3D4),
+                          const Color(0xFFFFC107),
+                        ][i].withValues(alpha: 0.85),
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                      child: const Icon(
+                        Icons.person,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  );
+                }),
               ),
             ),
           ),

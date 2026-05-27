@@ -246,3 +246,40 @@ Ao executar o app no simulador, a `LoginView` quebrou no build do `_HeroCard`:
 Próximo passo: **Iteração 5 — correção do crash do `_HeroCard`** (substituir margin negativo por uma técnica válida de overlap), depois seguir para **Cadastro (Signup)** com seleção de papel.
 
 ---
+
+## Iteração 5
+### Prompt usado:
+```plaintext
+Como Iteração 5, corrija o crash detectado na Iteração 4:
+- `_HeroCard` em `lib/views/login_view.dart:353` quebra com `'margin == null || margin.isNonNegative': is not true` por causa de `Container(margin: EdgeInsets.only(left: -8))`. O efeito desejado é overlap dos 3 avatares — vamos substituir por `Stack` + `Positioned` com `left` calculado.
+- Aproveite a iteração pra fechar o gap de cobertura que deixou esse bug passar: adicione testes de smoke (`testWidgets`) para `LoginView` e `OnboardingView` que apenas montam cada uma e verificam textos chave. Esses testes pegam qualquer assertion error de widget no build.
+- Mantenha o mesmo visual: 3 círculos (lavanda, verde menta, amarelo) com borda branca de 2px, 36x36px, sobrepostos com 8px de intersecção.
+```
+
+### Output recebido:
+```markdown
+- Refatorou o bloco dos 3 avatares em `lib/views/login_view.dart` (linhas 347-378):
+  - Trocou `Row` + `Container(margin: EdgeInsets.only(left: -8))` por `SizedBox(width: 92, height: 36)` envolvendo um `Stack`.
+  - Cada avatar agora é um `Positioned(left: 28.0 * i, ...)` dentro do Stack. Cálculo: cada item 36px, sobrepondo 8px com o anterior → próximo item a 28px de distância do anterior. Total: 36 + 28 + 28 = 92px.
+  - Ordem de desenho preservada (último item fica visualmente em cima, mantendo o stacking original).
+- Atualizou `test/widget_test.dart` com 2 testes novos:
+  - `OnboardingView builds without errors`: pumpWidget direto da OnboardingView e verifica "Encontre o talento certo", "Próximo", "Pular", "PT".
+  - `LoginView builds without errors`: pumpWidget direto da LoginView e verifica "Bem-vindo de volta", "Entre na sua conta", "PLATAFORMA PRO", "Entrar", "Continuar com Google".
+  - Esses 2 testes builda o widget tree inteiro de cada tela — qualquer assertion error em sub-widget (como o margin negativo) é detectado.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)`.
+  - `flutter test` → `3 tests, all passed`.
+```
+
+### Resultado:
+Correção pontual + fortalecimento da cobertura de testes. A IA aplicou a solução correta (`Stack` + `Positioned`) sem precisar de retentativas, e o cálculo de `left = 28.0 * i` foi feito corretamente na primeira passada (36 - 8 de overlap = 28 de step). O `SizedBox` de 92x36 dá ao Stack uma dimensão definida — necessário porque Stack sem dimensão herda dos pais e os pais aqui são `Positioned` (que já tem `right: 24, top: 24` no card pai).
+
+**Cobertura de testes:** os 2 novos testes (`OnboardingView builds without errors`, `LoginView builds without errors`) montam diretamente cada tela com `MaterialApp(home: ...)` sem precisar atravessar o fluxo Splash→Onboarding→Login. Isso é o padrão recomendado pelo Flutter para smoke tests de tela. Custo: ~1s adicional por teste, total `flutter test` ainda em 3s.
+
+**Comprovação experimental do valor dos testes novos:** se os mesmos testes existissem na Iteração 4, o bug do margin negativo teria sido pego antes do commit — o `pumpWidget(MaterialApp(home: LoginView()))` triggera todo o build tree, incluindo o `_HeroCard` que quebrava com a assertion.
+
+Esta iteração entra como **iteração de correção** (vs. iteração de feature) — análoga às iterações de correção do `5_habit_flow` (13 de 36 iterações foram para fix de iterações anteriores, ~36%). Para o `6_freelance_hub`: 1 iteração de correção em 5 iterações totais (20% até aqui), proporção menor — mas ainda cedo no projeto para conclusão sobre o índice global.
+
+Próximo passo: tela de **Cadastro (Signup)** com seleção de papel (Cliente vs Freelancer) — desbloqueia o link "Cadastre-se" do Login.
+
+---
