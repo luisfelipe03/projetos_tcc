@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:freelance_hub/main.dart';
+import 'package:freelance_hub/models/project.dart';
 import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
+import 'package:freelance_hub/views/project_detail_view.dart';
 import 'package:freelance_hub/views/signup_view.dart';
 
 void main() {
@@ -72,5 +74,21 @@ void main() {
     expect(find.text('Meus Trabalhos'), findsOneWidget);
     expect(find.text('Mensagens'), findsOneWidget);
     expect(find.text('Perfil'), findsOneWidget);
+  });
+
+  testWidgets('ProjectDetailView renders project metadata and CTA', (
+    tester,
+  ) async {
+    final project = mockProjects.first;
+    await tester.pumpWidget(
+      MaterialApp(home: ProjectDetailView(project: project)),
+    );
+
+    expect(find.text('Detalhes do projeto'), findsOneWidget);
+    expect(find.text(project.title), findsOneWidget);
+    expect(find.text('Sobre o projeto'), findsOneWidget);
+    expect(find.text('Cliente'), findsOneWidget);
+    expect(find.text(project.clientName), findsOneWidget);
+    expect(find.text('Enviar proposta'), findsOneWidget);
   });
 }

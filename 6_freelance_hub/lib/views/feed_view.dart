@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/project.dart';
+import 'project_detail_view.dart';
 
 class FeedView extends StatefulWidget {
   const FeedView({super.key});
@@ -396,7 +397,13 @@ class _ProjectCard extends StatelessWidget {
         : _primary.withValues(alpha: 0.10);
 
     return InkWell(
-      onTap: () {},
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ProjectDetailView(project: project),
+          ),
+        );
+      },
       borderRadius: BorderRadius.circular(16),
       child: Container(
         clipBehavior: Clip.antiAlias,

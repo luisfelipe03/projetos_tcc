@@ -432,3 +432,90 @@ A IA implementou a Home + Feed completos numa única iteração estrutural. Pont
 A escolha entre seguir o fluxo do Freelancer (Project Detail → Send Proposal) ou pivotar para o Cliente Dashboard depende da prioridade — implementar primeiro o Freelancer cobre um caminho completo (do feed à proposta enviada) antes de duplicar o roteamento condicional pra Cliente.
 
 ---
+
+## Iteração 8
+### Prompt usado:
+```plaintext
+Como Iteração 8, implemente a tela de **Detalhes do Projeto** (visão do Freelancer ao tocar num card do feed). Não existe protótipo no Stitch — desenhe consistente com o sistema visual já estabelecido (purple primary, slate scale, DM Sans + Inter, mesmo padrão de top bar/cards).
+
+Estrutura:
+- Top bar: back arrow + "Detalhes do projeto" centralizado + bookmark toggle no canto direito.
+- Hero opcional: usa o mesmo gradient placeholder de feed quando `project.hasHeroImage == true`.
+- Bloco principal:
+  - Título (DM Sans 24 bold, line-height 1.2)
+  - Wrap de skill chips (mesmo `_SkillChip` style do feed)
+  - Budget em destaque (DM Sans 26 bold purple) + tipo (Preço fixo / Por hora)
+  - Metadata: ícone people + "X propostas" • ícone clock + "há Y horas/dias"
+- Divider
+- Seção "Sobre o projeto" com a description completa do projeto (Inter 14, line-height 1.6, color muted)
+- Divider
+- Seção "Cliente" com card outlined:
+  - Avatar circular purple (Icons.person)
+  - Nome (DM Sans 15 bold)
+  - Linha "★ X.X · N projetos publicados" (Inter 12)
+- Sticky bottom action bar:
+  - Container com top border + shadow sutil
+  - Botão "Enviar proposta" purple full-width (52px alto, rounded 14, DM Sans 15 bold)
+  - Por enquanto: tap mostra SnackBar "Tela de envio de proposta virá na próxima iteração."
+
+Expandir model:
+- Adicionar campos ao `Project`: `description` (String, parágrafo longo PT-BR), `clientName` (String), `clientRating` (double), `clientProjectsCount` (int).
+- Atualizar os 4 mock projects com descrições realistas e dados de cliente.
+
+Wire navegação:
+- O `_ProjectCard.onTap` no FeedView agora faz `Navigator.push(MaterialPageRoute(builder: (_) => ProjectDetailView(project: project)))`.
+
+Smoke test pra ProjectDetailView que verifica: "Detalhes do projeto", título do projeto, "Sobre o projeto", "Cliente", nome do cliente, "Enviar proposta".
+```
+
+### Output recebido:
+```markdown
+- Atualizou `lib/models/project.dart`:
+  - Adicionou 4 campos required: `description`, `clientName`, `clientRating`, `clientProjectsCount`.
+  - Atualizou os 4 mock projects com descrições realistas em PT-BR (média ~80 palavras cada, com `\n\n` pra separar parágrafos) e dados de cliente plausíveis (nomes brasileiros, ratings entre 4.6-5.0, projects count 7-24).
+- Criou `lib/views/project_detail_view.dart` (~430 linhas):
+  - `ProjectDetailView` (StatefulWidget) recebe `Project` no construtor.
+  - Estado local: `_bookmarked` (não persistido).
+  - Layout: Scaffold body = Column(_TopBar, Expanded(SingleChildScrollView(...)), _BottomActionBar).
+  - 6 helpers privados: `_TopBar`, `_HeroImage`, `_Section`, `_ClientCard`, `_SkillChip`, `_BottomActionBar`.
+  - `_BottomActionBar` é um Container com `SafeArea(top: false)` interno pra respeitar a home indicator do iOS.
+  - SnackBar "Tela de envio de proposta virá na próxima iteração." no tap do botão "Enviar proposta".
+- Editou `lib/views/feed_view.dart`:
+  - Import de `project_detail_view.dart`.
+  - `_ProjectCard.onTap` antes vazio (`() {}`), agora navega com `Navigator.push(MaterialPageRoute(builder: (_) => ProjectDetailView(project: project)))`.
+- Adicionou smoke test `ProjectDetailView renders project metadata and CTA` que monta a tela com `mockProjects.first` e verifica 6 textos (título da tela, título do projeto, seções, nome do cliente, CTA).
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)` na primeira execução, sem warnings de campos não usados (aprendi com as iterações anteriores).
+  - `flutter test` → `6 tests, all passed`.
+```
+
+### Resultado:
+Iteração limpa, sem retentativas internas. A IA aplicou os aprendizados das iterações anteriores:
+
+- **Sem cores declaradas sobrando**: a paleta foi importada já enxuta (apenas `_primary`, `_slate900`, `_slate500`, `_slate200`, `_slate800`, `_surfaceCream`, `_bgDark`) — todas usadas. Reflete a correção feita na Iteração 7 sendo internalizada como padrão.
+- **`_SkillChip` duplicado entre feed_view.dart e project_detail_view.dart** — aceitável por enquanto, mas já são 2 ocorrências; uma terceira tela com skill chips justifica extrair pra `core/widgets/`.
+- **`Project` model agora tem 4 campos required novos** — todos os call-sites já existentes foram atualizados no mesmo arquivo (mockProjects), zero risco de compile error em outros lugares.
+- **Decisão de layout pro sticky bottom**: `Column(TopBar, Expanded(SingleChildScrollView), BottomActionBar)` em vez de `Scaffold.bottomSheet` ou `Scaffold.persistentFooterButtons`. Garante que o botão sempre fica visível, scroll é confinado ao body, e respeita SafeArea da home indicator.
+
+**Decisões deferidas (não-bloqueantes):**
+- Bookmark do detalhe não está sincronizado com o bookmark do card no feed — cada um tem seu próprio estado. Quando Firestore entrar, vão compartilhar a fonte de verdade.
+- Botão "Enviar proposta" só mostra SnackBar — a tela real virá na próxima iteração.
+
+**Estado da navegação:**
+```
+SplashView → OnboardingView → LoginView ⇆ SignupView
+                                  ↓
+                              HomeView (Scaffold + BottomNav)
+                                  ├─ Feed (lista de projetos)
+                                  │    ↓ tap em card
+                                  │   ProjectDetailView ← (Iteração 8)
+                                  │        ↓ tap em "Enviar proposta"
+                                  │       (próxima iteração)
+                                  ├─ Meus Trabalhos (placeholder)
+                                  ├─ Mensagens (placeholder)
+                                  └─ Perfil (placeholder)
+```
+
+Próximo passo: **Send Proposal** — form com valor proposto + mensagem ao cliente, validação, e ao enviar volta pro Feed com SnackBar de confirmação. Fecha o loop "ver projeto → propor" no lado Freelancer antes de virar pro Cliente Dashboard.
+
+---

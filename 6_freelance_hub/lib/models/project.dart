@@ -8,6 +8,10 @@ class Project {
     required this.isHourly,
     required this.proposalCount,
     required this.postedAgo,
+    required this.description,
+    required this.clientName,
+    required this.clientRating,
+    required this.clientProjectsCount,
     this.hasHeroImage = false,
   });
 
@@ -20,6 +24,10 @@ class Project {
   final int proposalCount;
   final Duration postedAgo;
   final bool hasHeroImage;
+  final String description;
+  final String clientName;
+  final double clientRating;
+  final int clientProjectsCount;
 
   String formattedBudget() {
     final min = _formatCurrency(minBudget);
@@ -61,6 +69,17 @@ const mockProjects = <Project>[
     isHourly: false,
     proposalCount: 12,
     postedAgo: Duration(hours: 2),
+    description:
+        'Buscamos um designer experiente para liderar a remodelagem completa '
+        'da interface do nosso aplicativo de fintech. Precisamos de um visual '
+        'moderno, limpo e acessível, com atenção especial à jornada de '
+        'onboarding e ao fluxo de pagamentos.\n\nForneceremos guidelines de '
+        'marca, personas de usuário e acesso a um design system inicial. O '
+        'entregável final são telas em alta fidelidade (Figma) cobrindo todos '
+        'os fluxos principais e protótipo navegável.',
+    clientName: 'Ana Beltrão',
+    clientRating: 4.8,
+    clientProjectsCount: 12,
   ),
   Project(
     id: 'p2',
@@ -72,6 +91,16 @@ const mockProjects = <Project>[
     proposalCount: 5,
     postedAgo: Duration(hours: 4),
     hasHeroImage: true,
+    description:
+        'Nossa plataforma cresceu 300% em 6 meses e o backend atual (Node.js + '
+        'PostgreSQL) está sofrendo gargalos em picos de tráfego. Procuramos um '
+        'especialista em AWS para arquitetar uma solução escalável: revisão de '
+        'queries, estratégia de cache (Redis/CloudFront), filas de jobs (SQS) '
+        'e auto-scaling.\n\nDocumentação detalhada é obrigatória. Pagamento '
+        'por hora.',
+    clientName: 'Marcelo Vargas',
+    clientRating: 4.6,
+    clientProjectsCount: 7,
   ),
   Project(
     id: 'p3',
@@ -82,6 +111,15 @@ const mockProjects = <Project>[
     isHourly: false,
     proposalCount: 28,
     postedAgo: Duration(days: 1),
+    description:
+        'Estúdio de fotografia precisa de tema WordPress 100% personalizado. '
+        'Requisitos: galeria responsiva com lazy-load, área de cliente '
+        'protegida por senha (download de fotos), integração com Instagram '
+        'API e otimização agressiva de Core Web Vitals.\n\nPerformance é '
+        'prioridade máxima — meta de LCP < 1.5s.',
+    clientName: 'Júlia Cardoso',
+    clientRating: 5.0,
+    clientProjectsCount: 24,
   ),
   Project(
     id: 'p4',
@@ -92,5 +130,15 @@ const mockProjects = <Project>[
     isHourly: false,
     proposalCount: 42,
     postedAgo: Duration(days: 2),
+    description:
+        'Marca consolidada há 8 anos buscando atualização completa: logo, '
+        'paleta de cores, tipografia, aplicações em mídia digital e impressa. '
+        'Mantemos a herança visual original mas com linguagem contemporânea '
+        '— evolução, não revolução.\n\nEntregáveis: brand book completo, '
+        'arquivos vetoriais em todos os formatos e guia de uso para a equipe '
+        'interna.',
+    clientName: 'Studio Aurora',
+    clientRating: 4.7,
+    clientProjectsCount: 18,
   ),
 ];
