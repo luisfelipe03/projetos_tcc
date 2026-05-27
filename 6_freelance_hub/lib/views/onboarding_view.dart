@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'home_view.dart';
+import 'login_view.dart';
 
 class OnboardingView extends StatefulWidget {
   const OnboardingView({super.key});
@@ -63,7 +63,7 @@ class _OnboardingViewState extends State<OnboardingView> {
 
   void _finish() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeView()),
+      MaterialPageRoute(builder: (_) => const LoginView()),
     );
   }
 

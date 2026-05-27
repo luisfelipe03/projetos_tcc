@@ -156,3 +156,93 @@ Como esses pontos são cosméticos e a estrutura visual está fiel, vão para um
 A integração com Splash foi um one-liner (troca de import + classe na rota). Próximo passo: implementar o **Login & Auth** ou a **Language Sheet** (bottom sheet de seleção de idioma) acessada pelo toque na pill "PT" — o que o usuário priorizar.
 
 ---
+
+## Iteração 4
+### Prompt usado:
+```plaintext
+Como Iteração 4, implemente a tela de **Login & Auth** conforme o protótipo do Stitch. Decisões:
+
+- Traduza tudo pro português (consistência com Onboarding):
+  - "Welcome Back" → "Bem-vindo de volta"
+  - "Login to your account" → "Entre na sua conta"
+  - "Enter your credentials to access your workspace." → "Informe suas credenciais para acessar."
+  - "Email Address" → "E-mail" (placeholder: "nome@empresa.com")
+  - "Password" → "Senha" (placeholder: "••••••••")
+  - "Forgot password?" → "Esqueceu a senha?"
+  - "Log In" → "Entrar"
+  - "OR CONTINUE WITH" → "OU CONTINUE COM"
+  - "Don't have an account? Create an account" → "Não tem conta? Cadastre-se"
+  - "PRO PLATFORM" → "PLATAFORMA PRO"
+- Mantenha o **primary purple `#3B309E`** do app (não trocar pro blue `#1337EC` do protótipo) — preserva consistência cromática com Splash/Onboarding.
+- **Remova o botão LinkedIn** — o README só menciona Google como social sign-in. Botão Google fica full-width sozinho.
+- Hero card: gradiente diagonal de `#534AB7` → `#1B154A` com 3 círculos decorativos (alpha baixo), 3 avatares circulares sobrepostos no topo direito (representando os 3 freelancers do protótipo), chip "PLATAFORMA PRO" e caption no rodapé esquerdo. **Sem network image** (asset rotting).
+- Form com 2 `TextFormField`:
+  - E-mail: validação com regex, ícone mail, autofill `email`.
+  - Senha: validação ≥6 chars, ícone lock, autofill `password`, toggle de visibilidade (eye icon).
+- Top bar: back arrow + "Bem-vindo de volta" centralizado (compensado por padding-right pra centralizar visualmente apesar do arrow à esquerda).
+- "Entrar" e "Continuar com Google" navegam pra HomeView via `pushReplacement` (sem Firebase ainda).
+- "Esqueceu a senha?" e "Cadastre-se" exibem SnackBar "em breve".
+- Suporte completo light/dark com paleta slate (slate-200/400/500/700/900) + bg dark `#0B1020`.
+- Tipografia DM Sans (título + botão) + Inter (resto).
+- Logo Google: implemente como `CustomPainter` com os 4 segmentos coloridos clássicos — sem dependência externa.
+- Atualizar `OnboardingView` pra navegar pra `LoginView` no fim (em vez de HomeView).
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/views/login_view.dart` (~580 linhas) com:
+  - `LoginView` (StatefulWidget) com `GlobalKey<FormState>`, 2 `TextEditingController`, estado `_obscurePassword`.
+  - Layout em `SingleChildScrollView` (evita overflow quando teclado aparece) + `SafeArea`.
+  - `_TopBar` com `IconButton(arrow_back)` + `Center` com padding-right compensatório para centralizar título mesmo com o botão à esquerda. Usa `Navigator.maybePop` (silencioso se não há rota anterior).
+  - `_HeroCard`: `Container` 180px com gradient diagonal + 2 círculos decorativos `Positioned` + 3 avatares circulares com borda branca sobrepostos + chip "PLATAFORMA PRO" + caption. Tudo em Flutter puro, sem assets.
+  - `_TextInput`: wrapper do `TextFormField` com `OutlineInputBorder` arredondado (14px), estados `enabled`/`focused`/`error`/`focusedError` configurados, fill color + ícone prefix + suffix opcional.
+  - Validação inline: regex de e-mail (`^[\w.+-]+@[\w-]+\.[\w.-]+$`), senha ≥6 chars.
+  - `_OrDivider`: 2 linhas com texto centralizado e tracking widest.
+  - `_SocialButton`: `OutlinedButton` full-width com ícone customizado + label.
+  - `_GoogleIcon` + `_GoogleGPainter`: 4 arcos coloridos (amarelo, verde, azul, vermelho) formando o "G" do Google + retângulo azul horizontal + círculo branco interno.
+- Atualizou `lib/views/onboarding_view.dart`: import de `home_view.dart` → `login_view.dart`, navegação `Pular`/`Começar` agora vai para `LoginView`.
+- Pequena correção pós-analyze: campo `_primaryDeep` declarado mas não usado removido.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.3s)` (depois de remover `_primaryDeep`).
+  - `flutter test` → `All tests passed!` (smoke test da Splash inalterado).
+```
+
+### Resultado:
+A IA implementou a tela de Login completa em uma única iteração, com fidelidade estrutural ao protótipo e os tradeoffs cromáticos/de conteúdo declarados (purple em vez de blue, sem LinkedIn). Pontos de destaque:
+
+- **CustomPainter do logo do Google** implementado com 4 arcos parciais (cada um cobrindo 90° do círculo) traduzindo o desenho clássico do "G" sem precisar de SVG asset. Resultado: aproximação reconhecível, não pixel-perfect — em produção, seria mais robusto usar `flutter_svg` ou o pacote `google_sign_in_web` que traz o logo oficial.
+- **Hero card sem network image**: a foto real do protótipo (URL do Stitch) foi substituída por uma composição estilizada que comunica o mesmo conceito (3 avatares = profissionais conectados + gradient corporate = ambiente premium).
+- **Top bar com back arrow funcional sem rota anterior**: `Navigator.maybePop` é silencioso quando o stack está vazio (caso de uso real aqui, já que Onboarding → Login é `pushReplacement`). Isso preserva a fidelidade ao design sem comportamento estranho.
+- **Validação inline** seguindo padrão `Form` + `validator` do Flutter, sem dependência de `reactive_forms` ainda — virá quando os formulários ficarem mais complexos (cadastro com role selection, criar projeto).
+- **Form submit + Google login navegam ambos para HomeView** via `pushReplacement` — placeholder até a Iteração de integração com Firebase Auth.
+- **Único warning de analyze** (campo não usado `_primaryDeep`) foi pego e corrigido sem reentrada de prompt — comportamento esperado de boa qualidade.
+
+Pontos que vão precisar de iteração futura:
+- O logo do Google está aproximado, não oficial. Considerar uso de `flutter_svg` + asset oficial ou pacote `font_awesome_flutter` com `Brands.googlePlusG`.
+- O hero card poderia ter uma ilustração mais elaborada (formas geométricas, dotted patterns) para se aproximar mais do mockup.
+- A tela do **Cadastro (Signup)** precisa ser criada — atualmente o link "Cadastre-se" só mostra SnackBar.
+
+### Erro detectado em runtime (após validação automatizada passar)
+
+Ao executar o app no simulador, a `LoginView` quebrou no build do `_HeroCard`:
+
+```
+'package:flutter/src/widgets/container.dart': Failed assertion: line 270 pos 15:
+'margin == null || margin.isNonNegative': is not true.
+
+#3  _HeroCard.build.<anonymous closure> (package:freelance_hub/views/login_view.dart:353:24)
+```
+
+**Causa raiz:** na composição dos 3 avatares sobrepostos no topo direito da hero card, foi usado `margin: EdgeInsets.only(left: i == 0 ? 0 : -8)` para criar o efeito de overlap. O `Container` do Flutter não aceita margins negativos — o asserção `margin.isNonNegative` falha em runtime.
+
+**Por que as validações automatizadas não pegaram:**
+- `flutter analyze` é estática, não simula o build dos widgets — não tem como saber que `-8` violaria a precondição do `Container`.
+- `flutter test` passou porque o smoke test atual só monta `FreelanceHubApp` e verifica a Splash; ele nunca atravessa Splash → Onboarding → LoginView no contexto do teste (o `Future.delayed(3s)` da Splash é drenado mas o `pushReplacement` para Onboarding não é exercido como evento de interação).
+
+**Lição:** o gap de cobertura é evidente — sem teste que monte `LoginView` diretamente (ou um teste E2E que percorra o fluxo), bugs de assertion de widget passam despercebidos. Mitigações possíveis em iterações futuras: (a) widget tests por tela (`pumpWidget(MaterialApp(home: LoginView()))`), (b) usar `Transform.translate` ou `Stack`+`Positioned` em vez de margins negativos quando precisar de overlap.
+
+**Status:** a Iteração 4 é commitada com o bug presente (registro honesto do que a IA entregou em uma única passada). A correção será feita na **Iteração 5**.
+
+Próximo passo: **Iteração 5 — correção do crash do `_HeroCard`** (substituir margin negativo por uma técnica válida de overlap), depois seguir para **Cadastro (Signup)** com seleção de papel.
+
+---
