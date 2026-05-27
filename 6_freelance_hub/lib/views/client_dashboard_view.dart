@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'create_project_view.dart';
+
 class ClientDashboardView extends StatelessWidget {
   const ClientDashboardView({super.key});
 
@@ -99,11 +101,9 @@ class ClientDashboardView extends StatelessWidget {
               height: 52,
               child: FilledButton.icon(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Tela de criar projeto virá numa próxima iteração.',
-                      ),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const CreateProjectView(),
                     ),
                   );
                 },

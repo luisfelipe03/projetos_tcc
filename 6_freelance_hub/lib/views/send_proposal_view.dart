@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/text_formatters.dart';
 import '../models/project.dart';
 
 class SendProposalView extends StatefulWidget {
@@ -173,7 +174,7 @@ class _SendProposalViewState extends State<SendProposalView> {
                           suffixText: widget.project.isHourly ? '/h' : null,
                           hint: '0',
                           keyboardType: TextInputType.number,
-                          inputFormatters: [_ThousandsFormatter()],
+                          inputFormatters: [ThousandsFormatter()],
                           validator: _validateValue,
                           inputBg: cardBg,
                           inputBorder: inputBorder,
@@ -548,25 +549,3 @@ class _BottomActionBar extends StatelessWidget {
   }
 }
 
-class _ThousandsFormatter extends TextInputFormatter {
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    if (digits.isEmpty) {
-      return const TextEditingValue(text: '');
-    }
-    final buf = StringBuffer();
-    for (var i = 0; i < digits.length; i++) {
-      if (i > 0 && (digits.length - i) % 3 == 0) buf.write('.');
-      buf.write(digits[i]);
-    }
-    final formatted = buf.toString();
-    return TextEditingValue(
-      text: formatted,
-      selection: TextSelection.collapsed(offset: formatted.length),
-    );
-  }
-}

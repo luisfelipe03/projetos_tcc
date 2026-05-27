@@ -666,3 +666,84 @@ SplashView → OnboardingView → LoginView ⇆ SignupView
 Próximo passo: **Criar Projeto** (publicar novo projeto), acessado pelo CTA do dashboard — paralelo do SendProposal mas no lado Cliente. OU iniciar a **integração Firebase** (Auth primeiro), que marca a transição "fase UI" → "fase backend" e destrava várias coisas (auth real, persistência, roteamento real por papel).
 
 ---
+
+## Iteração 11
+### Prompt usado:
+```plaintext
+Como Iteração 11, implemente a tela de **Criar Projeto** (CTA do Dashboard "Publicar Novo Projeto" → form de criação). Paralela ao SendProposal mas no lado Cliente.
+
+Estrutura:
+- Top bar: back + "Publicar projeto" centralizado.
+- Form scrollável com 6 blocos:
+  1. **Título** — TextField simples, validação ≥10 chars e ≤100.
+  2. **Categoria** — Wrap de chips single-select (Design, Desenvolvimento, Marketing, Conteúdo, Outros). Mostra erro inline se nenhuma selecionada no submit.
+  3. **Habilidades** — Wrap de chips multi-select (14 opções: UI/UX, Figma, Branding, Logo Design, Node.js, Python, React, Flutter, AWS, WordPress, PHP, SEO, Copywriting, Social Media). Contador "N selecionada(s)" no header. Mínimo 1.
+  4. **Tipo de orçamento** — Segmented control custom (Preço fixo / Por hora). Pílula purple quando selecionada.
+  5. **Valor (R$)** — 2 inputs side-by-side (Mínimo, Máximo) com prefix "R$ " e ThousandsFormatter. Validação: ambos > 0, max ≥ min.
+  6. **Descrição do projeto** — multiline (6-7 linhas), validação ≥50 chars.
+- Sticky bottom: botão "Publicar projeto" purple. No submit válido: SnackBar verde "Projeto publicado! Você receberá propostas em breve." + pop.
+
+Refatoração de oportunidade:
+- `_ThousandsFormatter` está em 2 telas (SendProposal e agora Criar Projeto). Extrair pra `lib/core/text_formatters.dart` como `ThousandsFormatter` público. Atualizar SendProposal pra usar o compartilhado.
+
+Wire:
+- CTA "Publicar Novo Projeto" no ClientDashboardView agora navega pra CreateProjectView (em vez do SnackBar placeholder).
+
+Smoke test com viewport ampliado.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/core/text_formatters.dart` com `ThousandsFormatter` público (mesma lógica do helper privado anterior).
+- Editou `lib/views/send_proposal_view.dart`:
+  - Import do `ThousandsFormatter` compartilhado.
+  - Trocou referência de `_ThousandsFormatter()` para `ThousandsFormatter()`.
+  - Removeu a definição duplicada no final do arquivo.
+- Criou `lib/views/create_project_view.dart` (~540 linhas):
+  - StatefulWidget com 4 controllers (título, minBudget, maxBudget, descrição) + 3 estados não-form (`_selectedCategory`, `_selectedSkills` como Set, `_budgetType` enum, flags de erro `_showCategoryError`, `_showSkillsError`).
+  - Enum privado `_BudgetType { fixed, hourly }`.
+  - Lista constante de 5 categorias e 14 habilidades.
+  - `_SelectableChip` (StatelessWidget) reutilizável: aceita `selected`, `onTap`, `compact` (true pra skills, false pra categorias). Quando selected: bg purple/22 dark ou purple/10 light, border purple 1.5px, ícone check à esquerda, label em bold purple.
+  - `_BudgetTypeSegmented` (StatelessWidget) custom: Container com padding 4px + Row de 2 segments; segment selected tem bg purple sólido + texto branco.
+  - Label do bloco de valor muda dinamicamente: "Faixa de orçamento (R$)" pro fixed, "Valor por hora (R$)" pro hourly.
+  - Validação tripla (Form.validate + categoria + habilidades). Erros não-form via flags `_show*Error` + Text vermelho inline.
+  - `_validateMaxBudget` cruza com `_minBudgetController.text` pra garantir max ≥ min.
+  - Submit: dismiss keyboard + SnackBar verde floating "Projeto publicado! Você receberá propostas em breve." + pop.
+- Editou `lib/views/client_dashboard_view.dart`:
+  - Import de `create_project_view.dart`.
+  - CTA "Publicar Novo Projeto" antes mostrava SnackBar; agora navega com `Navigator.push(MaterialPageRoute(builder: (_) => CreateProjectView()))`.
+- Adicionou smoke test `CreateProjectView builds with form + chips + segmented` com viewport `Size(800, 2000)` (form é alto), verificando: "Publicar projeto" 2x, "Conte-nos sobre o projeto", labels dos 6 blocos, "Design" (1ª categoria), "Preço fixo", "Por hora".
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)` (zero warnings de primeira).
+  - `flutter test` → `10 tests, all passed` (era 9).
+```
+
+### Resultado:
+Iteração limpa, sem retentativas. Decisões relevantes:
+
+- **Refator de `ThousandsFormatter` no momento certo**: a 3ª ocorrência iminente justificou extrair pra `core/text_formatters.dart`. SendProposal foi migrado no mesmo turno — sem regressão (smoke test continua passando porque o comportamento é idêntico). Padrão "extrair na 3ª duplicação" virou diretriz prática.
+- **`_SelectableChip` parametrizado pelo `compact`** em vez de criar 2 widgets separados (um pra categoria, um pra skills). Mesma estética, só ajusta padding e font-size.
+- **`_BudgetTypeSegmented` custom** em vez de usar `SegmentedButton` do Material 3. Razão: o SegmentedButton tem padrão de borda externa contínua e cantos compartilhados que conflitam com o padrão do app (pílula full purple solid). Custom dá mais controle.
+- **Label do bloco de valor é dinâmico**: muda baseado em `_budgetType`. Pequeno detalhe que dá feedback ao usuário ("estou pedindo valor por hora ou faixa fixa?").
+- **Validação cruzada de max ≥ min**: `_validateMaxBudget` lê o `_minBudgetController.text` no momento da validação. Não é reativa (só dispara em validate, não atualiza em tempo real ao mudar o min) — aceitável; uma versão reativa exigiria listener no min controller que re-valida o max.
+- **`_TextInput` ainda duplicado** entre Login, Signup, SendProposal e agora CreateProject. As 4 instâncias têm pequenas variações de capabilities (alguns têm icon, outros prefixText). Extração via parâmetros opcionais é viável mas adiciona complexidade — vou aguardar mais ocorrências antes de consolidar.
+
+**Loop do Cliente fechado:**
+```
+Dashboard → "Publicar Novo Projeto" → CreateProject form → (submit) → volta pro Dashboard
+```
+
+**Estado completo da navegação:**
+```
+Splash → Onboarding → Login ⇆ Signup
+                        ↓
+                    HomeView(initialRole)
+                        ├─ Freelancer:
+                        │   Feed → Detail → Send Proposal
+                        └─ Cliente:
+                            Dashboard → Create Project
+```
+
+**Próximo passo:** virar pra fase de **integração Firebase** — o usuário já criou o projeto `freelance-hub-c53e2` e quer rodar `flutterfire configure`. Marca transição UI → backend. Vai ser a Iteração 12.
+
+---

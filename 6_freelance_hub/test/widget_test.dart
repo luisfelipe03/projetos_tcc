@@ -5,6 +5,7 @@ import 'package:freelance_hub/main.dart';
 import 'package:freelance_hub/models/project.dart';
 import 'package:freelance_hub/models/user_role.dart';
 import 'package:freelance_hub/views/client_dashboard_view.dart';
+import 'package:freelance_hub/views/create_project_view.dart';
 import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
@@ -138,6 +139,29 @@ void main() {
     // bottom nav (modo Cliente).
     expect(find.text('Painel'), findsNWidgets(2));
     expect(find.text('Projetos'), findsOneWidget);
+  });
+
+  testWidgets('CreateProjectView builds with form + chips + segmented', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: CreateProjectView()),
+    );
+
+    // "Publicar projeto" aparece 2x: top bar + botão sticky.
+    expect(find.text('Publicar projeto'), findsNWidgets(2));
+    expect(find.text('Conte-nos sobre o projeto'), findsOneWidget);
+    expect(find.text('Título do projeto'), findsOneWidget);
+    expect(find.text('Categoria'), findsOneWidget);
+    expect(find.text('Habilidades'), findsOneWidget);
+    expect(find.text('Tipo de orçamento'), findsOneWidget);
+    expect(find.text('Preço fixo'), findsOneWidget);
+    expect(find.text('Por hora'), findsOneWidget);
+    expect(find.text('Design'), findsOneWidget);
   });
 
   testWidgets('SendProposalView builds with form + recap', (tester) async {
