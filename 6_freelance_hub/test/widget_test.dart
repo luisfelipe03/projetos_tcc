@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:freelance_hub/main.dart';
 import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
+import 'package:freelance_hub/views/signup_view.dart';
 
 void main() {
   testWidgets('App starts on SplashView with brand', (
@@ -42,5 +43,18 @@ void main() {
     expect(find.text('PLATAFORMA PRO'), findsOneWidget);
     expect(find.text('Entrar'), findsOneWidget);
     expect(find.text('Continuar com Google'), findsOneWidget);
+  });
+
+  testWidgets('SignupView builds with role selector and form', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: SignupView()),
+    );
+
+    expect(find.text('Crie sua conta'), findsOneWidget);
+    expect(find.text('Eu sou:'), findsOneWidget);
+    expect(find.text('Cliente'), findsOneWidget);
+    expect(find.text('Freelancer'), findsOneWidget);
+    // "Criar conta" aparece 2x: no top bar (título) e no botão primário.
+    expect(find.text('Criar conta'), findsNWidgets(2));
   });
 }

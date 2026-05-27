@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'home_view.dart';
+import 'signup_view.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -47,8 +48,8 @@ class _LoginViewState extends State<LoginView> {
   }
 
   void _handleSignUp() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fluxo de cadastro em breve.')),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SignupView()),
     );
   }
 

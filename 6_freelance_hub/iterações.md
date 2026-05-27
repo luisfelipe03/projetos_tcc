@@ -283,3 +283,69 @@ Esta iteração entra como **iteração de correção** (vs. iteração de featu
 Próximo passo: tela de **Cadastro (Signup)** com seleção de papel (Cliente vs Freelancer) — desbloqueia o link "Cadastre-se" do Login.
 
 ---
+
+## Iteração 6
+### Prompt usado:
+```plaintext
+Como Iteração 6, implemente a tela de **Cadastro (Signup)** com seleção de papel. Essa tela não existe no Stitch — desenhe consistente com o LoginView (mesma paleta purple/slate, DM Sans + Inter, mesmo estilo de input). Estrutura:
+
+- Top bar: back arrow + "Criar conta" centralizado (mesma estrutura do Login).
+- Título "Crie sua conta" + subtítulo "Junte-se ao FreelanceHub em poucos passos."
+- **Seleção de papel** (central pro RBAC do app):
+  - Crie `lib/models/user_role.dart` com `enum UserRole { client, freelancer }` tipado (com `displayName` e `tagline` como propriedades do enum).
+  - 2 cards em row (Expanded + SizedBox(width: 12) + Expanded), 50/50 da largura.
+  - Cada card: padding 14, border arredondada 16px, ícone (briefcase pra Cliente, design_services pra Freelancer), título DM Sans 15px bold + tagline Inter 11px 2 linhas.
+  - Estado não-selecionado: bg = inputBg, border slate (1px). Selecionado: bg = `#E3DFFF` (light) / `#3B309E` com 18% alpha (dark), border purple `#3B309E` (1.5px), ícone purple, título purple, badge circular purple com checkmark no canto superior direito (animado com `AnimatedOpacity`).
+  - `AnimatedContainer` na transição (180ms easeOutCubic).
+- Form com 3 fields (Nome / E-mail / Senha) usando o mesmo `_TextInput` style do Login.
+- Checkbox de termos com `RichText` que mistura cor neutra + 2 links purple ("Termos de Uso", "Política de Privacidade").
+- Validação:
+  - Form: nome ≥3 chars, regex de e-mail, senha ≥6 chars.
+  - Role: deve estar selecionado (`_showRoleError = true` se não).
+  - Termos: deve estar marcado (`_showTermsError = true` se não).
+  - Mensagens de erro inline (cor `#BA1A1A`) abaixo dos componentes não-form.
+- Botão "Criar conta" purple full-width. No tap: valida tudo, se ok → navega pra HomeView via pushReplacement.
+- Footer "Já tem uma conta? Entrar" — tap volta pro Login com `Navigator.maybePop`.
+- Atualizar LoginView: o link "Cadastre-se" agora navega pra SignupView com `push` (não pushReplacement — pra permitir voltar).
+- Adicionar smoke test pra SignupView que verifica os textos chave.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/models/user_role.dart` com `enum UserRole` tipado:
+  - `client` (displayName "Cliente", tagline "Contrate freelancers e\npublique projetos.").
+  - `freelancer` (displayName "Freelancer", tagline "Receba projetos e\ngerencie entregas.").
+  - Construtor const com required named params.
+- Criou `lib/views/signup_view.dart` (~530 linhas):
+  - `SignupView` (StatefulWidget) com `GlobalKey<FormState>`, 3 `TextEditingController`, `UserRole? _selectedRole`, `bool _termsAccepted`, `bool _obscurePassword`, `bool _showRoleError`, `bool _showTermsError`.
+  - `_handleSubmit`: faz `form.validate()` + checa role + checa terms; só navega se tudo passar; em caso de erro nos não-form (role/terms), seta flags pra exibir mensagens inline via `setState`.
+  - `_TopBar` reutilizando o mesmo padrão do Login.
+  - `_RoleCard` (StatelessWidget) com `AnimatedContainer` (180ms easeOutCubic) que anima bg/border na seleção, e badge de check no canto top-right com `AnimatedOpacity`.
+  - Form com `_TextInput`, `_FieldLabel`, `_TermsCheckbox` (com RichText) — pequena duplicação de helpers do Login (`_FieldLabel`, `_TextInput`) que ficou aceitável até criar um `core/widgets/` compartilhado.
+- Atualizou `lib/views/login_view.dart`:
+  - Importou `signup_view.dart`.
+  - `_handleSignUp` agora faz `Navigator.push(MaterialPageRoute(builder: (_) => SignupView()))` em vez do SnackBar "em breve".
+- Adicionou teste de smoke `SignupView builds with role selector and form` em `test/widget_test.dart` verificando: "Crie sua conta", "Eu sou:", "Cliente", "Freelancer", "Criar conta" (2x).
+```
+
+### Resultado:
+A IA implementou Signup + enum UserRole em uma única passada estrutural. Decisões tomadas sem retentativa:
+
+- **Enum tipado com propriedades** em vez de `enum` simples + map externo — `displayName` e `tagline` viajam junto com o valor.
+- **Cards de papel com `AnimatedContainer`** que animam border, bg e título simultaneamente em 180ms — feedback visual claro pro usuário no toque.
+- **Badge de check com `AnimatedOpacity`** em vez de aparecer/sumir abruptamente.
+- **Validação de não-form em estado separado** (`_showRoleError`, `_showTermsError`) — Flutter's `Form.validate()` só roda nos `FormField`s; role e terms exigem checagem manual + flags pra exibir erro inline.
+
+**Duas correções pós-validação:**
+1. **Warning de analyze:** `_primaryLight` declarado em `_SignupViewState` mas o uso real estava no `_RoleCard` (que já tem seu próprio static const). Removido o do parent.
+2. **Test failure:** assertion `find.text('Criar conta'), findsOneWidget` falhou porque o texto aparece 2x (top bar + botão). Mudado pra `findsNWidgets(2)` com comentário explicando.
+
+Ambas detectadas e corrigidas dentro da mesma iteração (sem necessidade de iteração de fix separada). `flutter analyze` finaliza com 0 issues, `flutter test` com 4 passes.
+
+**Pequena duplicação intencional:** `_FieldLabel` e `_TextInput` aparecem tanto em `login_view.dart` quanto em `signup_view.dart`. Para 2 ocorrências ainda não vale criar um módulo compartilhado em `core/widgets/`. Quando aparecer uma terceira tela com inputs (talvez profile edit ou criar projeto), extraio.
+
+**Sobre a navegação:** Login → Signup usa `push` (não `pushReplacement`) — assim o botão "Entrar" no footer do Signup volta naturalmente pro Login via `Navigator.maybePop`. Onboarding → Login é `pushReplacement` (não tem por que voltar pra Onboarding após login).
+
+Próximo passo: **Home/Feed do Cliente ou do Freelancer** — começa a entrar nas telas pós-autenticação. Como temos `UserRole` modelado mas nenhum estado de autenticação ainda, o roteamento condicional por papel virá quando a Iteração de Firebase Auth fizer a integração de verdade. Por enquanto, a `HomeView` precisa virar uma tela real (lista de projetos para Freelancer / dashboard para Cliente).
+
+---
