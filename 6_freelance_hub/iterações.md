@@ -519,3 +519,65 @@ SplashView → OnboardingView → LoginView ⇆ SignupView
 Próximo passo: **Send Proposal** — form com valor proposto + mensagem ao cliente, validação, e ao enviar volta pro Feed com SnackBar de confirmação. Fecha o loop "ver projeto → propor" no lado Freelancer antes de virar pro Cliente Dashboard.
 
 ---
+
+## Iteração 9
+### Prompt usado:
+```plaintext
+Como Iteração 9, implemente a tela de **Send Proposal** — fecha o loop do Freelancer (ver projeto → propor). Não existe protótipo no Stitch; desenhe consistente com o sistema visual (purple primary, slate scale, DM Sans + Inter).
+
+Estrutura:
+- Top bar: back arrow + "Enviar proposta" centralizado (mesmo padrão do Login/Signup/Detail).
+- **Recap card** no topo da rolagem: ícone briefcase purple, label "Propondo para", título do projeto truncado em 1 linha com ellipsis, budget formatado + tipo. Dá contexto visual antes do form.
+- Form (Form + GlobalKey + 3 controllers):
+  - **Valor da proposta** — input de número com `prefixText: 'R$ '`, suffix `/h` se project.isHourly. Formatter custom `_ThousandsFormatter` que insere pontos como separador de milhar (replicando a lógica de `Project._formatCurrency`). Validador: não vazio, parse positivo.
+  - **Prazo estimado** — input numérico com ícone `event_outlined` prefix, suffix "dias". Validador: 1-365.
+  - **Mensagem ao cliente** — TextFormField multiline (minLines 6, maxLines 7, maxLength 1000). Counter custom no label header ("N / 1000") com cor verde `#086B53` quando ≥ 30 chars (mínimo válido), cor neutra abaixo disso. Validador: ≥ 30 chars.
+- Sticky bottom: botão "Enviar proposta" purple full-width.
+- No submit:
+  - Form.validate()
+  - Se ok: dismiss keyboard via FocusScope.unfocus(), mostra SnackBar verde `#086B53` floating com cantos arredondados ("Proposta enviada com sucesso! Você será notificado se for aceita."), e pop pra ProjectDetailView.
+- Wire: o botão "Enviar proposta" do ProjectDetailView agora navega pra SendProposalView (substituindo o SnackBar placeholder).
+- Smoke test que verifica títulos, labels do form, recap card.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/views/send_proposal_view.dart` (~440 linhas):
+  - `SendProposalView` (StatefulWidget) com `Project` no construtor + GlobalKey<FormState> + 3 `TextEditingController` + listener no message controller pra atualizar o counter.
+  - Layout: Column(_TopBar, Expanded(SingleChildScrollView(Form)), _BottomActionBar). `resizeToAvoidBottomInset: true` permite o teclado empurrar o body sem cobrir o input ativo.
+  - `_ProjectRecap`: Container com border + Icon briefcase purple bg + textos hierárquicos (label uppercase, título 1 linha com ellipsis, budget+tipo).
+  - `_TextInput` parametrizável: aceita `icon` (prefixIcon Material), `prefixText` (texto antes do conteúdo, ex.: "R$ "), `suffixText` (depois, ex.: "/h" ou "dias"), `inputFormatters`, `maxLines`/`minLines`/`maxLength`. `counterText: ''` desabilita o counter default do Flutter (uso meu próprio no label header).
+  - Counter custom no label da mensagem: muda cor verde `#086B53` quando ≥30 chars, neutro abaixo. Reage via `_messageController.addListener` → `setState`.
+  - `_ThousandsFormatter` (TextInputFormatter): retira tudo não-dígito, percorre da direita pra esquerda inserindo "." a cada 3 — mesma lógica do `_formatCurrency` do model mas adaptada pra input.
+  - Submit: `Form.validate()` + dismiss keyboard + SnackBar verde floating + `Navigator.pop()`.
+- Editou `lib/views/project_detail_view.dart`:
+  - Import de `send_proposal_view.dart`.
+  - O `_BottomActionBar.onSendProposal` antes mostrava SnackBar placeholder, agora navega com `Navigator.push(MaterialPageRoute(builder: (_) => SendProposalView(project: project)))`.
+- Adicionou smoke test `SendProposalView builds with form + recap` verificando: "Enviar proposta" 2x (top bar + botão), "Propondo para", título do projeto, "Sua proposta", labels dos 3 fields.
+- Pequena correção pós-analyze: `_slate400` declarado mas não usado em `_SendProposalViewState` (o `_TextInput` hint color é resolvido localmente). Removido no mesmo turno.
+- Validação:
+  - `flutter analyze` → `No issues found!` (após remover `_slate400`).
+  - `flutter test` → `7 tests, all passed`.
+```
+
+### Resultado:
+A IA implementou a tela de envio de proposta completa em uma iteração, com formatação custom de moeda, contador dinâmico de caracteres, e validação tripla. Pontos relevantes:
+
+- **`_ThousandsFormatter` custom** em vez de adicionar `intl` (pacote pesado só pra um caso). É 8 linhas de Dart puro e atende. Quando i18n entrar no projeto, vale substituir pelo `NumberFormat` do `intl`.
+- **Counter de caracteres dinâmico** com feedback de cor: verde quando o mínimo é atingido, neutro antes. Pequeno detalhe de UX que sinaliza "você já tem uma mensagem aceitável" sem precisar tentar submeter.
+- **Layout com `resizeToAvoidBottomInset: true` + `Expanded(SingleChildScrollView)`** garante que o teclado não cobre os fields. O sticky bottom button continua visível porque está abaixo do Expanded.
+- **SnackBar verde com canto arredondado floating** em vez do SnackBar padrão (que é cinza, retangular e na parte inferior). Reforça a noção de sucesso e combina com a paleta.
+- **`Form.validate()` + dismiss keyboard antes do pop** evita o flicker do teclado fechando depois da navegação.
+
+**Único warning interno corrigido**: `_slate400` declarado mas não usado — removido no mesmo turno (padrão de auto-correção que estou mantendo desde a Iteração 7).
+
+**Decisão deferida**: a proposta enviada não é persistida em lugar nenhum. Quando Firestore entrar, o submit vai criar um doc em `proposals/{id}` com `clientId`, `freelancerId`, `value`, `message`, `daysEstimate`, `status: pending`. Por enquanto é só visual.
+
+**Loop do Freelancer está fechado:**
+```
+Feed → Project Detail → Send Proposal → (submit) → volta pro Detail com SnackBar
+```
+
+Próximo passo: virar pro lado do **Cliente**. O candidato natural é o **Client Dashboard** (a HomeView do papel Cliente, paralela ao Feed do Freelancer) — vai ter resumo dos próprios projetos publicados + propostas recebidas + métricas básicas. Para isso, vai ser hora de modelar o roteamento condicional por papel: HomeView precisa decidir entre FeedView (Freelancer) e ClientDashboardView (Cliente) baseado em alguma fonte de role. Sem auth ainda, posso adicionar um seletor temporário de papel ou hardcodar pra demo.
+
+---

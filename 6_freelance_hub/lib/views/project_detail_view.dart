@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../models/project.dart';
+import 'send_proposal_view.dart';
 
 class ProjectDetailView extends StatefulWidget {
   const ProjectDetailView({super.key, required this.project});
@@ -186,11 +187,9 @@ class _ProjectDetailViewState extends State<ProjectDetailView> {
                 navBg: cardBg,
                 borderColor: borderColor,
                 onSendProposal: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Tela de envio de proposta virá na próxima iteração.',
-                      ),
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => SendProposalView(project: project),
                     ),
                   );
                 },

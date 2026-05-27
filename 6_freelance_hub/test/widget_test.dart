@@ -7,6 +7,7 @@ import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
 import 'package:freelance_hub/views/project_detail_view.dart';
+import 'package:freelance_hub/views/send_proposal_view.dart';
 import 'package:freelance_hub/views/signup_view.dart';
 
 void main() {
@@ -89,6 +90,24 @@ void main() {
     expect(find.text('Sobre o projeto'), findsOneWidget);
     expect(find.text('Cliente'), findsOneWidget);
     expect(find.text(project.clientName), findsOneWidget);
+    // "Enviar proposta" aparece 2x: na sticky CTA + na recap da próxima tela
+    // não — esta tela é só Detail. 1 ocorrência aqui.
     expect(find.text('Enviar proposta'), findsOneWidget);
+  });
+
+  testWidgets('SendProposalView builds with form + recap', (tester) async {
+    final project = mockProjects.first;
+    await tester.pumpWidget(
+      MaterialApp(home: SendProposalView(project: project)),
+    );
+
+    // "Enviar proposta" aparece 2x: top bar (título) + botão sticky.
+    expect(find.text('Enviar proposta'), findsNWidgets(2));
+    expect(find.text('Propondo para'), findsOneWidget);
+    expect(find.text(project.title), findsOneWidget);
+    expect(find.text('Sua proposta'), findsOneWidget);
+    expect(find.text('Valor da proposta'), findsOneWidget);
+    expect(find.text('Prazo estimado'), findsOneWidget);
+    expect(find.text('Mensagem ao cliente'), findsOneWidget);
   });
 }
