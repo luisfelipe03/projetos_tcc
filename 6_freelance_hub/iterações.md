@@ -581,3 +581,88 @@ Feed → Project Detail → Send Proposal → (submit) → volta pro Detail com 
 Próximo passo: virar pro lado do **Cliente**. O candidato natural é o **Client Dashboard** (a HomeView do papel Cliente, paralela ao Feed do Freelancer) — vai ter resumo dos próprios projetos publicados + propostas recebidas + métricas básicas. Para isso, vai ser hora de modelar o roteamento condicional por papel: HomeView precisa decidir entre FeedView (Freelancer) e ClientDashboardView (Cliente) baseado em alguma fonte de role. Sem auth ainda, posso adicionar um seletor temporário de papel ou hardcodar pra demo.
 
 ---
+
+## Iteração 10
+### Prompt usado:
+```plaintext
+Como Iteração 10, implemente o **Client Dashboard** (HomeView no modo Cliente, paralela ao FeedView). Conforme protótipo do Stitch:
+
+Conteúdo:
+- Top header "Painel" + avatar circular purple.
+- 3 cards de métricas verticais (full-width): label uppercase pequeno + valor grande em DM Sans bold + ícone circular colorido à direita. Métricas: Projetos ativos (12), Aguardando revisão (4, amarelo), Total de propostas (48, verde).
+- CTA "Publicar Novo Projeto" purple full-width (52px, ícone + à esquerda). Tap mostra SnackBar.
+- Seção "Projetos ativos" + link "Ver tudo →".
+- 2 cards de projeto ativo (hero gradient + badge "MAIS DISCUTIDO" no primeiro, "N propostas" + "Ver projeto →" no rodapé).
+- Seção "Aguardando aprovação".
+- 2 cards menores: badge "AGUARDANDO REVISÃO" + título + link "Revisar agora →".
+
+Roteamento condicional por papel:
+- `HomeView` ganha `initialRole` (default Freelancer); state interno `_role` mutável.
+- Tab 0 branchifica: Freelancer → FeedView, Cliente → ClientDashboardView.
+- Tabs específicas por papel (Feed/Meus Trabalhos vs. Painel/Projetos; Mensagens/Perfil iguais).
+- Login navega com Freelancer hardcoded; Signup passa `_selectedRole`.
+- Profile tab tem caixa "MODO DEMO" com botão "Trocar para [outro papel]" — switch via setState, reseta tab pra 0.
+
+Smoke tests:
+- ClientDashboardView com viewport ampliado (`Size(800, 2000)`) + Scaffold wrapper.
+- HomeView com `initialRole: UserRole.client` mostrando dashboard e tabs corretas.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/views/client_dashboard_view.dart` (~480 linhas):
+  - StatelessWidget porque o conteúdo é mock estático.
+  - 3 records privados: `_Metric`, `_ActiveProject`, `_PendingProject` com listas estáticas em PT-BR.
+  - `CustomScrollView` com 7 slivers (header, métricas, CTA, section header Ativos, lista Ativos, section header Pendentes, lista Pendentes, padding).
+  - 8 helpers privados: `_TopHeader`, `_MetricCard`, `_SectionHeader`, `_ActiveProjectCard`, `_PendingProjectCard`, `_Badge`, `_HeroPlaceholder`.
+- Reescreveu `lib/views/home_view.dart` (~250 linhas):
+  - `initialRole` no construtor (default Freelancer); `_role` state mutável.
+  - 2 listas constantes de `_TabSpec` por papel; getter `_tabs` retorna a correta.
+  - `_bodyForCurrentTab()`: tab 0 → FeedView ou ClientDashboardView; tab final (Profile) → `_ProfileTab` com switcher; demais → `_PlaceholderTab`.
+  - `_ProfileTab` com caixa "MODO DEMO" + texto explicativo + `OutlinedButton.icon` "Trocar para [outro]".
+- Editou `lib/views/login_view.dart`: import de UserRole + navegação com `initialRole: UserRole.freelancer`.
+- Editou `lib/views/signup_view.dart`: navegação com `initialRole: _selectedRole!`.
+- 2 testes novos:
+  - `ClientDashboardView renders metrics + sections`: usa `tester.view.physicalSize = Size(800, 2000)` + `addTearDown(tester.view.reset)` pra cobrir toda a CustomScrollView. Envolvido em `Scaffold(body: ...)` pelo InkWell exigir Material.
+  - `HomeView shows ClientDashboard when initialRole is client`: verifica "Publicar Novo Projeto", "Painel" 2x (header + tab label), "Projetos".
+- 2 correções internas durante a iteração:
+  - "Projetos ativos" 2x: label da métrica + título da seção. Mudou pra `findsNWidgets(2)`.
+  - "Aguardando aprovação" caía abaixo do viewport default (800x600). Solução: aumentar viewport pra 800x2000.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)` (zero warnings de primeira).
+  - `flutter test` → `9 tests, all passed` (era 7).
+```
+
+### Resultado:
+A IA implementou Dashboard + roteamento por papel + switcher demo numa única iteração. Pontos relevantes:
+
+- **Tabs específicas por papel** (Feed/Meus Trabalhos vs. Painel/Projetos) refletem que o léxico do Freelancer ≠ Cliente. Inline em vez de abstrair — quando os 2 papéis convergirem mais, refatora.
+- **`_role` como state interno + switcher no Profile**: abordagem mais simples. Quando Auth entrar, `initialRole` virá de `currentUser.role` e o switcher some.
+- **`FilledButton.icon`** em vez de `FilledButton` + Row custom — Material já oferece e economiza 4 linhas.
+- **2 correções internas no teste sem entrar em iteração de fix**: agora viraram padrão. A do viewport é uma armadilha conhecida do flutter_test quando se usa CustomScrollView grande — a partir desta iteração fica registrada como lesson learned aqui.
+
+**Cobertura visual:**
+- Modo Cliente: 4 tabs + 3 métricas + CTA + 2 ativos + 2 pendentes.
+- Modo Freelancer: inalterado.
+
+**Switcher demo:**
+- Profile → "Trocar para Cliente/Freelancer" → setState muda `_role` e reseta `_currentTab = 0`. Bottom nav recarrega com tabs do outro papel.
+
+**Decisões deferidas:**
+- "Ver tudo", "Revisar agora", "Publicar Novo Projeto" são placeholders sem navegação ainda.
+- A tab "Projetos" do Cliente eventualmente terá lista filtrável dos próprios projetos.
+
+**Estado da navegação:**
+```
+SplashView → OnboardingView → LoginView ⇆ SignupView
+                                  ↓
+                              HomeView(initialRole)
+                                  ├─ Freelancer:
+                                  │    Feed → Project Detail → Send Proposal
+                                  └─ Cliente:
+                                       Painel (Dashboard) → placeholders
+```
+
+Próximo passo: **Criar Projeto** (publicar novo projeto), acessado pelo CTA do dashboard — paralelo do SendProposal mas no lado Cliente. OU iniciar a **integração Firebase** (Auth primeiro), que marca a transição "fase UI" → "fase backend" e destrava várias coisas (auth real, persistência, roteamento real por papel).
+
+---

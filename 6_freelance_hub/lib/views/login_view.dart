@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/user_role.dart';
 import 'home_view.dart';
 import 'signup_view.dart';
 
@@ -37,13 +38,17 @@ class _LoginViewState extends State<LoginView> {
   void _handleLogin() {
     if (!_formKey.currentState!.validate()) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeView()),
+      MaterialPageRoute(
+        builder: (_) => const HomeView(initialRole: UserRole.freelancer),
+      ),
     );
   }
 
   void _handleGoogleLogin() {
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeView()),
+      MaterialPageRoute(
+        builder: (_) => const HomeView(initialRole: UserRole.freelancer),
+      ),
     );
   }
 

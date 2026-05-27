@@ -54,7 +54,9 @@ class _SignupViewState extends State<SignupView> {
     if (!formValid || !roleValid || !termsValid) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeView()),
+      MaterialPageRoute(
+        builder: (_) => HomeView(initialRole: _selectedRole!),
+      ),
     );
   }
 

@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../models/user_role.dart';
+import 'client_dashboard_view.dart';
 import 'feed_view.dart';
 
 class HomeView extends StatefulWidget {
-  const HomeView({super.key});
+  const HomeView({super.key, this.initialRole = UserRole.freelancer});
+
+  final UserRole initialRole;
 
   @override
   State<HomeView> createState() => _HomeViewState();
@@ -16,9 +20,10 @@ class _HomeViewState extends State<HomeView> {
   static const _surfaceCream = Color(0xFFFBF9F2);
   static const _bgDark = Color(0xFF0B1020);
 
+  late UserRole _role = widget.initialRole;
   int _currentTab = 0;
 
-  static const _tabs = [
+  static const _freelancerTabs = [
     _TabSpec(
       label: 'Feed',
       icon: Icons.dashboard_outlined,
@@ -41,13 +46,57 @@ class _HomeViewState extends State<HomeView> {
     ),
   ];
 
+  static const _clientTabs = [
+    _TabSpec(
+      label: 'Painel',
+      icon: Icons.dashboard_outlined,
+      activeIcon: Icons.dashboard,
+    ),
+    _TabSpec(
+      label: 'Projetos',
+      icon: Icons.folder_outlined,
+      activeIcon: Icons.folder,
+    ),
+    _TabSpec(
+      label: 'Mensagens',
+      icon: Icons.chat_bubble_outline,
+      activeIcon: Icons.chat_bubble,
+    ),
+    _TabSpec(
+      label: 'Perfil',
+      icon: Icons.person_outline,
+      activeIcon: Icons.person,
+    ),
+  ];
+
+  List<_TabSpec> get _tabs =>
+      _role == UserRole.freelancer ? _freelancerTabs : _clientTabs;
+
+  Widget _bodyForCurrentTab() {
+    if (_currentTab == 0) {
+      return _role == UserRole.freelancer
+          ? const FeedView()
+          : const ClientDashboardView();
+    }
+    if (_currentTab == _tabs.length - 1) {
+      return _ProfileTab(
+        currentRole: _role,
+        onSwitchRole: () => setState(() {
+          _role = _role == UserRole.freelancer
+              ? UserRole.client
+              : UserRole.freelancer;
+          _currentTab = 0;
+        }),
+      );
+    }
+    return _PlaceholderTab(label: _tabs[_currentTab].label);
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bg = isDark ? _bgDark : _surfaceCream;
-    final navBg = isDark
-        ? const Color(0xFF111827)
-        : Colors.white;
+    final navBg = isDark ? const Color(0xFF111827) : Colors.white;
     final inactiveColor = isDark ? Colors.white60 : const Color(0xFF94A3B8);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -60,13 +109,7 @@ class _HomeViewState extends State<HomeView> {
           ),
       child: Scaffold(
         backgroundColor: bg,
-        body: SafeArea(
-          bottom: false,
-          child: switch (_currentTab) {
-            0 => const FeedView(),
-            _ => _PlaceholderTab(label: _tabs[_currentTab].label),
-          },
-        ),
+        body: SafeArea(bottom: false, child: _bodyForCurrentTab()),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
             color: navBg,
@@ -172,6 +215,113 @@ class _PlaceholderTab extends StatelessWidget {
           Text(
             'Em breve.',
             style: GoogleFonts.inter(fontSize: 14, color: muted),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileTab extends StatelessWidget {
+  const _ProfileTab({required this.currentRole, required this.onSwitchRole});
+
+  final UserRole currentRole;
+  final VoidCallback onSwitchRole;
+
+  static const _primary = Color(0xFF3B309E);
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final muted = isDark ? Colors.white60 : const Color(0xFF94A3B8);
+    final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
+    final other = currentRole == UserRole.freelancer
+        ? UserRole.client
+        : UserRole.freelancer;
+
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.construction, size: 48, color: muted),
+          const SizedBox(height: 12),
+          Text(
+            'Perfil',
+            style: GoogleFonts.dmSans(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: titleColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Em breve.',
+            style: GoogleFonts.inter(fontSize: 14, color: muted),
+          ),
+          const SizedBox(height: 40),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: _primary.withValues(alpha: isDark ? 0.18 : 0.06),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _primary.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'MODO DEMO',
+                  style: GoogleFonts.inter(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.2,
+                    color: _primary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Você está como ${currentRole.displayName}.',
+                  style: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Roteamento por papel será automatizado quando o Firebase Auth entrar.',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    color: muted,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: onSwitchRole,
+                    icon: const Icon(Icons.swap_horiz, size: 18),
+                    label: Text('Trocar para ${other.displayName}'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _primary,
+                      side: const BorderSide(color: _primary),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
