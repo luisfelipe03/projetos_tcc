@@ -810,3 +810,99 @@ Iteração de infra limpa, sem retentativas. Pontos relevantes:
 - Decisão deferida: fazer Iteração 13 só de Auth, ou Iteração 13 = Auth + Firestore (pra já ter user role persistido)?
 
 ---
+
+## Iteração 13
+### Prompt usado:
+```plaintext
+Como Iteração 13, integre **Firebase Auth + Cloud Firestore juntos** (opção B aprovada — sem auth o role não persiste, não vale a pena fazer separado). Escopo:
+
+1. Adicionar `firebase_auth: ^5.3.1` e `cloud_firestore: ^5.4.4` ao pubspec.
+2. Criar `lib/models/app_user.dart` com classe `AppUser` (uid, email, displayName, role).
+3. Criar `lib/core/services/auth_service.dart` (singleton estático):
+   - `signUp({email, password, displayName, role})` → createUserWithEmailAndPassword + updateDisplayName + criar doc em `users/{uid}` com `{email, displayName, role.name, createdAt: FieldValue.serverTimestamp()}`.
+   - `signIn({email, password})` → signInWithEmailAndPassword + buscar doc em `users/{uid}` + retornar `AppUser`.
+   - `currentAppUser()` → se `_auth.currentUser != null`, busca doc e retorna `AppUser?`.
+   - `signOut()`.
+   - `mapAuthError(FirebaseAuthException)` → traduz códigos pro português (invalid-email, wrong-password, email-already-in-use, weak-password, too-many-requests, network-request-failed, etc.).
+4. Atualizar LoginView:
+   - `_isSubmitting` state flag.
+   - `_handleLogin` async: dismiss keyboard + setState(_isSubmitting=true) + try AuthService.signIn / catch FirebaseAuthException → SnackBar vermelho com mapeamento PT.
+   - Botão "Entrar": `onPressed: _isSubmitting ? null : _handleLogin`. Mostra CircularProgressIndicator branco no lugar do label quando submetendo. Disabled bg alpha 0.5.
+   - "Continuar com Google" agora só mostra SnackBar "em breve" (Google Sign-In vai precisar de outro pacote + setup OAuth).
+5. Atualizar SignupView: igual ao Login, com `_isSubmitting` + try AuthService.signUp + error SnackBar. No success usa `pushAndRemoveUntil` (sem possibilidade de voltar pro Signup após criar conta).
+6. Atualizar SplashView:
+   - `_goToNext` agora async.
+   - Se `Firebase.apps.isNotEmpty`: tenta `AuthService.currentAppUser()`; se retorna user válido, pushReplacement pra HomeView(initialRole: user.role).
+   - Senão (ou erro): segue pro fluxo de OnboardingView.
+   - Guard `Firebase.apps.isNotEmpty` é essencial pra widget tests não quebrarem (tests não chamam main(), Firebase nunca inicializa).
+7. Atualizar HomeView _ProfileTab:
+   - Remover o switcher demo "Trocar para X" (não tem mais utilidade — agora o user troca de papel deslogando e cadastrando como outro).
+   - Tornar `_role` `late final` (não muta mais).
+   - Adicionar botão "Sair" vermelho que chama AuthService.signOut + pushAndRemoveUntil pra LoginView.
+   - Visual do Profile: avatar grande purple + "Você está como X" + botão Sair.
+8. Criar `firestore.rules` no repo com regras pra `users/{uid}`:
+   - read: qualquer authenticated (perfil é público dentro do app).
+   - create: só pelo próprio uid, role precisa ser 'client' ou 'freelancer'.
+   - update: só pelo próprio uid, role não pode mudar após criação.
+   - delete: bloqueado.
+9. Atualizar `firebase.json` pra referenciar `firestore.rules` (mas NÃO deploy automático — usuário decide quando deployar com `firebase deploy --only firestore:rules`).
+```
+
+### Output recebido:
+```markdown
+- pubspec.yaml: +firebase_auth ^5.3.1, +cloud_firestore ^5.4.4. `flutter pub get` resolveu 20 transitive deps.
+- Criou `lib/models/app_user.dart` (~15 linhas): classe imutável com 4 campos.
+- Criou `lib/core/services/auth_service.dart` (~110 linhas):
+  - Singleton `AuthService.instance`.
+  - 4 métodos públicos (signUp, signIn, currentAppUser, signOut) + `mapAuthError` + `_loadUser` privado.
+  - `_loadUser` faz `.get()` em `users/{uid}`, parseia `role` via `UserRole.values.firstWhere` com fallback pra freelancer.
+- Editou `lib/views/login_view.dart`:
+  - Imports: firebase_auth, AuthService.
+  - +`bool _isSubmitting`.
+  - `_handleLogin` agora `Future<void>` com try/catch/finally. `FirebaseAuthException` → `_showError(mapAuthError(e))`. Outros erros → `'Erro inesperado: $e'`.
+  - Botão "Entrar" desabilita durante submit e mostra spinner branco 22x22.
+  - `_handleGoogleLogin` antes navegava pra HomeView; agora só mostra SnackBar "Login com Google em breve."
+  - `_showError` helper: SnackBar floating vermelho `#BA1A1A` com texto branco.
+- Editou `lib/views/signup_view.dart`:
+  - Mesmo padrão: +_isSubmitting + async _handleSubmit + spinner + _showError.
+  - Após signup bem-sucedido, `pushAndRemoveUntil` pra HomeView (limpa stack — não faz sentido voltar pro Signup).
+- Editou `lib/views/splash_view.dart`:
+  - +imports de firebase_core, AuthService, HomeView.
+  - `_goToNext` virou async. Se `Firebase.apps.isNotEmpty` (não-test environment), tenta AuthService.currentAppUser. Se retorna user válido → pushReplacement pra HomeView com role. Senão → onboarding (caminho default).
+- Editou `lib/views/home_view.dart`:
+  - Removeu o switcher `onSwitchRole` e o `_ProfileTab` agora só tem `onSignOut`.
+  - `_role` virou `late final`.
+  - `_handleSignOut`: await AuthService.signOut + pushAndRemoveUntil(LoginView).
+  - `_ProfileTab` redesenhado: avatar circular grande purple (Icons.person 44px) + título "Perfil" + "Você está como X" + "Edição de perfil em breve" + botão "Sair" vermelho com ícone logout.
+- Criou `firestore.rules` (~25 linhas) com regras pra collection users/.
+- Atualizou `firebase.json` adicionando `"firestore": {"rules": "firestore.rules"}` (também reformatou o JSON pra ficar legível).
+- Pequena correção pós-analyze: warning de `_role` ser `final` (porque sem switcher não muta mais) — adicionado `final` ao late.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)`.
+  - `flutter test` → `10 tests, all passed`.
+```
+
+### Resultado:
+Iteração grande e bem-sucedida. Pontos relevantes:
+
+- **`AuthService` como singleton estático** (`AuthService.instance`) em vez de injeção via Riverpod/Provider. Decisão pragmática enquanto Riverpod não está instalado. Quando entrar (eventualmente), o singleton vira um `Provider<AuthService>` injetado e os call-sites mudam de `AuthService.instance.signIn` pra `ref.read(authServiceProvider).signIn`. Pouco churn quando chegar a hora.
+- **Guard `Firebase.apps.isNotEmpty` no Splash** é o detalhe que mantém os 10 testes existentes passando sem precisar mockar Firebase. Em runtime de teste, `main()` não é chamado → Firebase nunca inicializa → guard pula a tentativa de leitura → vai pro onboarding (mesmo caminho de antes).
+- **`mapAuthError` traduz códigos do Firebase pro PT-BR** (8 códigos cobertos + fallback). Erro genérico mostra `e.message ?? e.code` — adiciona ruído mas previne perda de informação útil.
+- **SnackBar de erro com estilo dedicado** (vermelho, floating, rounded). Visualmente diferente do SnackBar de sucesso (verde) usado no SendProposal/CreateProject. Padrão consistente: verde pra sucesso, vermelho pra erro.
+- **Sign-out vai pra LoginView (não Splash)**: melhor UX. Splash faria check de auth e tentaria buscar user que acabou de deslogar — passaria pelo mesmo guard mas adicionaria um delay de 3s desnecessário.
+- **`pushAndRemoveUntil` no signup success**: garante que o stack fica só com HomeView. Sem isso, o usuário poderia apertar back e voltar pro form de signup com a conta já criada — fluxo confuso.
+- **`firestore.rules` no repo** mas NÃO deployadas automaticamente. O usuário decide quando rodar `firebase deploy --only firestore:rules`. Razão: deploy é ação remota que afeta state real do projeto Firebase — deve ser explícita. Documento as regras antes mas executo só sob comando.
+
+**Decisões críticas de segurança documentadas nas rules:**
+- Leitura pública de `users/` (autenticado): necessária pra exibir nome/avatar do cliente em telas como ProjectDetailView. Documento sensível (senha hash, etc.) fica no Auth, não no Firestore.
+- `role` não muda após criação: previne escalação de privilégio (cliente que quer virar freelancer ou vice-versa, ganhando acesso a fluxos que não deveria).
+- Delete bloqueado: usuários não auto-deletam. Quando "Excluir conta" entrar, será via Cloud Function que valida + cascade nos outros docs.
+
+**Pontos que precisam de ação manual do usuário antes do app funcionar:**
+1. **Habilitar Email/Password Auth no console Firebase** (Firebase Console → Authentication → Sign-in method → Email/Password → Enable). Sem isso, signup retorna `operation-not-allowed`.
+2. **Criar database Cloud Firestore no console** (Firebase Console → Firestore Database → Create database → Production mode ou Test mode). Sem isso, todas as operações falham com `failed-precondition`.
+3. **Deployar as rules**: `firebase deploy --only firestore:rules` (opcional se já tá em test mode com regras permissivas; obrigatório em production mode).
+
+**Próximo passo:** Iteração 14 — usar o auth real em telas que precisam saber quem é o usuário (ex.: o `clientName` no ProjectDetailView agora poderia vir do Firestore quando os projetos forem persistidos, mas projects ainda são mock). Ou: persistir os **projects no Firestore** — mover o `mockProjects` pra `projects/{id}` em Firestore + alimentar o FeedView via stream. Marca a transição final "mock → real backend".
+
+---

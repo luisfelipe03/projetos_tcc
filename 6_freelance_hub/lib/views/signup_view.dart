@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
 import '../models/user_role.dart';
 import 'home_view.dart';
 
@@ -32,6 +34,7 @@ class _SignupViewState extends State<SignupView> {
   bool _termsAccepted = false;
   bool _showRoleError = false;
   bool _showTermsError = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -41,7 +44,7 @@ class _SignupViewState extends State<SignupView> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     final formValid = _formKey.currentState!.validate();
     final roleValid = _selectedRole != null;
     final termsValid = _termsAccepted;
@@ -53,11 +56,52 @@ class _SignupViewState extends State<SignupView> {
 
     if (!formValid || !roleValid || !termsValid) return;
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => HomeView(initialRole: _selectedRole!),
-      ),
-    );
+    FocusScope.of(context).unfocus();
+    setState(() => _isSubmitting = true);
+    try {
+      final user = await AuthService.instance.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        displayName: _nameController.text.trim(),
+        role: _selectedRole!,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => HomeView(initialRole: user.role),
+        ),
+        (route) => false,
+      );
+    } on FirebaseAuthException catch (e) {
+      _showError(AuthService.instance.mapAuthError(e));
+    } catch (e) {
+      _showError('Erro inesperado: $e');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFBA1A1A),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
   }
 
   void _goToLogin() {
@@ -262,12 +306,12 @@ class _SignupViewState extends State<SignupView> {
                           width: double.infinity,
                           height: 56,
                           child: FilledButton(
-                            onPressed: _handleSubmit,
+                            onPressed: _isSubmitting ? null : _handleSubmit,
                             style: FilledButton.styleFrom(
                               backgroundColor: _primary,
                               foregroundColor: Colors.white,
                               disabledBackgroundColor:
-                                  _primary.withValues(alpha: 0.4),
+                                  _primary.withValues(alpha: 0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -276,7 +320,17 @@ class _SignupViewState extends State<SignupView> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            child: const Text('Criar conta'),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor:
+                                          AlwaysStoppedAnimation(Colors.white),
+                                    ),
+                                  )
+                                : const Text('Criar conta'),
                           ),
                         ),
                         const SizedBox(height: 24),

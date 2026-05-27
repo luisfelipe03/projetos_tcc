@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
 import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
+import 'login_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key, this.initialRole = UserRole.freelancer});
@@ -20,7 +22,7 @@ class _HomeViewState extends State<HomeView> {
   static const _surfaceCream = Color(0xFFFBF9F2);
   static const _bgDark = Color(0xFF0B1020);
 
-  late UserRole _role = widget.initialRole;
+  late final UserRole _role = widget.initialRole;
   int _currentTab = 0;
 
   static const _freelancerTabs = [
@@ -81,15 +83,19 @@ class _HomeViewState extends State<HomeView> {
     if (_currentTab == _tabs.length - 1) {
       return _ProfileTab(
         currentRole: _role,
-        onSwitchRole: () => setState(() {
-          _role = _role == UserRole.freelancer
-              ? UserRole.client
-              : UserRole.freelancer;
-          _currentTab = 0;
-        }),
+        onSignOut: _handleSignOut,
       );
     }
     return _PlaceholderTab(label: _tabs[_currentTab].label);
+  }
+
+  Future<void> _handleSignOut() async {
+    await AuthService.instance.signOut();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginView()),
+      (route) => false,
+    );
   }
 
   @override
@@ -223,10 +229,10 @@ class _PlaceholderTab extends StatelessWidget {
 }
 
 class _ProfileTab extends StatelessWidget {
-  const _ProfileTab({required this.currentRole, required this.onSwitchRole});
+  const _ProfileTab({required this.currentRole, required this.onSignOut});
 
   final UserRole currentRole;
-  final VoidCallback onSwitchRole;
+  final Future<void> Function() onSignOut;
 
   static const _primary = Color(0xFF3B309E);
 
@@ -235,9 +241,6 @@ class _ProfileTab extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final muted = isDark ? Colors.white60 : const Color(0xFF94A3B8);
     final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
-    final other = currentRole == UserRole.freelancer
-        ? UserRole.client
-        : UserRole.freelancer;
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -245,8 +248,17 @@ class _ProfileTab extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Icon(Icons.construction, size: 48, color: muted),
-          const SizedBox(height: 12),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: _primary.withValues(alpha: 0.18),
+              border: Border.all(color: _primary, width: 2),
+            ),
+            child: const Icon(Icons.person, color: _primary, size: 44),
+          ),
+          const SizedBox(height: 16),
           Text(
             'Perfil',
             style: GoogleFonts.dmSans(
@@ -257,70 +269,33 @@ class _ProfileTab extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Em breve.',
+            'Você está como ${currentRole.displayName}.',
             style: GoogleFonts.inter(fontSize: 14, color: muted),
           ),
+          const SizedBox(height: 4),
+          Text(
+            'Edição de perfil em breve.',
+            style: GoogleFonts.inter(fontSize: 12, color: muted),
+          ),
           const SizedBox(height: 40),
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _primary.withValues(alpha: isDark ? 0.18 : 0.06),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: _primary.withValues(alpha: 0.25),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onSignOut,
+              icon: const Icon(Icons.logout, size: 18),
+              label: const Text('Sair'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFFBA1A1A),
+                side: const BorderSide(color: Color(0xFFBA1A1A)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'MODO DEMO',
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.2,
-                    color: _primary,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Você está como ${currentRole.displayName}.',
-                  style: GoogleFonts.inter(
-                    fontSize: 13,
-                    color: titleColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Roteamento por papel será automatizado quando o Firebase Auth entrar.',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: muted,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: onSwitchRole,
-                    icon: const Icon(Icons.swap_horiz, size: 18),
-                    label: Text('Trocar para ${other.displayName}'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: _primary,
-                      side: const BorderSide(color: _primary),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      textStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],

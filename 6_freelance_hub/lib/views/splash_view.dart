@@ -1,7 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
+import 'home_view.dart';
 import 'onboarding_view.dart';
 
 class SplashView extends StatefulWidget {
@@ -35,7 +38,27 @@ class _SplashViewState extends State<SplashView>
     super.dispose();
   }
 
-  void _goToNext() {
+  Future<void> _goToNext() async {
+    if (!mounted) return;
+
+    // Pula direto pra Home se já tem sessão ativa. Guard de Firebase.apps
+    // evita crash em testes (que montam o widget sem Firebase.initializeApp).
+    if (Firebase.apps.isNotEmpty) {
+      try {
+        final user = await AuthService.instance.currentAppUser();
+        if (user != null && mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => HomeView(initialRole: user.role),
+            ),
+          );
+          return;
+        }
+      } catch (_) {
+        // Falha ao buscar perfil — segue pro fluxo de onboarding/login.
+      }
+    }
+
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const OnboardingView()),

@@ -1,8 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../models/user_role.dart';
+import '../core/services/auth_service.dart';
 import 'home_view.dart';
 import 'signup_view.dart';
 
@@ -27,6 +28,7 @@ class _LoginViewState extends State<LoginView> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -35,21 +37,57 @@ class _LoginViewState extends State<LoginView> {
     super.dispose();
   }
 
-  void _handleLogin() {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const HomeView(initialRole: UserRole.freelancer),
-      ),
-    );
+    FocusScope.of(context).unfocus();
+    setState(() => _isSubmitting = true);
+    try {
+      final user = await AuthService.instance.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => HomeView(initialRole: user.role),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      _showError(AuthService.instance.mapAuthError(e));
+    } catch (e) {
+      _showError('Erro inesperado: $e');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   void _handleGoogleLogin() {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (_) => const HomeView(initialRole: UserRole.freelancer),
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Login com Google em breve.')),
     );
+  }
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFFBA1A1A),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+      );
   }
 
   void _handleSignUp() {
@@ -205,10 +243,12 @@ class _LoginViewState extends State<LoginView> {
                           width: double.infinity,
                           height: 56,
                           child: FilledButton(
-                            onPressed: _handleLogin,
+                            onPressed: _isSubmitting ? null : _handleLogin,
                             style: FilledButton.styleFrom(
                               backgroundColor: _primary,
                               foregroundColor: Colors.white,
+                              disabledBackgroundColor:
+                                  _primary.withValues(alpha: 0.5),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(14),
                               ),
@@ -217,7 +257,17 @@ class _LoginViewState extends State<LoginView> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            child: const Text('Entrar'),
+                            child: _isSubmitting
+                                ? const SizedBox(
+                                    width: 22,
+                                    height: 22,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor:
+                                          AlwaysStoppedAnimation(Colors.white),
+                                    ),
+                                  )
+                                : const Text('Entrar'),
                           ),
                         ),
                         const SizedBox(height: 32),
