@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:freelance_hub/main.dart';
+import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
 import 'package:freelance_hub/views/signup_view.dart';
@@ -56,5 +57,20 @@ void main() {
     expect(find.text('Freelancer'), findsOneWidget);
     // "Criar conta" aparece 2x: no top bar (título) e no botão primário.
     expect(find.text('Criar conta'), findsNWidgets(2));
+  });
+
+  testWidgets('HomeView builds feed + bottom nav', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: HomeView()),
+    );
+
+    expect(find.text('Feed de Projetos'), findsOneWidget);
+    expect(find.text('Todos os filtros'), findsOneWidget);
+    expect(find.text('Redesign de UI de app mobile'), findsOneWidget);
+    // Tabs do bottom nav.
+    expect(find.text('Feed'), findsOneWidget);
+    expect(find.text('Meus Trabalhos'), findsOneWidget);
+    expect(find.text('Mensagens'), findsOneWidget);
+    expect(find.text('Perfil'), findsOneWidget);
   });
 }

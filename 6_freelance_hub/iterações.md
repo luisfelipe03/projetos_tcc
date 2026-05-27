@@ -349,3 +349,86 @@ Ambas detectadas e corrigidas dentro da mesma iteração (sem necessidade de ite
 Próximo passo: **Home/Feed do Cliente ou do Freelancer** — começa a entrar nas telas pós-autenticação. Como temos `UserRole` modelado mas nenhum estado de autenticação ainda, o roteamento condicional por papel virá quando a Iteração de Firebase Auth fizer a integração de verdade. Por enquanto, a `HomeView` precisa virar uma tela real (lista de projetos para Freelancer / dashboard para Cliente).
 
 ---
+
+## Iteração 7
+### Prompt usado:
+```plaintext
+Como Iteração 7, transforme a `HomeView` (que está em branco) na **tela principal pós-login do Freelancer**, conforme o protótipo "Project Feed" do Stitch. Como ainda não há estado de autenticação/role, a HomeView por enquanto exibe a visão do Freelancer; o roteamento por papel virá com a integração de Firebase Auth.
+
+Estrutura:
+- `HomeView` vira um Scaffold com `BottomNavigationBar` custom (4 tabs):
+  - Feed (ativa) — exibe o feed de projetos
+  - Meus Trabalhos
+  - Mensagens
+  - Perfil
+  - As 3 tabs não-Feed são placeholders ("Em breve" + ícone de construção).
+  - Estilo: tab ativa em purple `#3B309E` com ícone preenchido + label em bold; inativas em slate-400 com ícone outline.
+- `FeedView` (arquivo separado) com:
+  - Top header: ícone hambúrguer (bubble purple/10), título "Feed de Projetos" (DM Sans 18px bold), bell de notificações com badge vermelho, avatar circular com borda purple.
+  - Search bar: outline none, bg purple/5, placeholder "Buscar projetos, habilidades…", ícone search prefix.
+  - Filter chips em row scrollável: "Todos os filtros" (ativa por default — purple filled), "Categoria ▼", "Orçamento ▼".
+  - Lista de project cards (separadas por 12px de gap):
+    - Card pode ter hero image opcional (gradient placeholder, sem network image)
+    - Título (DM Sans 16 bold) + bookmark toggle (filled/outline) à direita
+    - Skill chips em wrap (bg purple/10 light ou purple/20 dark, text purple, uppercase, letter-spacing)
+    - Row footer com 2 colunas: budget (DM Sans 18 bold purple) + tipo ("Preço fixo"/"Por hora"); direita: "X propostas" + "há Y horas/dias"
+- Criar `lib/models/project.dart`:
+  - Class `Project` com: id, title, skills, minBudget, maxBudget, isHourly, proposalCount, postedAgo, hasHeroImage.
+  - Helper `formattedBudget()` — formato BR "R$ X,XXX - R$ Y,YYY" ou "R$ X-Y/h"; quando min == max só mostra um valor.
+  - Helper `budgetTypeLabel()` — "Preço fixo" ou "Por hora".
+  - Helper `relativePostedLabel()` — "há N horas/dias".
+  - `const mockProjects` com 4 projetos hardcoded em português (Redesign de UI, Escalar backend, Tema WordPress, Renovação de identidade).
+- Adicionar smoke test para HomeView.
+- Sem novas deps.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/models/project.dart` (~80 linhas):
+  - Class `Project` imutável com 9 campos.
+  - 3 helpers: `formattedBudget()` (formatação BR manual com pontos como milhares), `budgetTypeLabel()`, `relativePostedLabel()`.
+  - `const mockProjects` list com 4 projetos, 1 com `hasHeroImage: true` (o de e-commerce).
+- Reescreveu `lib/views/home_view.dart`:
+  - Trocou o `Scaffold(body: SizedBox.shrink())` antigo por um Scaffold com:
+    - State `_currentTab` (int, default 0).
+    - BottomNav custom (não usa `BottomNavigationBar` nativo) com 4 tabs via `_TabSpec` (label + icon + activeIcon).
+    - Switch expression sobre `_currentTab`: caso 0 → `FeedView()`, demais → `_PlaceholderTab(label: ...)`.
+    - `AnnotatedRegion<SystemUiOverlayStyle>` adaptativo light/dark.
+- Criou `lib/views/feed_view.dart` (~440 linhas):
+  - `FeedView` (StatefulWidget) com state: `_searchController`, `_activeFilter` (String), `_bookmarked` (Set<String>).
+  - Layout em `CustomScrollView` com Slivers (top header → search → filters → lista → padding final).
+  - 5 helpers privados: `_TopHeader`, `_IconBubble`, `_SearchBar`, `_FilterChip`, `_ProjectCard`, `_HeroImagePlaceholder`, `_SkillChip`.
+  - `_HeroImagePlaceholder`: gradient `#1B154A → #534AB7` com 2 círculos decorativos brancos low-alpha + ícone `dns_outlined` centralizado (substitui a foto real do protótipo).
+  - Bookmark é estado list-level via `Set<String>` em `_FeedViewState`; toggle no `_ProjectCard` chama `setState` na lista.
+- Adicionou teste de smoke para HomeView verificando: "Feed de Projetos", "Todos os filtros", título do primeiro projeto, e 4 labels de tab.
+- Pequena correção pós-analyze: removeu 2 campos não-usados (`_slate200`, `_slate700`) de `_FeedViewState`.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.4s)`.
+  - `flutter test` → `5 tests, all passed`.
+```
+
+### Resultado:
+A IA implementou a Home + Feed completos numa única iteração estrutural. Pontos relevantes:
+
+- **Separação em 3 arquivos** (`home_view.dart` + `feed_view.dart` + `models/project.dart`) em vez de tudo num só — boa decomposição, considerando que `feed_view.dart` já passa de 400 linhas.
+- **Bottom nav custom** em vez do `BottomNavigationBar` nativo do Material. Trade-off: mais código pra implementar, mas controle total sobre estilo (cores, ícones outline/filled, label bold no ativo, divisor topo, shadow). Compatível com o look do protótipo.
+- **`CustomScrollView` com Slivers** para a feed view, em vez de `ListView` + `Column` aninhados. Performance superior (apenas itens visíveis são built) e permite header, search e chips ficarem no mesmo scroll natural.
+- **Bookmark com `Set<String>`** em vez de bool por Project ou Map<String,bool>. Eficiente para checagem/toggle (`O(1)` ambos) e econômico em memória pra poucos bookmarks.
+- **Formatação de moeda BR manual** em `Project._formatCurrency`: insere pontos como separador de milhar percorrendo a string da direita para a esquerda. Sem dependência do pacote `intl` (que viria mais tarde junto com i18n). Trade-off: não suporta decimais nem outras moedas — suficiente pro mock atual.
+- **`hero image` substituído por gradient + ícone**: solução já estabelecida nas iterações anteriores (Splash, Login) para evitar network images com URLs rotting do Stitch.
+
+**1 correção interna:** 2 cores declaradas (`_slate200`, `_slate700`) que sobraram da fase de cópia de paletas do Login — removidas no mesmo turno do warning, sem iteração de fix separada.
+
+**Considerações sobre estado da app:**
+- `_activeFilter` é apenas visual (a lista não é filtrada de verdade ainda).
+- `_bookmarked` é estado local — perde quando a tela é recriada. Persistência virá com Firestore.
+- A busca não filtra a lista — `_searchController` é capturado mas não aplicado. Virá quando precisar.
+
+**Próximos passos sugeridos:**
+- Tela de **Project Detail** (visão do freelancer ao tocar num card): título, descrição completa, cliente, propostas, botão "Enviar proposta".
+- Tela de **Send Proposal** (form com valor proposto + mensagem).
+- **Client Dashboard** (visão do Cliente, equivalente da Home dele, com projetos próprios + propostas recebidas).
+
+A escolha entre seguir o fluxo do Freelancer (Project Detail → Send Proposal) ou pivotar para o Cliente Dashboard depende da prioridade — implementar primeiro o Freelancer cobre um caminho completo (do feed à proposta enviada) antes de duplicar o roteamento condicional pra Cliente.
+
+---
