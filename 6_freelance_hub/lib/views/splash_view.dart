@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'home_view.dart';
+import 'onboarding_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -38,7 +38,7 @@ class _SplashViewState extends State<SplashView>
   void _goToNext() {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const HomeView()),
+      MaterialPageRoute(builder: (_) => const OnboardingView()),
     );
   }
 
