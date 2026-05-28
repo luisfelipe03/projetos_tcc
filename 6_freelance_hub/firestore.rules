@@ -17,5 +17,27 @@ service cloud.firestore {
                     && request.resource.data.role == resource.data.role;
       allow delete: if false;
     }
+
+    // Projetos publicados. Leitura por qualquer usuário autenticado.
+    // Criação restrita ao próprio ownerId (com role client validado).
+    // Atualização: dono pode editar campos da descrição; status NÃO pode
+    // ser alterado direto pelo client — só via Cloud Function (próxima fase).
+    // proposalCount também só via Function (incremento atômico ao receber proposta).
+    match /projects/{projectId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.status == 'open'
+                    && request.resource.data.proposalCount == 0;
+      allow update: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid
+                    && request.resource.data.ownerId == resource.data.ownerId
+                    && request.resource.data.status == resource.data.status
+                    && request.resource.data.proposalCount == resource.data.proposalCount;
+      allow delete: if request.auth != null
+                    && resource.data.ownerId == request.auth.uid
+                    && resource.data.status == 'open'
+                    && resource.data.proposalCount == 0;
+    }
   }
 }

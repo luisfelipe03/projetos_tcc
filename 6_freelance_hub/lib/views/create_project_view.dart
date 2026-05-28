@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
+import '../core/services/projects_service.dart';
 import '../core/text_formatters.dart';
 
 enum _BudgetType { fixed, hourly }
@@ -60,6 +62,7 @@ class _CreateProjectViewState extends State<CreateProjectView> {
   _BudgetType _budgetType = _BudgetType.fixed;
   bool _showCategoryError = false;
   bool _showSkillsError = false;
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -70,7 +73,7 @@ class _CreateProjectViewState extends State<CreateProjectView> {
     super.dispose();
   }
 
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
     final formValid = _formKey.currentState!.validate();
     final categoryValid = _selectedCategory != null;
     final skillsValid = _selectedSkills.isNotEmpty;
@@ -83,27 +86,71 @@ class _CreateProjectViewState extends State<CreateProjectView> {
     if (!formValid || !categoryValid || !skillsValid) return;
 
     FocusScope.of(context).unfocus();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          backgroundColor: const Color(0xFF086B53),
-          content: Text(
-            'Projeto publicado! Você receberá propostas em breve.',
-            style: GoogleFonts.inter(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
+    setState(() => _isSubmitting = true);
+    try {
+      final user = await AuthService.instance.currentAppUser();
+      if (user == null) {
+        throw StateError('Sessão expirada. Faça login novamente.');
+      }
+      final minRaw = _minBudgetController.text.replaceAll('.', '');
+      final maxRaw = _maxBudgetController.text.replaceAll('.', '');
+      await ProjectsService.instance.createProject(
+        ownerId: user.uid,
+        clientName: user.displayName,
+        title: _titleController.text.trim(),
+        description: _descriptionController.text.trim(),
+        skills: _selectedSkills.toList(),
+        category: _selectedCategory!,
+        minBudget: double.parse(minRaw),
+        maxBudget: double.parse(maxRaw),
+        isHourly: _budgetType == _BudgetType.hourly,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF086B53),
+            content: Text(
+              'Projeto publicado! Você receberá propostas em breve.',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+              ),
+            ),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFFBA1A1A),
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            content: Text(
+              'Falha ao publicar: $e',
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-        ),
-      );
-    Navigator.of(context).pop();
+        );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   String? _validateTitle(String? value) {
@@ -377,7 +424,8 @@ class _CreateProjectViewState extends State<CreateProjectView> {
               _BottomActionBar(
                 navBg: cardBg,
                 borderColor: borderColor,
-                onSubmit: _handleSubmit,
+                onSubmit: _isSubmitting ? null : _handleSubmit,
+                isSubmitting: _isSubmitting,
               ),
             ],
           ),
@@ -670,11 +718,13 @@ class _BottomActionBar extends StatelessWidget {
     required this.navBg,
     required this.borderColor,
     required this.onSubmit,
+    required this.isSubmitting,
   });
 
   final Color navBg;
   final Color borderColor;
-  final VoidCallback onSubmit;
+  final VoidCallback? onSubmit;
+  final bool isSubmitting;
 
   @override
   Widget build(BuildContext context) {
@@ -702,6 +752,8 @@ class _BottomActionBar extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF3B309E),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    const Color(0xFF3B309E).withValues(alpha: 0.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -710,7 +762,16 @@ class _BottomActionBar extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Publicar projeto'),
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Text('Publicar projeto'),
             ),
           ),
         ),

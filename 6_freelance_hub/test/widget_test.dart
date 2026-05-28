@@ -69,6 +69,9 @@ void main() {
     await tester.pumpWidget(
       const MaterialApp(home: HomeView()),
     );
+    // Stream.value(mockProjects) emite no próximo microtask; precisa de um
+    // pump extra pro StreamBuilder rebuildar com os dados.
+    await tester.pump();
 
     expect(find.text('Feed de Projetos'), findsOneWidget);
     expect(find.text('Todos os filtros'), findsOneWidget);

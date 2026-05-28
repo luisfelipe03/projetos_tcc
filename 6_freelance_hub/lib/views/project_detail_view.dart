@@ -170,8 +170,6 @@ class _ProjectDetailViewState extends State<ProjectDetailView> {
                         titleColor: titleColor,
                         child: _ClientCard(
                           name: project.clientName,
-                          rating: project.clientRating,
-                          projectsCount: project.clientProjectsCount,
                           cardBg: cardBg,
                           borderColor: borderColor,
                           titleColor: titleColor,
@@ -336,8 +334,6 @@ class _Section extends StatelessWidget {
 class _ClientCard extends StatelessWidget {
   const _ClientCard({
     required this.name,
-    required this.rating,
-    required this.projectsCount,
     required this.cardBg,
     required this.borderColor,
     required this.titleColor,
@@ -345,8 +341,6 @@ class _ClientCard extends StatelessWidget {
   });
 
   final String name;
-  final double rating;
-  final int projectsCount;
   final Color cardBg;
   final Color borderColor;
   final Color titleColor;
@@ -389,33 +383,9 @@ class _ClientCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Color(0xFFFFC107), size: 14),
-                    const SizedBox(width: 4),
-                    Text(
-                      rating.toStringAsFixed(1),
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: titleColor,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        '•',
-                        style: TextStyle(color: mutedColor, fontSize: 12),
-                      ),
-                    ),
-                    Text(
-                      '$projectsCount projetos publicados',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: mutedColor,
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Avaliações e portfólio em breve.',
+                  style: GoogleFonts.inter(fontSize: 12, color: mutedColor),
                 ),
               ],
             ),

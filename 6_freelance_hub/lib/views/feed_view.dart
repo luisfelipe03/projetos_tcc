@@ -1,6 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/projects_service.dart';
 import '../models/project.dart';
 import 'project_detail_view.dart';
 
@@ -22,6 +24,16 @@ class _FeedViewState extends State<FeedView> {
   final _searchController = TextEditingController();
   String _activeFilter = 'Todos os filtros';
   final Set<String> _bookmarked = <String>{};
+  late final Stream<List<Project>> _projectsStream;
+
+  @override
+  void initState() {
+    super.initState();
+    // Guard pra ambiente de teste sem Firebase.initializeApp: cai pra mock.
+    _projectsStream = Firebase.apps.isNotEmpty
+        ? ProjectsService.instance.streamOpenProjects()
+        : Stream<List<Project>>.value(mockProjects);
+  }
 
   @override
   void dispose() {
@@ -103,26 +115,68 @@ class _FeedViewState extends State<FeedView> {
             ),
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 12)),
-          SliverList.separated(
-            itemCount: mockProjects.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (context, i) {
-              final project = mockProjects[i];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _ProjectCard(
-                  project: project,
-                  bookmarked: _bookmarked.contains(project.id),
-                  onBookmarkToggle: () => setState(() {
-                    if (!_bookmarked.add(project.id)) {
-                      _bookmarked.remove(project.id);
-                    }
-                  }),
-                  cardBg: cardBg,
-                  titleColor: titleColor,
-                  mutedColor: mutedColor,
-                  isDark: isDark,
-                ),
+          StreamBuilder<List<Project>>(
+            stream: _projectsStream,
+            builder: (context, snap) {
+              if (snap.hasError) {
+                return SliverToBoxAdapter(
+                  child: _StateMessage(
+                    icon: Icons.error_outline,
+                    title: 'Não foi possível carregar os projetos',
+                    subtitle: '${snap.error}',
+                    color: mutedColor,
+                    titleColor: titleColor,
+                  ),
+                );
+              }
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 40),
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Color(0xFF3B309E),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              final projects = snap.data ?? const [];
+              if (projects.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: _StateMessage(
+                    icon: Icons.inbox_outlined,
+                    title: 'Nenhum projeto disponível',
+                    subtitle:
+                        'Os projetos publicados pelos clientes aparecerão aqui.',
+                    color: mutedColor,
+                    titleColor: titleColor,
+                  ),
+                );
+              }
+              return SliverList.separated(
+                itemCount: projects.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, i) {
+                  final project = projects[i];
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: _ProjectCard(
+                      project: project,
+                      bookmarked: _bookmarked.contains(project.id),
+                      onBookmarkToggle: () => setState(() {
+                        if (!_bookmarked.add(project.id)) {
+                          _bookmarked.remove(project.id);
+                        }
+                      }),
+                      cardBg: cardBg,
+                      titleColor: titleColor,
+                      mutedColor: mutedColor,
+                      isDark: isDark,
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -603,6 +657,54 @@ class _SkillChip extends StatelessWidget {
           letterSpacing: 0.6,
           color: primary,
         ),
+      ),
+    );
+  }
+}
+
+class _StateMessage extends StatelessWidget {
+  const _StateMessage({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.titleColor,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final Color titleColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(32, 40, 32, 40),
+      child: Column(
+        children: [
+          Icon(icon, size: 44, color: color),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.dmSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: titleColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: color,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }

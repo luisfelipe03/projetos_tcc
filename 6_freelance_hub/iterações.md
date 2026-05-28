@@ -906,3 +906,96 @@ Iteração grande e bem-sucedida. Pontos relevantes:
 **Próximo passo:** Iteração 14 — usar o auth real em telas que precisam saber quem é o usuário (ex.: o `clientName` no ProjectDetailView agora poderia vir do Firestore quando os projetos forem persistidos, mas projects ainda são mock). Ou: persistir os **projects no Firestore** — mover o `mockProjects` pra `projects/{id}` em Firestore + alimentar o FeedView via stream. Marca a transição final "mock → real backend".
 
 ---
+
+## Iteração 14
+### Prompt usado:
+```plaintext
+Como Iteração 14, persistir **Projects no Firestore** — transição "mock → backend real" pro feed e criação de projetos.
+
+Refactor do model `Project`:
+- Adicionar: `ownerId` (String), `status` (enum `ProjectStatus { open, active, delivered, completed, disputed, closed }`), `category` (String), `createdAt` (DateTime).
+- Remover: `clientRating`, `clientProjectsCount` (voltam com Reviews depois), `postedAgo` (substituído por `createdAt`).
+- Manter: `clientName` denormalizado no doc (escrito no createProject, atualizado se necessário no futuro via trigger).
+- `relativePostedLabel({DateTime? now})` agora deriva de `createdAt`, e aceita `now` opcional pra testes determinísticos.
+- `mockProjects` vira um getter (`List<Project> get mockProjects`) com `DateTime.now().subtract(...)` — útil pra testes e como fallback offline (no FeedView).
+
+Criar `lib/core/services/projects_service.dart`:
+- Singleton `ProjectsService.instance`.
+- `streamOpenProjects()` — Stream<List<Project>>, query `where status==open` + `orderBy createdAt desc`.
+- `streamMyProjects(ownerId)` — análogo, filtrado por owner.
+- `createProject({...})` — Future<String>, add doc com `FieldValue.serverTimestamp()` e retorna id.
+- `_fromDoc` privado mapeando Firestore → Project. Conversão de Timestamp → DateTime com fallback `?? DateTime.now()` pra docs com pendingWrites.
+
+Wire:
+- `FeedView`: state guarda `late final Stream<List<Project>>`. Inicializa com `Firebase.apps.isNotEmpty ? ProjectsService.instance.streamOpenProjects() : Stream.value(mockProjects)` — guard pra testes que não inicializam Firebase. StreamBuilder envolve o sliver com 4 estados (loading/erro/vazio/dados) via novo widget `_StateMessage`.
+- `CreateProjectView`: `_handleSubmit` agora async — busca `AuthService.currentAppUser()`, chama `ProjectsService.createProject(...)`, mostra SnackBar verde no sucesso, vermelho no erro. Loading spinner no botão durante submit (`_isSubmitting`).
+- `ProjectDetailView`: `_ClientCard` perde os params `rating`/`projectsCount`; passa a mostrar só nome + placeholder "Avaliações e portfólio em breve.".
+
+Firestore rules pra `projects/{id}`:
+- read: qualquer autenticado.
+- create: só pelo próprio ownerId, status precisa ser 'open', proposalCount precisa ser 0.
+- update: só pelo dono; ownerId, status e proposalCount são imutáveis (Cloud Function vai cuidar dessas mudanças).
+- delete: só pelo dono, e só se status='open' e proposalCount=0 (sem propostas pendentes).
+```
+
+### Output recebido:
+```markdown
+- Rewriteu `lib/models/project.dart` (~150 linhas):
+  - `enum ProjectStatus { open, active, delivered, completed, disputed, closed }`.
+  - `Project` com 14 campos imutáveis + 3 helpers (`formattedBudget`, `budgetTypeLabel`, `relativePostedLabel`).
+  - `relativePostedLabel` derivado de `createdAt`, suporta `now` opcional pra testes determinísticos.
+  - `mockProjects` agora é getter retornando lista nova a cada chamada (datas relativas a `DateTime.now()`).
+  - 4 mocks atualizados pro novo shape (com `ownerId: 'mock-owner-N'`, `category`, `createdAt: now.subtract(...)`, `status: open`).
+- Criou `lib/core/services/projects_service.dart` (~85 linhas):
+  - Singleton + 3 métodos públicos + `_fromDoc` privado.
+  - `streamOpenProjects` faz `where status==open` + `orderBy createdAt desc`.
+  - `createProject` retorna o doc id após `add`.
+- Editou `lib/views/feed_view.dart`:
+  - +import firebase_core e ProjectsService.
+  - `_projectsStream` em `initState` com guard `Firebase.apps.isNotEmpty`.
+  - StreamBuilder envolvendo o sliver da lista, com 4 estados:
+    - loading (CircularProgressIndicator centrado, 40px padding).
+    - erro (icone error_outline + título "Não foi possível carregar os projetos" + mensagem do erro).
+    - vazio (icon inbox_outlined + "Nenhum projeto disponível" + texto explicativo).
+    - dados (SliverList.separated como antes).
+  - Novo widget `_StateMessage` reutilizado pra erro/vazio.
+- Editou `lib/views/create_project_view.dart`:
+  - +imports de AuthService e ProjectsService.
+  - +`_isSubmitting` state.
+  - `_handleSubmit` agora async: busca currentAppUser, valida sessão, chama createProject com parseamento dos campos numéricos. Try/catch com SnackBar verde/vermelho.
+  - `_BottomActionBar` agora aceita `isSubmitting` e troca o label por CircularProgressIndicator quando submetendo. Disabled bg alpha 0.5.
+- Editou `lib/views/project_detail_view.dart`:
+  - `_ClientCard` removeu `rating` e `projectsCount` params; só nome + "Avaliações e portfólio em breve."
+- Editou `firestore.rules`: adicionou bloco `match /projects/{projectId}` com 4 regras conforme spec.
+- 2 correções internas:
+  - Test `HomeView builds feed + bottom nav` quebrou porque `Stream.value(mockProjects)` emite no próximo microtask, não síncrono. Solução: `await tester.pump()` extra após `pumpWidget` pra deixar o StreamBuilder reconstruir com os dados. Comentado no teste.
+  - Lint `prefer_final_fields` no `_role` (já era resolvido na 13 mas surgiu de novo? Não — esse era warning anterior já fixed).
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.9s)`.
+  - `flutter test` → `10 tests, all passed`.
+```
+
+### Resultado:
+Iteração ambiciosa de "mock → real backend" pra projects, executada limpa. Pontos relevantes:
+
+- **Guard `Firebase.apps.isNotEmpty` no FeedView + fallback pra `mockProjects`** segue o padrão estabelecido no Splash (Iteração 13). Benefício duplo: tests funcionam sem mockar Firebase + dev pode rodar o app sem `flutter pub get` completo do Firebase pra avaliar a UI.
+- **Stream.value emite assíncrono**: descoberta que custou 1 mini-correção interna (`await tester.pump()` extra). Lição: qualquer StreamBuilder em test exige pump adicional após o primeiro pumpWidget. Documentado no comentário do teste.
+- **`createdAt` como DateTime em vez de Timestamp** mantém o model framework-agnostic (não importa cloud_firestore no model). A conversão Timestamp→DateTime acontece no `_fromDoc` do service. Quando o doc acabou de ser criado e o `serverTimestamp()` ainda não preencheu, `data['createdAt']` é null → fallback `?? DateTime.now()` previne crash.
+- **Rules cuidadosas pra `projects/`**: ownerId, status e proposalCount são imutáveis via client. Isso fecha vetores de ataque (cliente não pode forjar projeto de outro user, freelancer não pode "fechar" projeto, ninguém pode inflar proposalCount). Quando Cloud Functions entrarem (Iteração de escrow), elas vão escrever esses campos via Admin SDK que ignora rules.
+- **Denormalização do `clientName`**: opcional, controverso. Vantagem: 1 read por card no feed em vez de 1+N. Desvantagem: stale data se cliente troca nome. Aceitável pra MVP; sync via trigger quando virar problema real.
+- **Decisão de não atualizar Client Dashboard ainda**: as métricas (12/4/48) e listas (Projetos ativos / Aguardando) do dashboard precisam de mais coleções (contracts, proposals agregadas) que ainda não existem. Fica em mock até a iteração de contracts.
+
+**Setup necessário antes de validar:**
+1. Firestore Database já criado (Iteração 13).
+2. **Deployar firestore.rules**: `firebase deploy --only firestore:rules` (importante! As rules antigas só tinham `users/`; sem deploy, `projects/` cai no default "deny all" ou "allow all" dependendo do test mode).
+3. Stop+run no app (não basta hot restart — refactor do model é grande).
+
+**Como testar:**
+1. Entra como Cliente. CTA "Publicar Novo Projeto" → preenche form → publicar.
+2. Verifica em Firebase Console > Firestore > collection `projects/` — doc novo criado com todos os campos.
+3. Desloga, cadastra/entra como Freelancer. O feed agora deve mostrar o projeto recém-criado (em "tempo real" via stream).
+4. Cria outro projeto como Cliente em outra sessão — Freelancer vê aparecer instantaneamente no feed (Firestore listeners em ação).
+
+**Próximo passo:** **Iteração 15 — Proposals no Firestore**. SendProposal hoje só mostra SnackBar; deve criar doc em `proposals/{id}` com `projectId`, `freelancerId`, `clientId`, `value`, `daysEstimate`, `message`, `status: pending`, `createdAt`. Também atualizar `proposalCount` do project... mas isso precisaria de Cloud Function (regra impede client de mexer em proposalCount). Decisão: ou (a) só criar o doc da proposal e deixar contador stale até CF, ou (b) já adicionar Cloud Function pra incrementar (introduz `functions/` no projeto).
+
+---
