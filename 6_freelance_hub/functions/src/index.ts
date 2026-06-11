@@ -1,4 +1,5 @@
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger, setGlobalOptions } from "firebase-functions/v2";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
@@ -9,10 +10,6 @@ setGlobalOptions({ region: "us-central1" });
 /**
  * Trigger disparado ao criar um doc em proposals/{proposalId}.
  * Incrementa atomicamente o proposalCount do projeto correspondente.
- *
- * Por que server-side: as rules do Firestore impedem o cliente de mexer em
- * proposalCount diretamente (sem isso, qualquer freelancer podia inflar o
- * contador). O trigger roda com privilégios admin e bypassa rules.
  */
 export const onProposalCreated = onDocumentCreated(
   "proposals/{proposalId}",
@@ -54,3 +51,142 @@ export const onProposalCreated = onDocumentCreated(
     }
   }
 );
+
+/**
+ * Callable: cliente aceita uma proposta.
+ *
+ * Operação atômica (transaction):
+ *  1. Valida que caller é o clientId da proposta.
+ *  2. Valida que a proposta está em status `pending`.
+ *  3. Status da proposta → `accepted`.
+ *  4. Outras propostas pending do mesmo projeto → `rejected`.
+ *  5. Status do projeto → `active`.
+ *  6. Cria doc em `contracts/` com referência cruzada.
+ *
+ * Retorna { contractId }.
+ */
+export const acceptProposal = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const proposalId = request.data?.proposalId;
+  if (typeof proposalId !== "string" || !proposalId) {
+    throw new HttpsError("invalid-argument", "proposalId é obrigatório.");
+  }
+
+  const db = getFirestore();
+  const proposalRef = db.collection("proposals").doc(proposalId);
+  const contractRef = db.collection("contracts").doc(); // auto ID
+
+  const callerUid = request.auth.uid;
+
+  const result = await db.runTransaction(async (tx) => {
+    const proposalSnap = await tx.get(proposalRef);
+    if (!proposalSnap.exists) {
+      throw new HttpsError("not-found", "Proposta não encontrada.");
+    }
+    const proposal = proposalSnap.data()!;
+
+    if (proposal.clientId !== callerUid) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas o cliente do projeto pode aceitar."
+      );
+    }
+    if (proposal.status !== "pending") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Proposta não está mais pendente."
+      );
+    }
+
+    const projectId = proposal.projectId as string;
+    const projectRef = db.collection("projects").doc(projectId);
+    const projectSnap = await tx.get(projectRef);
+    if (!projectSnap.exists) {
+      throw new HttpsError("not-found", "Projeto não encontrado.");
+    }
+
+    const otherPendingSnap = await tx.get(
+      db
+        .collection("proposals")
+        .where("projectId", "==", projectId)
+        .where("status", "==", "pending")
+    );
+
+    tx.update(proposalRef, { status: "accepted" });
+
+    for (const doc of otherPendingSnap.docs) {
+      if (doc.id !== proposalId) {
+        tx.update(doc.ref, { status: "rejected" });
+      }
+    }
+
+    tx.update(projectRef, { status: "active" });
+
+    tx.set(contractRef, {
+      projectId,
+      projectTitle: proposal.projectTitle,
+      clientId: proposal.clientId,
+      freelancerId: proposal.freelancerId,
+      freelancerName: proposal.freelancerName,
+      value: proposal.value,
+      daysEstimate: proposal.daysEstimate,
+      isHourly: proposal.isHourly,
+      acceptedProposalId: proposalId,
+      status: "active",
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    return { contractId: contractRef.id };
+  });
+
+  logger.info("Proposta aceita", {
+    proposalId,
+    contractId: result.contractId,
+    callerUid,
+  });
+  return result;
+});
+
+/**
+ * Callable: cliente rejeita uma proposta.
+ * Simples: valida caller e status, troca status pra `rejected`.
+ */
+export const rejectProposal = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const proposalId = request.data?.proposalId;
+  if (typeof proposalId !== "string" || !proposalId) {
+    throw new HttpsError("invalid-argument", "proposalId é obrigatório.");
+  }
+
+  const db = getFirestore();
+  const proposalRef = db.collection("proposals").doc(proposalId);
+  const snap = await proposalRef.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "Proposta não encontrada.");
+  }
+  const proposal = snap.data()!;
+
+  if (proposal.clientId !== request.auth.uid) {
+    throw new HttpsError(
+      "permission-denied",
+      "Apenas o cliente do projeto pode rejeitar."
+    );
+  }
+  if (proposal.status !== "pending") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Proposta não está mais pendente."
+    );
+  }
+
+  await proposalRef.update({ status: "rejected" });
+  logger.info("Proposta rejeitada", {
+    proposalId,
+    callerUid: request.auth.uid,
+  });
+  return { ok: true };
+});

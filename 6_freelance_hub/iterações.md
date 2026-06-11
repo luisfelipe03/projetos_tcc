@@ -1206,6 +1206,91 @@ Iteração com 1 retry esperado (Service Agent propagation), sem alteração de 
 
 ---
 
+## Iteração 19
+### Prompt usado:
+```plaintext
+Iteração 19 — callables acceptProposal/rejectProposal + wire UI + collection contracts/.
+
+Server-side (functions/src/index.ts):
+- `acceptProposal({proposalId})` callable v2:
+  - Valida auth (HttpsError unauthenticated).
+  - Valida proposalId string não-vazia (invalid-argument).
+  - Transaction:
+    - Lê proposta → not-found / permission-denied (caller != clientId) / failed-precondition (status != pending).
+    - Lê projeto → not-found.
+    - Lê outras propostas pending do mesmo projectId.
+    - Update proposta → status accepted.
+    - Update outras propostas → status rejected.
+    - Update projeto → status active.
+    - Set contracts/{auto-id} com projeto/cliente/freelancer/valor/dias/isHourly/acceptedProposalId/status active/createdAt.
+  - Retorna {contractId}.
+- `rejectProposal({proposalId})` callable v2:
+  - Mesma validação (auth + caller + status pending).
+  - Update simples → status rejected.
+
+Rules (firestore.rules):
+- Bloco match /contracts/{contractId}: read condicional (clientId OR freelancerId match request.auth.uid); create/update/delete false (só Cloud Function, que usa Admin SDK).
+
+Cliente (Flutter):
+- pubspec: + cloud_functions ^5.1.3. flutter pub get.
+- proposals_service.dart: + métodos acceptProposal/rejectProposal que invocam as callables via FirebaseFunctions.instance.httpsCallable.
+- received_proposals_view.dart:
+  - State _processingId pra rastrear qual proposta está em transação.
+  - _handleAccept/_handleReject async com try/catch + finally.
+  - Botões disabled enquanto outra proposta processa (`actionsDisabled`); spinner inline quando ela mesma processa (`isProcessing`).
+  - _humanizeError com switch case nos códigos da FirebaseFunctionsException (unauthenticated, permission-denied, failed-precondition, not-found, default).
+  - SnackBar verde no sucesso, vermelho no erro.
+
+Deploy: functions (build + deploy) e firestore (só rules). Valida analyze + test.
+```
+
+### Output recebido:
+```markdown
+- Editou `functions/src/index.ts` (+150 linhas): acceptProposal + rejectProposal callables.
+- Build TS limpo. Deploy: rejectProposal e acceptProposal criadas; onProposalCreated atualizada (update incidental, sem mudança real).
+- Editou `firestore.rules`: +bloco match /contracts/{contractId}. Deploy de rules.
+- Editou `pubspec.yaml`: +`cloud_functions: ^5.1.3`. `flutter pub get` ok (warns de outdated em deps transitivas, nada novo).
+- Editou `lib/core/services/proposals_service.dart`: +import cloud_functions, +campo _functions, +2 métodos públicos.
+- Editou `lib/views/received_proposals_view.dart`:
+  - +import cloud_functions.
+  - +State _processingId; removeu helper _showComingSoon antigo.
+  - +_handleAccept, _handleReject async.
+  - +_humanizeError, +_showSnack.
+  - _ProjectGroup + _ProposalCard ganharam parâmetros processingId/isProcessing/actionsDisabled. Botões disabled + spinner inline.
+- Validação: flutter analyze 0 issues. flutter test 12 passed (intacto — o smoke test atual cobre só empty state).
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Transaction com query interna**: `tx.get(query)` em `acceptProposal` lê todas as propostas pending do projeto numa snapshot consistente. Sem isso, race entre "lê outras pending" e "atualiza" poderia perder uma proposta nova. Custo: a query precisa estar resolvida ANTES de qualquer `tx.update`, regra do Firestore.
+- **Outras propostas → rejected, não withdrawn**: `withdrawn` semanticamente é "freelancer desistiu"; `rejected` é "cliente passou". Quando o cliente aceita uma, as outras viraram inviáveis por culpa do cliente, não do freelancer — `rejected` está correto.
+- **HttpsError com codes específicos**: `unauthenticated`, `permission-denied`, `failed-precondition`, `not-found`. O Flutter SDK propaga via `FirebaseFunctionsException.code`, e o `_humanizeError` traduz cada um pra PT-BR. Sem isso, o usuário veria stack traces crus.
+- **`_processingId` em vez de bool simples**: o estado de loading é "qual proposta?" não "tem loading rolando?". Isso permite distinguir 3 estados visuais por proposta: idle, **eu** estou processando (spinner inline), **outra** está processando (disabled em cinza). Bool simples agruparia esses 2 últimos.
+- **`Cloud Functions us-central1` + Flutter sem config**: o SDK do Flutter pega a região default (us-central1) automaticamente. Se mudássemos pra `southamerica-east1`, precisaria `FirebaseFunctions.instanceFor(region: 'southamerica-east1')`. Fica como nota pra futuro.
+- **Sem modelo Contract.dart**: optei por NÃO criar o model Dart de `Contract` agora porque não há UI consumindo essa collection ainda. Quando vier a tela "Meus contratos", crio o model junto. Evita arquivo morto.
+- **`disabledBackgroundColor`** explicitado no FilledButton "Aceitar": sem isso, o botão fica quase invisível em disabled (mesma cor com opacity baixa). Setei `_primary.withValues(alpha: 0.5)` pra continuar reconhecível.
+- **Erro de transaction NÃO faz rollback de cobranças**: callables v2 são facturas por execução, mesmo que dêem rollback. Implicação: tentar `acceptProposal` várias vezes com input inválido custa por chamada. Mitigação: validar client-side antes (já fazemos — botão só aparece pra `pending`).
+
+**Cobertura visual:**
+- Botões "Aceitar"/"Rejeitar" na ReceivedProposalsView agora são **reais**.
+- Sucesso muda 4 coisas simultaneamente em ~1-3s (transaction commit + stream propagate): status da proposta aceita vira `accepted` (badge verde em ambas views), outras pending viram `rejected` (badge vermelho), projeto sai do feed do Freelancer (filtro `status == open`), e um doc novo aparece em `contracts/` no Console.
+
+**Fluxo testável agora:**
+1. Cenário básico: Cliente publica projeto, 2 freelancers mandam propostas, Cliente aceita uma → confere que a aceita virou verde "Aceita" em "Meus Trabalhos" do freelancer vencedor, a outra virou vermelha "Recusada" em "Meus Trabalhos" do outro freelancer, e o projeto sumiu do feed público.
+2. Firestore Console > `contracts/` → doc novo com auto-id e referência cruzada.
+3. Cliente tenta aceitar uma proposta já aceita de outra sessão → SnackBar vermelho "Proposta não está mais pendente."
+4. Cliente desconectado tenta aceitar → SnackBar vermelho "Sessão expirada."
+
+**Próximo passo (Iteração 20):** **Meus Contratos** — primeira UI que consome `contracts/`. Pode ser tab nova ou aproveitar o placeholder "Painel" do Cliente. Implementação:
+- `lib/models/contract.dart`: enum ContractStatus { active, delivered, completed, disputed }; model imutável.
+- `lib/core/services/contracts_service.dart`: streamContractsByClient(uid), streamContractsByFreelancer(uid).
+- Índices compostos: clientId+createdAt, freelancerId+createdAt.
+- Tela `MyContractsView` (renomear "Painel" pro Cliente? Ou adicionar coluna nova?). Lista contratos com card: projectTitle, valor, prazo, status badge, contraparte (nome do cliente OU freelancer, dependendo do role logado), data.
+- Talvez aproveitar pra renumerar as métricas do ClientDashboardView com counts reais (`Number of contracts.active`, etc).
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

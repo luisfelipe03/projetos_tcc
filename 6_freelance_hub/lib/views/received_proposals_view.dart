@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -23,6 +24,8 @@ class ReceivedProposalsView extends StatefulWidget {
 class _ReceivedProposalsViewState extends State<ReceivedProposalsView> {
   Stream<List<Proposal>>? _stream;
   String? _loadError;
+  // ID da proposta atualmente sendo aceita/rejeitada — exibe spinner localizado.
+  String? _processingId;
 
   @override
   void initState() {
@@ -50,19 +53,72 @@ class _ReceivedProposalsViewState extends State<ReceivedProposalsView> {
     }
   }
 
-  void _showComingSoon(String action) {
+  Future<void> _handleAccept(Proposal p) async {
+    if (_processingId != null) return;
+    setState(() => _processingId = p.id);
+    try {
+      await ProposalsService.instance.acceptProposal(p.id);
+      if (!mounted) return;
+      _showSnack(
+        'Proposta aceita! Contrato criado com ${p.freelancerName}.',
+        success: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'aceitar'), success: false);
+    } finally {
+      if (mounted) setState(() => _processingId = null);
+    }
+  }
+
+  Future<void> _handleReject(Proposal p) async {
+    if (_processingId != null) return;
+    setState(() => _processingId = p.id);
+    try {
+      await ProposalsService.instance.rejectProposal(p.id);
+      if (!mounted) return;
+      _showSnack('Proposta rejeitada.', success: true);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'rejeitar'), success: false);
+    } finally {
+      if (mounted) setState(() => _processingId = null);
+    }
+  }
+
+  String _humanizeError(Object e, String action) {
+    if (e is FirebaseFunctionsException) {
+      switch (e.code) {
+        case 'unauthenticated':
+          return 'Sessão expirada. Faça login novamente.';
+        case 'permission-denied':
+          return 'Você não tem permissão para $action esta proposta.';
+        case 'failed-precondition':
+          return 'Proposta não está mais pendente.';
+        case 'not-found':
+          return 'Proposta não encontrada.';
+        default:
+          return 'Falha ao $action: ${e.message ?? e.code}';
+      }
+    }
+    return 'Falha ao $action: $e';
+  }
+
+  void _showSnack(String message, {required bool success}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          backgroundColor: _primary,
+          backgroundColor: success
+              ? const Color(0xFF086B53)
+              : const Color(0xFFBA1A1A),
           behavior: SnackBarBehavior.floating,
           margin: const EdgeInsets.all(16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           content: Text(
-            '$action chegará junto com Cloud Functions (próxima iteração).',
+            message,
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -153,8 +209,9 @@ class _ReceivedProposalsViewState extends State<ReceivedProposalsView> {
                       isDark: isDark,
                       titleColor: titleColor,
                       mutedColor: mutedColor,
-                      onAccept: (p) => _showComingSoon('Aceitar proposta'),
-                      onReject: (p) => _showComingSoon('Rejeitar proposta'),
+                      processingId: _processingId,
+                      onAccept: _handleAccept,
+                      onReject: _handleReject,
                     ),
                   ),
                 );
@@ -282,6 +339,7 @@ class _ProjectGroup extends StatelessWidget {
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
+    required this.processingId,
     required this.onAccept,
     required this.onReject,
   });
@@ -290,6 +348,7 @@ class _ProjectGroup extends StatelessWidget {
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
+  final String? processingId;
   final ValueChanged<Proposal> onAccept;
   final ValueChanged<Proposal> onReject;
 
@@ -346,6 +405,9 @@ class _ProjectGroup extends StatelessWidget {
             isDark: isDark,
             titleColor: titleColor,
             mutedColor: mutedColor,
+            isProcessing: processingId == group.proposals[i].id,
+            actionsDisabled:
+                processingId != null && processingId != group.proposals[i].id,
             onAccept: () => onAccept(group.proposals[i]),
             onReject: () => onReject(group.proposals[i]),
           ),
@@ -361,6 +423,8 @@ class _ProposalCard extends StatelessWidget {
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
+    required this.isProcessing,
+    required this.actionsDisabled,
     required this.onAccept,
     required this.onReject,
   });
@@ -369,6 +433,8 @@ class _ProposalCard extends StatelessWidget {
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
+  final bool isProcessing;
+  final bool actionsDisabled;
   final VoidCallback onAccept;
   final VoidCallback onReject;
 
@@ -474,7 +540,9 @@ class _ProposalCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: onReject,
+                    onPressed: (isProcessing || actionsDisabled)
+                        ? null
+                        : onReject,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFFBA1A1A),
                       side: const BorderSide(color: Color(0xFFBA1A1A)),
@@ -487,16 +555,30 @@ class _ProposalCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    child: const Text('Rejeitar'),
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(
+                                Color(0xFFBA1A1A),
+                              ),
+                            ),
+                          )
+                        : const Text('Rejeitar'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton(
-                    onPressed: onAccept,
+                    onPressed: (isProcessing || actionsDisabled)
+                        ? null
+                        : onAccept,
                     style: FilledButton.styleFrom(
                       backgroundColor: _primary,
                       foregroundColor: Colors.white,
+                      disabledBackgroundColor: _primary.withValues(alpha: 0.5),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -506,7 +588,16 @@ class _ProposalCard extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    child: const Text('Aceitar'),
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Text('Aceitar'),
                   ),
                 ),
               ],

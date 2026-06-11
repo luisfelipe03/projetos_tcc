@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 import '../../models/proposal.dart';
 
@@ -7,6 +8,7 @@ class ProposalsService {
   static final ProposalsService instance = ProposalsService._();
 
   final _firestore = FirebaseFirestore.instance;
+  final _functions = FirebaseFunctions.instance;
 
   CollectionReference<Map<String, dynamic>> get _collection =>
       _firestore.collection('proposals');
@@ -67,6 +69,23 @@ class ProposalsService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snap) => snap.docs.map(_fromDoc).toList());
+  }
+
+  /// Cliente aceita uma proposta. Server faz a transaction (status proposta,
+  /// outras propostas pending → rejected, status projeto → active, contrato).
+  /// Retorna o contractId criado.
+  Future<String> acceptProposal(String proposalId) async {
+    final callable = _functions.httpsCallable('acceptProposal');
+    final result = await callable.call<Map<String, dynamic>>({
+      'proposalId': proposalId,
+    });
+    return result.data['contractId'] as String;
+  }
+
+  /// Cliente rejeita uma proposta. Server troca status pra `rejected`.
+  Future<void> rejectProposal(String proposalId) async {
+    final callable = _functions.httpsCallable('rejectProposal');
+    await callable.call<Map<String, dynamic>>({'proposalId': proposalId});
   }
 
   Proposal _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {

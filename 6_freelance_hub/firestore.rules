@@ -55,5 +55,18 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // Contratos. Criados exclusivamente pela Cloud Function acceptProposal
+    // (admin SDK bypassa rules). Leitura: só as partes do contrato.
+    // Update/delete: bloqueado — transições de status (entrega, conclusão,
+    // disputa) virão por Cloud Function dedicada em iterações futuras.
+    match /contracts/{contractId} {
+      allow read: if request.auth != null
+                  && (resource.data.clientId == request.auth.uid
+                      || resource.data.freelancerId == request.auth.uid);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
   }
 }
