@@ -39,5 +39,21 @@ service cloud.firestore {
                     && resource.data.status == 'open'
                     && resource.data.proposalCount == 0;
     }
+
+    // Propostas. Doc ID = "{projectId}_{freelancerId}" — previne duplicatas.
+    // Leitura: só o freelancer dono OU o cliente do projeto.
+    // Criação: só pelo próprio freelancer, status pending obrigatório.
+    // Update/delete: bloqueado — transições de status são via Cloud Function
+    // (aceitar/rejeitar/withdraw acompanha o ciclo de vida do contrato).
+    match /proposals/{proposalId} {
+      allow read: if request.auth != null
+                  && (resource.data.freelancerId == request.auth.uid
+                      || resource.data.clientId == request.auth.uid);
+      allow create: if request.auth != null
+                    && request.resource.data.freelancerId == request.auth.uid
+                    && request.resource.data.status == 'pending';
+      allow update: if false;
+      allow delete: if false;
+    }
   }
 }

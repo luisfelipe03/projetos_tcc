@@ -999,3 +999,79 @@ Iteração ambiciosa de "mock → real backend" pra projects, executada limpa. P
 **Próximo passo:** **Iteração 15 — Proposals no Firestore**. SendProposal hoje só mostra SnackBar; deve criar doc em `proposals/{id}` com `projectId`, `freelancerId`, `clientId`, `value`, `daysEstimate`, `message`, `status: pending`, `createdAt`. Também atualizar `proposalCount` do project... mas isso precisaria de Cloud Function (regra impede client de mexer em proposalCount). Decisão: ou (a) só criar o doc da proposal e deixar contador stale até CF, ou (b) já adicionar Cloud Function pra incrementar (introduz `functions/` no projeto).
 
 ---
+
+## Iteração 15
+### Prompt usado:
+```plaintext
+Como Iteração 15, persistir **Proposals no Firestore**. Opção (a) escolhida: só criar o doc da proposta, `proposalCount` do project fica stale até Cloud Function (iteração de escrow).
+
+Modelagem:
+- `lib/models/proposal.dart`: classe `Proposal` (id, projectId, projectTitle, freelancerId, freelancerName, clientId, value, daysEstimate, isHourly, message, status, createdAt). Enum `ProposalStatus { pending, accepted, rejected, withdrawn }`.
+- Doc ID determinístico: `${projectId}_${freelancerId}` — previne duplicatas naturalmente (segunda tentativa do mesmo freelancer no mesmo projeto cai em "update" que as rules negam).
+
+`lib/core/services/proposals_service.dart`:
+- `createProposal(...)` com `set()` no doc ID determinístico.
+- `streamProposalsForProject(projectId)` — pro Cliente ver propostas recebidas (UI vem depois).
+- `streamProposalsByFreelancer(freelancerId)` — pra tab "Meus Trabalhos" (UI vem depois).
+
+Wire SendProposalView:
+- `_isSubmitting` state.
+- `_handleSubmit` async: busca currentAppUser, chama createProposal com `widget.project.ownerId` como clientId e `widget.project.title` denormalizado.
+- Loading spinner no botão.
+- Error handling humanizado: `permission-denied` → "Você já enviou proposta para este projeto." (porque a 2ª tentativa cai em update bloqueado).
+
+Firestore rules pra `proposals/{id}`:
+- read: só freelancer dono OR cliente do projeto (campos `freelancerId`/`clientId` no doc).
+- create: só pelo próprio freelancer, status pending obrigatório.
+- update/delete: bloqueado (transições via Cloud Function depois).
+
+Indexes:
+- (projectId ASC, createdAt DESC) — pra streamProposalsForProject.
+- (freelancerId ASC, createdAt DESC) — pra streamProposalsByFreelancer.
+
+Deploy `firebase deploy --only firestore` (rules + indexes juntos).
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/models/proposal.dart` (~30 linhas): classe imutável + enum.
+- Criou `lib/core/services/proposals_service.dart` (~75 linhas): singleton + 3 métodos públicos + `_docId` privado + `_fromDoc` privado.
+- Editou `lib/views/send_proposal_view.dart`:
+  - +imports de AuthService e ProposalsService.
+  - +`_isSubmitting` state.
+  - `_handleSubmit` virou async: form.validate + busca currentAppUser + valida sessão + chama createProposal + SnackBar verde no sucesso + pop / SnackBar vermelho no erro.
+  - `_humanizeError` detecta `permission-denied` no toString e mostra mensagem específica de duplicata.
+  - `_BottomActionBar` agora aceita `isSubmitting` + `onSubmit` nullable; mostra spinner durante submit; disabled bg 0.5.
+- Editou `firestore.rules`: bloco `match /proposals/{proposalId}` com 4 regras (read condicional, create restrito, update/delete false).
+- Editou `firestore.indexes.json`: +2 índices compostos.
+- `firebase deploy --only firestore` rodou: rules released + indexes deployed em ~5s.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.9s)`.
+  - `flutter test` → `10 tests, all passed`.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Doc ID determinístico `${projectId}_${freelancerId}`** é o detalhe arquitetural mais importante desta iteração. Resolve o problema de duplicatas SEM precisar de Cloud Function ou validação client-side complexa (que pode ser burlada). Tradeoff: a UX da segunda tentativa é "erro genérico de permissão" em vez de validação inline ("você já propôs aqui"); mitigado pelo `_humanizeError`.
+- **Denormalização agressiva**: `projectTitle` e `freelancerName` ficam no doc da proposta. Razão: as views futuras (Propostas Recebidas pro cliente, Meus Trabalhos pro freelancer) vão listar muitas propostas e ler title/name 1 vez por linha. Sem denormalização seria 1 doc proposta + 1 doc project + 1 doc user = 3 reads por linha. Com denormalização, 1 read. O custo é stale data se project/user mudarem — aceitável pro MVP.
+- **`proposalCount` fica stale**: decisão consciente. O badge "X propostas" no feed e no detalhe vai estar errado pra projetos novos com propostas recebidas. Será corrigido na **Iteração de Cloud Functions** (próxima grande virada arquitetural) quando entrar o trigger `onCreate` em `proposals/` que increment `projects/{projectId}.proposalCount` via `FieldValue.increment(1)`.
+- **Rules com `read` condicional sobre `resource.data`**: padrão usual de Firebase rules. Cliente lê proposals do seu projeto, freelancer lê as próprias. Sem leak entre freelancers, sem leak pra clientes que não são donos.
+- **Indexes deployados junto** evita o erro "query requires an index" que apareceu na Iteração 14. Lesson learned aplicada.
+
+**Cobertura visual continua a mesma** — nenhuma view nova nesta iteração; apenas o submit do SendProposal virou real. As próximas iterações vão expor essas propostas em UIs (Meus Trabalhos pro Freelancer, Propostas Recebidas pro Cliente).
+
+**Fluxo testável agora:**
+1. Cliente publica projeto (já funcionava na Iteração 14).
+2. Freelancer abre o feed, tap em card, "Enviar proposta", preenche valor + prazo + mensagem, submete → **proposta criada em Firestore**.
+3. Verifica no Firebase Console > Firestore > `proposals/` — doc com ID `{projectId}_{freelancerId}` deve aparecer.
+4. Tentar enviar proposta de novo no mesmo projeto → SnackBar vermelho "Você já enviou proposta para este projeto."
+
+**Próximo passo:** **Iteração 16** tem 2 candidatos naturais:
+- **A — "Propostas Recebidas"** (UI do Cliente que lista propostas pros próprios projetos, com botão aceitar/rejeitar). Mas aceitar é o ponto de entrada pro contrato + escrow, que precisa de Cloud Function. Então essa iteração só lista (sem ações reais).
+- **B — "Meus Trabalhos"** (UI do Freelancer que lista propostas enviadas, status atual de cada uma). Mais simples, sem dependência de Cloud Function.
+- **C — Cloud Functions setup** (entra `functions/` no projeto, escreve trigger pra incrementar proposalCount + função callable `acceptProposal` pra criar contrato/transferir escrow). Maior, marca transição "transações reais".
+
+Recomendação: B primeiro (UI freelancer fecha mais um loop visível), depois C (server-side é foundational e destrava A).
+
+---

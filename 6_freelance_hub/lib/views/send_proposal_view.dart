@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
+import '../core/services/proposals_service.dart';
 import '../core/text_formatters.dart';
 import '../models/project.dart';
 
@@ -31,6 +33,7 @@ class _SendProposalViewState extends State<SendProposalView> {
   final _valueController = TextEditingController();
   final _daysController = TextEditingController();
   final _messageController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -49,32 +52,76 @@ class _SendProposalViewState extends State<SendProposalView> {
 
   void _onMessageChanged() => setState(() {});
 
-  void _handleSubmit() {
-    final ok = _formKey.currentState!.validate();
-    if (!ok) return;
+  Future<void> _handleSubmit() async {
+    if (!_formKey.currentState!.validate()) return;
 
     FocusScope.of(context).unfocus();
+    setState(() => _isSubmitting = true);
+    try {
+      final user = await AuthService.instance.currentAppUser();
+      if (user == null) {
+        throw StateError('Sessão expirada. Faça login novamente.');
+      }
+      final valueRaw = _valueController.text.replaceAll('.', '');
+      await ProposalsService.instance.createProposal(
+        projectId: widget.project.id,
+        projectTitle: widget.project.title,
+        freelancerId: user.uid,
+        freelancerName: user.displayName,
+        clientId: widget.project.ownerId,
+        value: double.parse(valueRaw),
+        daysEstimate: int.parse(_daysController.text.trim()),
+        isHourly: widget.project.isHourly,
+        message: _messageController.text.trim(),
+      );
+      if (!mounted) return;
+      _showSnack(
+        'Proposta enviada com sucesso! Você será notificado se for aceita.',
+        success: true,
+      );
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(
+        _humanizeError(e),
+        success: false,
+      );
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  String _humanizeError(Object e) {
+    final s = e.toString();
+    if (s.contains('permission-denied')) {
+      return 'Você já enviou proposta para este projeto.';
+    }
+    return 'Falha ao enviar proposta: $e';
+  }
+
+  void _showSnack(String message, {required bool success}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          backgroundColor: const Color(0xFF086B53),
+          backgroundColor: success
+              ? const Color(0xFF086B53)
+              : const Color(0xFFBA1A1A),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           content: Text(
-            'Proposta enviada com sucesso! Você será notificado se for aceita.',
+            message,
             style: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w500,
               color: Colors.white,
             ),
           ),
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
         ),
       );
-    Navigator.of(context).pop();
   }
 
   String? _validateValue(String? value) {
@@ -246,7 +293,8 @@ class _SendProposalViewState extends State<SendProposalView> {
               _BottomActionBar(
                 navBg: cardBg,
                 borderColor: borderColor,
-                onSubmit: _handleSubmit,
+                onSubmit: _isSubmitting ? null : _handleSubmit,
+                isSubmitting: _isSubmitting,
               ),
             ],
           ),
@@ -500,11 +548,13 @@ class _BottomActionBar extends StatelessWidget {
     required this.navBg,
     required this.borderColor,
     required this.onSubmit,
+    required this.isSubmitting,
   });
 
   final Color navBg;
   final Color borderColor;
-  final VoidCallback onSubmit;
+  final VoidCallback? onSubmit;
+  final bool isSubmitting;
 
   @override
   Widget build(BuildContext context) {
@@ -532,6 +582,8 @@ class _BottomActionBar extends StatelessWidget {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF3B309E),
                 foregroundColor: Colors.white,
+                disabledBackgroundColor:
+                    const Color(0xFF3B309E).withValues(alpha: 0.5),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -540,7 +592,16 @@ class _BottomActionBar extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: const Text('Enviar proposta'),
+              child: isSubmitting
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Text('Enviar proposta'),
             ),
           ),
         ),
