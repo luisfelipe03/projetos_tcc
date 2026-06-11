@@ -11,6 +11,7 @@ import 'package:freelance_hub/views/login_view.dart';
 import 'package:freelance_hub/views/my_proposals_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
 import 'package:freelance_hub/views/project_detail_view.dart';
+import 'package:freelance_hub/views/received_proposals_view.dart';
 import 'package:freelance_hub/views/send_proposal_view.dart';
 import 'package:freelance_hub/views/signup_view.dart';
 
@@ -183,6 +184,19 @@ void main() {
       find.text('Vá ao Feed, abra um projeto e envie sua primeira proposta.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('ReceivedProposalsView shows empty state when no proposals', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: ReceivedProposalsView())),
+    );
+    await tester.pump();
+
+    // "Projetos" aparece 1x (header da tela; bottom nav está em outro teste).
+    expect(find.text('Projetos'), findsOneWidget);
+    expect(find.text('Nenhuma proposta recebida'), findsOneWidget);
   });
 
   testWidgets('SendProposalView builds with form + recap', (tester) async {

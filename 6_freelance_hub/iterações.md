@@ -1134,3 +1134,74 @@ Iteração coesa, sem retentativas. Pontos relevantes:
 Recomendação: A agora (fecha o triângulo Cliente-publica → Freelancer-propõe → Cliente-vê) e depois C (destrava aceitar de verdade).
 
 ---
+
+## Iteração 17
+### Prompt usado:
+```plaintext
+Iteração 17 — "Propostas Recebidas" (opção A).
+
+Substituir o placeholder da tab "Projetos" do Cliente (índice 1 do bottom nav) por uma view real que lista as propostas recebidas pelo Cliente nos projetos que ele publicou. Diferente do "Meus Trabalhos" do Freelancer, aqui as propostas devem ser **agrupadas por projeto** — Cliente raciocina em termos de projetos, não propostas isoladas.
+
+Implementação:
+- Add `streamProposalsByClient(clientId)` em `lib/core/services/proposals_service.dart`: query `where('clientId', isEqualTo: clientId).orderBy('createdAt', descending: true)`.
+- Add índice composto (`clientId` ASC, `createdAt` DESC) em `firestore.indexes.json`. Deploy com `firebase deploy --only firestore`.
+- Rules de read em `proposals/{id}` JÁ cobrem o Cliente (`resource.data.clientId == request.auth.uid`), nada a mudar.
+- `lib/views/received_proposals_view.dart`:
+  - StatefulWidget com o mesmo pattern do MyProposalsView (initState busca currentAppUser → seta stream; guard `Firebase.apps.isEmpty`).
+  - Header "Projetos" + descrição.
+  - 4 estados (loading/error/empty/data).
+  - Agrupa propostas por `projectId` em memória (`_groupByProject` helper): ordena grupos pela proposta mais recente.
+  - Cada grupo: header `<projectTitle>` + badge `N propostas`; abaixo, lista de `_ProposalCard`.
+  - `_ProposalCard`: avatar com iniciais do freelancer (CircleAvatar fake — só cor primária + texto), nome, status badge, valor, prazo, mensagem (preview de 3 linhas), data relativa, botões "Rejeitar" (outlined vermelho) + "Aceitar" (filled roxo) — só pra status `pending`.
+  - `onAccept`/`onReject` mostram SnackBar roxo "Aceitar/Rejeitar proposta chegará junto com Cloud Functions (próxima iteração)."
+- HomeView: branch `if (_currentTab == 1 && _role == UserRole.client) return const ReceivedProposalsView();` antes do placeholder.
+- Smoke test em `widget_test.dart` cobrindo empty state.
+
+Validar `flutter analyze` + `flutter test`. Stage tudo.
+```
+
+### Output recebido:
+```markdown
+- Editou `lib/core/services/proposals_service.dart`: +1 método `streamProposalsByClient`.
+- Editou `firestore.indexes.json`: +1 índice composto.
+- Deploy firestore com sucesso (rules unchanged, 1 índice novo).
+- Criou `lib/views/received_proposals_view.dart` (~470 linhas): ReceivedProposalsView + _Header + _StateMessage + _ProjectGroup + _ProposalCard + _MetaItem + _StatusBadge.
+- Editou `lib/views/home_view.dart`: +1 import + +1 branch.
+- Editou `test/widget_test.dart`: +1 import + smoke test de empty state.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.9s)`.
+  - `flutter test` → 12 passed (11 antes + 1 novo).
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Agrupamento client-side por `projectId`**: a query retorna lista flat ordenada por `createdAt desc`; `_groupByProject` faz LinkedHashMap em memória e ordena os grupos pela proposta mais recente de cada um. Alternativa seria 1 query por projeto (mais reads, mais streams), ou subcoleção `projects/{id}/proposals/{id}` (refactor maior). A escolha atual é a mais barata em reads e a mais simples em código.
+- **Botões "Aceitar"/"Rejeitar" stub'ados**: aparecem só em propostas `pending` e mostram SnackBar "Em breve". A escolha aqui é estabelecer a UI **antes** da Cloud Function, pra que a próxima iteração (C) seja só "trocar o callback do botão" — não precisar redesenhar layout. Padrão "UI primeiro, lógica depois" usado conscientemente.
+- **`streamProposalsByClient` vs filtrar `streamProposalsForProject` 1-a-1**: optar pela query única + agrupar é justificado por (1) Firestore cobra por document read, então 1 query que retorna 30 docs custa o mesmo que 3 queries de 10; (2) listeners têm overhead de manutenção — 1 listener é mais barato que N; (3) a paginação futura (`limit` + `startAfter`) funciona melhor com query única.
+- **Duplicação de helpers de formatação** (`_formatValue`, `_relativeDate`, `_StatusBadge`) com MyProposalsView. Conscientemente não extraí ainda. A duplicação é localmente óbvia, e cada view tem nuances próprias (label "enviada"/"recebida" do `_relativeDate`). Quando a terceira view precisar disso ou os designs convergirem 100%, extraio pra `core/proposal_formatters.dart`.
+- **Avatar com iniciais**: solução compacta sem rede (sem `network_image` rot — lembrete da Iteração 1). `_initials` extrai 1-2 letras do nome; fallback "?" pra nome vazio. Estilo coerente com o resto do app.
+- **Sem refactor do `ClientDashboardView`**: a tela "Painel" do Cliente continua mock estático com métricas hardcoded ("12 projetos ativos", "48 propostas"). Idealmente esses números viriam de queries reais (count de projects + count de proposals do clientId). Deixei intencional pra essa iteração — escopo seria muito maior. Quando vier o Cloud Function de `proposalCount` (Iteração C), aproveito pra renumerar as métricas reais.
+
+**Cobertura visual:**
+- Cliente: Painel (placeholder mock), **Projetos (novo, real)**, Mensagens (placeholder), Perfil (real).
+- Freelancer: Feed (real), Meus Trabalhos (real), Mensagens (placeholder), Perfil (real).
+- 6/8 tabs com conteúdo real. Mensagens vai precisar de outra collection + outra arquitetura (chat em tempo real); fica reservado pra iteração depois de Cloud Functions.
+
+**Fluxo testável agora:**
+1. Login como Cliente sem projetos → tab "Projetos" → empty state.
+2. Publica projeto, desloga, entra como Freelancer.
+3. Freelancer envia proposta nesse projeto (Iteração 15) e vê em "Meus Trabalhos" (Iteração 16).
+4. Volta pra conta Cliente → tab "Projetos" → grupo do projeto aparece com a proposta, mostrando nome do freelancer, valor, prazo, mensagem completa, badge "Aguardando", botões "Aceitar"/"Rejeitar".
+5. Tap em qualquer botão → SnackBar roxo "chegará junto com Cloud Functions".
+6. Cliente abre 2 projetos diferentes, recebe propostas em ambos → tab "Projetos" mostra 2 grupos separados, cada um com seu título e propostas.
+
+**Próximo passo:** **Iteração 18 — Cloud Functions setup (C)**. Marca a transição "primeira lógica server-side":
+- `firebase init functions` introduz `functions/` no projeto (TypeScript ou JS; provavelmente TS).
+- Primeira função: trigger `onCreate` em `proposals/{id}` que incrementa `proposals_count` no `projects/{projectId}` via `FieldValue.increment(1)`. Resolve a divergência da Iteração 14/15 onde `proposalCount` ficou stale.
+- Segunda função: callable `acceptProposal({proposalId})` que (1) muda status da proposta pra `accepted`; (2) rejeita as outras propostas do mesmo projeto (`rejected`); (3) muda status do projeto pra `active`; (4) cria doc em `contracts/{id}` com referência cruzada. Tudo em transaction. Wire no botão "Aceitar" da Iteração 17.
+- Terceira função: callable `rejectProposal({proposalId})` simples — muda status. Wire no botão "Rejeitar".
+- Rules atualizadas pra permitir `proposalCount` ser escrito SÓ pelo service account (Cloud Function roda com privilégios elevados — mas o cliente continua bloqueado).
+- Quando rolar, abre caminho pra escrow (`payment_intent` + Stripe ou similar) que seria a próxima.
+
+---

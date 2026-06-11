@@ -59,6 +59,16 @@ class ProposalsService {
         .map((snap) => snap.docs.map(_fromDoc).toList());
   }
 
+  /// Todas as propostas dos projetos publicados por um cliente.
+  /// Usado na tab "Projetos" (Cliente) — agrupa por projectId na UI.
+  Stream<List<Proposal>> streamProposalsByClient(String clientId) {
+    return _collection
+        .where('clientId', isEqualTo: clientId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) => snap.docs.map(_fromDoc).toList());
+  }
+
   Proposal _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     return Proposal(
