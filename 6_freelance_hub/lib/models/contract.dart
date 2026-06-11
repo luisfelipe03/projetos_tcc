@@ -6,6 +6,7 @@ class Contract {
     required this.projectId,
     required this.projectTitle,
     required this.clientId,
+    required this.clientName,
     required this.freelancerId,
     required this.freelancerName,
     required this.value,
@@ -20,6 +21,7 @@ class Contract {
   final String projectId;
   final String projectTitle;
   final String clientId;
+  final String clientName;
   final String freelancerId;
   final String freelancerName;
   final double value;

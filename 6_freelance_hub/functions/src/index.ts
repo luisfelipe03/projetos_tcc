@@ -106,6 +106,8 @@ export const acceptProposal = onCall(async (request) => {
     if (!projectSnap.exists) {
       throw new HttpsError("not-found", "Projeto não encontrado.");
     }
+    const project = projectSnap.data()!;
+    const clientName = (project.clientName as string | undefined) ?? "";
 
     const otherPendingSnap = await tx.get(
       db
@@ -128,6 +130,7 @@ export const acceptProposal = onCall(async (request) => {
       projectId,
       projectTitle: proposal.projectTitle,
       clientId: proposal.clientId,
+      clientName,
       freelancerId: proposal.freelancerId,
       freelancerName: proposal.freelancerName,
       value: proposal.value,
@@ -187,6 +190,103 @@ export const rejectProposal = onCall(async (request) => {
   logger.info("Proposta rejeitada", {
     proposalId,
     callerUid: request.auth.uid,
+  });
+  return { ok: true };
+});
+
+/**
+ * Callable: freelancer marca o contrato como entregue.
+ * Valida caller == freelancerId e status atual == active.
+ */
+export const markContractDelivered = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const contractId = request.data?.contractId;
+  if (typeof contractId !== "string" || !contractId) {
+    throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+
+  const db = getFirestore();
+  const contractRef = db.collection("contracts").doc(contractId);
+  const snap = await contractRef.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "Contrato não encontrado.");
+  }
+  const contract = snap.data()!;
+  if (contract.freelancerId !== request.auth.uid) {
+    throw new HttpsError(
+      "permission-denied",
+      "Apenas o freelancer pode marcar como entregue."
+    );
+  }
+  if (contract.status !== "active") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Contrato não está em andamento."
+    );
+  }
+
+  await contractRef.update({ status: "delivered" });
+  logger.info("Contrato marcado como entregue", {
+    contractId,
+    callerUid: request.auth.uid,
+  });
+  return { ok: true };
+});
+
+/**
+ * Callable: cliente aprova a entrega.
+ * Valida caller == clientId e status atual == delivered.
+ * Transaction: contract → completed, project → completed.
+ */
+export const acceptContractDelivery = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const contractId = request.data?.contractId;
+  if (typeof contractId !== "string" || !contractId) {
+    throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+
+  const db = getFirestore();
+  const contractRef = db.collection("contracts").doc(contractId);
+  const callerUid = request.auth.uid;
+
+  await db.runTransaction(async (tx) => {
+    const contractSnap = await tx.get(contractRef);
+    if (!contractSnap.exists) {
+      throw new HttpsError("not-found", "Contrato não encontrado.");
+    }
+    const contract = contractSnap.data()!;
+
+    if (contract.clientId !== callerUid) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas o cliente pode aprovar a entrega."
+      );
+    }
+    if (contract.status !== "delivered") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Contrato não está em status entregue."
+      );
+    }
+
+    const projectId = contract.projectId as string;
+    const projectRef = db.collection("projects").doc(projectId);
+    const projectSnap = await tx.get(projectRef);
+    if (!projectSnap.exists) {
+      throw new HttpsError("not-found", "Projeto não encontrado.");
+    }
+
+    tx.update(contractRef, { status: "completed" });
+    tx.update(projectRef, { status: "completed" });
+  });
+
+  logger.info("Entrega aprovada e contrato concluído", {
+    contractId,
+    callerUid,
   });
   return { ok: true };
 });

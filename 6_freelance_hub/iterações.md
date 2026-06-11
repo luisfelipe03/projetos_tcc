@@ -1356,6 +1356,97 @@ Iteração coesa, sem retentativas. Pontos relevantes:
 
 ---
 
+## Iteração 21
+### Prompt usado:
+```plaintext
+Iteração 21 — workflow de entrega + denormalização de clientName.
+
+Server-side (functions/src/index.ts):
+- `acceptProposal`: dentro da transaction, ler `projectSnap.data().clientName` e gravar `clientName` no doc do contract criado. Resolve o placeholder "Cliente: Cliente" da Iteração 20.
+- `markContractDelivered({contractId})` callable v2:
+  - Validações: auth, contractId string não-vazia, contrato existe, caller == freelancerId, status atual == active.
+  - Update simples: status → delivered.
+- `acceptContractDelivery({contractId})` callable v2:
+  - Validações: auth, contractId, contrato existe, caller == clientId, status atual == delivered.
+  - Transaction: contract → completed, project → completed.
+
+Rules: NÃO precisam mudar. Admin SDK bypassa update: false.
+
+Cliente (Flutter):
+- `lib/models/contract.dart`: +campo `clientName` (final String).
+- `lib/core/services/contracts_service.dart`: +import cloud_functions, +campo _functions, +parse de clientName no _fromDoc, +métodos markDelivered/acceptDelivery (invocam callables).
+- `lib/views/my_contracts_view.dart`:
+  - +State _processingId (loading per-contract).
+  - +_handleMarkDelivered, _handleAcceptDelivery, _humanizeError, _showSnack.
+  - _ContractCard ganha 4 params: isProcessing, actionsDisabled, onMarkDelivered, onAcceptDelivery.
+  - Trocar placeholder "Cliente" pelo `contract.clientName` real (fallback "Cliente" só se vazio — útil pra contratos antigos sem clientName).
+  - Botões contextuais SÓ visíveis na intersecção status+role:
+    - active + freelancer → FilledButton roxo "Marcar como entregue".
+    - delivered + client → FilledButton verde "Aprovar entrega".
+  - Spinner inline durante a chamada, disabled em outros cards enquanto processa.
+
+Validar analyze + test. Stage tudo.
+
+**Migração**: contratos antigos não têm clientName. O ?? '' no _fromDoc + fallback no display "rawCounterpartyName.isEmpty ? counterpartyLabel : rawCounterpartyName" mantém retrocompatibilidade — antigos seguem mostrando "Cliente", novos mostram o nome real.
+```
+
+### Output recebido:
+```markdown
+- Editou `functions/src/index.ts`:
+  - acceptProposal: +leitura de clientName do project + grava no contract.
+  - +markContractDelivered (44 linhas).
+  - +acceptContractDelivery (51 linhas, com transaction).
+- Build TS limpo. Deploy: markContractDelivered + acceptContractDelivery criadas; acceptProposal, rejectProposal, onProposalCreated atualizadas.
+- Editou `lib/models/contract.dart`: +clientName required final String.
+- Editou `lib/core/services/contracts_service.dart`: +cloud_functions, +_functions, +markDelivered/acceptDelivery, +clientName no _fromDoc.
+- Editou `lib/views/my_contracts_view.dart`:
+  - +import cloud_functions.
+  - +_processingId, +2 handlers, +_humanizeError, +_showSnack.
+  - _ContractCard recebe processingId/disabled/2 callbacks.
+  - Counterparty name agora usa contract.clientName real (com fallback).
+  - +2 botões contextuais (Marcar entregue / Aprovar entrega).
+- Validação: flutter analyze 0 issues. flutter test 13 passed.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Update do acceptProposal foi cirúrgico**: 1 leitura adicional (`projectSnap.data().clientName`) + 1 campo a mais no `tx.set`. Continua dentro da mesma transaction (atomicidade garantida).
+- **Botões contextuais por status + role**: a UI mostra apenas a ação que faz sentido pra quem está olhando, no momento certo do workflow. Combinações:
+  - `active` + Cliente → nada (só lê — espera entrega).
+  - `active` + Freelancer → "Marcar como entregue".
+  - `delivered` + Freelancer → nada (só lê — espera aprovação).
+  - `delivered` + Cliente → "Aprovar entrega".
+  - `completed`, `disputed` → nada (terminal por ora).
+- **Estado terminal `completed`**: a transação no `acceptContractDelivery` também muda o status do `project` pra `completed` — fechando o ciclo completo: `open → active → completed`. Já tinha esse status no enum desde a Iteração 14, mas era só decorativo. Agora é real.
+- **Cores semânticas**: "Marcar entregue" é roxo (primário/positivo neutro), "Aprovar entrega" é verde (#086B53 — sucesso). Diferenças visuais transmitem "sim, isso é final" vs "isso só avança a etapa".
+- **Migração de dados sem script**: contratos criados na Iteração 20 não têm `clientName`. O `?? ''` no parser + ternary no display permite que continuem funcionando — só vão mostrar o placeholder antigo até serem substituídos por contratos novos. Sem necessidade de script de backfill pra MVP.
+- **Project lifecycle agora completo** (do ponto de vista de status): open (criação) → active (proposta aceita) → completed (entrega aprovada). O `delivered`/`disputed` no enum de Project não é usado mais — o ciclo de "entrega" agora vive no Contract, não no Project. **Devo limpar isso?** Não nesta iteração — mexer no enum implica refactor de filtros do feed e seria distração. Deixo nota pra futuro: enum Project deve ser reduzido pra `open | active | completed | closed`.
+- **`acceptContractDelivery` retorna `{ok: true}` em vez de algo mais rico**: poderia retornar o contract atualizado pra a UI consumir, mas o stream já vai re-emitir em ~500ms via Firestore listener. Manter resposta pequena.
+
+**Cobertura visual:**
+- Card de contrato (Freelancer) agora mostra o nome real do Cliente (não mais "Cliente: Cliente").
+- Botões "Marcar como entregue" (Freelancer/active) e "Aprovar entrega" (Cliente/delivered) — workflow completo de entrega.
+- Estado terminal `completed` (badge verde) destaca contratos finalizados.
+
+**Fluxo testável agora:**
+1. Cenário fim-a-fim: Cliente publica → Freelancer propõe → Cliente aceita (contrato criado em status active com clientName real).
+2. Freelancer abre "Meus contratos" → vê badge "Em andamento" + botão "Marcar como entregue".
+3. Freelancer clica → spinner ~1-2s → SnackBar verde "Entrega registrada. Aguardando aprovação do cliente." → badge vira "Entregue" (âmbar).
+4. Em paralelo (sessão Cliente): card atualiza pra status "Entregue" + botão "Aprovar entrega" aparece.
+5. Cliente clica → spinner ~1-2s → SnackBar verde "Entrega aprovada! Contrato concluído." → badge vira "Concluído" (verde).
+6. (Bônus) Firestore Console > `projects/{id}.status` agora é `completed`.
+
+**Próximo passo (Iteração 22):** decisões abertas:
+- **A — Mensagens** (chat freelancer ↔ cliente): collection `messages`, Streams paginados, sender/receiver, MaterialDateLabel agrupando. Destrava as 2 tabs "Mensagens" que ainda são placeholder. Maior iteração até agora (UI + arquitetura nova).
+- **B — Native integration #1 (Câmera)**: enviar foto de perfil OU adicionar anexos no fluxo de entrega (Freelancer envia foto do trabalho ao marcar como entregue). Começa a abordar o requisito do TCC "recursos nativos" (camera, files, biometric, geolocation).
+- **C — Disputas**: cliente solicita revisão em vez de aprovar; freelancer responde; ciclo de comunicação. Precisa de chat antes (A) ou input de texto inline.
+- **D — Histórico de status no contract**: subcollection `contracts/{id}/events/` registrando cada mudança de status com timestamp e ator. Útil pra auditoria e timeline visual, mas não destrava nada visível agora.
+
+Recomendação: **B — Câmera primeiro** (avança um requisito explícito do TCC e é uma iteração "redonda" de 1 recurso nativo) e depois **A — Mensagens** (maior, mas necessária pro fluxo realista).
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

@@ -1,3 +1,4 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,11 +27,86 @@ class _MyContractsViewState extends State<MyContractsView> {
   Stream<List<Contract>>? _stream;
   UserRole? _role;
   String? _loadError;
+  String? _processingId;
 
   @override
   void initState() {
     super.initState();
     _initStream();
+  }
+
+  Future<void> _handleMarkDelivered(Contract c) async {
+    if (_processingId != null) return;
+    setState(() => _processingId = c.id);
+    try {
+      await ContractsService.instance.markDelivered(c.id);
+      if (!mounted) return;
+      _showSnack('Entrega registrada. Aguardando aprovação do cliente.',
+          success: true);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'marcar como entregue'), success: false);
+    } finally {
+      if (mounted) setState(() => _processingId = null);
+    }
+  }
+
+  Future<void> _handleAcceptDelivery(Contract c) async {
+    if (_processingId != null) return;
+    setState(() => _processingId = c.id);
+    try {
+      await ContractsService.instance.acceptDelivery(c.id);
+      if (!mounted) return;
+      _showSnack('Entrega aprovada! Contrato concluído.', success: true);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'aprovar entrega'), success: false);
+    } finally {
+      if (mounted) setState(() => _processingId = null);
+    }
+  }
+
+  String _humanizeError(Object e, String action) {
+    if (e is FirebaseFunctionsException) {
+      switch (e.code) {
+        case 'unauthenticated':
+          return 'Sessão expirada. Faça login novamente.';
+        case 'permission-denied':
+          return 'Você não tem permissão para $action.';
+        case 'failed-precondition':
+          return 'Contrato não está no status esperado.';
+        case 'not-found':
+          return 'Contrato não encontrado.';
+        default:
+          return 'Falha ao $action: ${e.message ?? e.code}';
+      }
+    }
+    return 'Falha ao $action: $e';
+  }
+
+  void _showSnack(String message, {required bool success}) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          backgroundColor: success
+              ? const Color(0xFF086B53)
+              : const Color(0xFFBA1A1A),
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          content: Text(
+            message,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      );
   }
 
   Future<void> _initStream() async {
@@ -145,6 +221,11 @@ class _MyContractsViewState extends State<MyContractsView> {
             isDark: isDark,
             titleColor: titleColor,
             mutedColor: mutedColor,
+            isProcessing: _processingId == contracts[i].id,
+            actionsDisabled:
+                _processingId != null && _processingId != contracts[i].id,
+            onMarkDelivered: () => _handleMarkDelivered(contracts[i]),
+            onAcceptDelivery: () => _handleAcceptDelivery(contracts[i]),
           ),
         );
       },
@@ -240,6 +321,10 @@ class _ContractCard extends StatelessWidget {
     required this.isDark,
     required this.titleColor,
     required this.mutedColor,
+    required this.isProcessing,
+    required this.actionsDisabled,
+    required this.onMarkDelivered,
+    required this.onAcceptDelivery,
   });
 
   final Contract contract;
@@ -247,6 +332,10 @@ class _ContractCard extends StatelessWidget {
   final bool isDark;
   final Color titleColor;
   final Color mutedColor;
+  final bool isProcessing;
+  final bool actionsDisabled;
+  final VoidCallback onMarkDelivered;
+  final VoidCallback onAcceptDelivery;
 
   @override
   Widget build(BuildContext context) {
@@ -258,12 +347,17 @@ class _ContractCard extends StatelessWidget {
     // Contraparte = a outra parte do contrato em relação ao viewer.
     final counterpartyLabel =
         viewerRole == UserRole.client ? 'Freelancer' : 'Cliente';
-    final counterpartyName = viewerRole == UserRole.client
-        ? (contract.freelancerName.isEmpty
-              ? 'Freelancer'
-              : contract.freelancerName)
-        // Cliente do contrato — não temos clientName denormalizado por enquanto.
-        : 'Cliente';
+    final rawCounterpartyName = viewerRole == UserRole.client
+        ? contract.freelancerName
+        : contract.clientName;
+    final counterpartyName = rawCounterpartyName.isEmpty
+        ? counterpartyLabel
+        : rawCounterpartyName;
+
+    final showMarkDelivered = viewerRole == UserRole.freelancer &&
+        contract.status == ContractStatus.active;
+    final showAcceptDelivery = viewerRole == UserRole.client &&
+        contract.status == ContractStatus.delivered;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -346,6 +440,77 @@ class _ContractCard extends StatelessWidget {
               letterSpacing: 0.2,
             ),
           ),
+          if (showMarkDelivered) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: (isProcessing || actionsDisabled)
+                    ? null
+                    : onMarkDelivered,
+                icon: isProcessing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.check_circle_outline, size: 18),
+                label: const Text('Marcar como entregue'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _primary,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: _primary.withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          if (showAcceptDelivery) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: (isProcessing || actionsDisabled)
+                    ? null
+                    : onAcceptDelivery,
+                icon: isProcessing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.task_alt, size: 18),
+                label: const Text('Aprovar entrega'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFF086B53),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor:
+                      const Color(0xFF086B53).withValues(alpha: 0.5),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  textStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
