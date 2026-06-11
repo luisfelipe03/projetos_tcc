@@ -770,6 +770,7 @@ export const sendMessage = onCall(async (request) => {
       type: "chat_message",
       threadId,
       senderId: senderUid,
+      senderName: senderName || "",
     }
   );
 

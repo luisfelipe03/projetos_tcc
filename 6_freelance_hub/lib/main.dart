@@ -18,6 +18,11 @@ Future<void> main() async {
 final GlobalKey<ScaffoldMessengerState> rootMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
+/// Key global do Navigator — usada pelo NotificationsService pra fazer
+/// deep link quando o usuário toca uma push notification.
+final GlobalKey<NavigatorState> rootNavigatorKey =
+    GlobalKey<NavigatorState>();
+
 class FreelanceHubApp extends StatelessWidget {
   const FreelanceHubApp({super.key});
 
@@ -29,6 +34,7 @@ class FreelanceHubApp extends StatelessWidget {
       title: 'Freelance Hub',
       debugShowCheckedModeBanner: false,
       scaffoldMessengerKey: rootMessengerKey,
+      navigatorKey: rootNavigatorKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: _seedColor),
         textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),

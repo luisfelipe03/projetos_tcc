@@ -1916,6 +1916,71 @@ match /messages/{messageId} {
 
 ---
 
+## Iteração 27
+### Prompt usado:
+```plaintext
+Iteração 27 — Deep link em push notifications (opção D).
+
+Hoje a notificação chega (Android nativo / iOS in-app SnackBar) mas o tap nela só abre o app na última tela aberta. Falta UX: tocar a notif tem que abrir a tela relevante.
+
+Mapeamento desejado por `data.type`:
+- `proposalCreated`               → ReceivedProposalsView (cliente)
+- `proposal_accepted` / `rejected`→ MyProposalsView (freelancer)
+- `contract_delivered`            → MyContractsView (cliente)
+- `contract_redelivered`          → MyContractsView (cliente)
+- `contract_completed`            → MyContractsView (freelancer)
+- `contract_revision_requested`   → MyContractsView (freelancer)
+- `chat_message`                  → ChatView(otherUid, otherName)
+
+Cobrir 2 cenários:
+1. App em background → tap notif do sistema → app vem pra foreground na tela certa.
+2. App terminated (cold start) → tap notif → app abre e navega pra tela certa.
+
+Foreground (app aberto) já mostra SnackBar; não navega (manter como está, fica intrusivo).
+```
+
+### Output:
+- `lib/main.dart`: adicionado `rootNavigatorKey = GlobalKey<NavigatorState>()` e plugado em `MaterialApp.navigatorKey`. Paralelo ao `rootMessengerKey` que já existia. Permite navegação a partir de qualquer lugar (ex: handler que roda em isolate diferente do widget tree).
+- `lib/core/services/notifications_service.dart`:
+  - `initialize` ganhou parâmetro opcional `GlobalKey<NavigatorState>? navigatorKey`.
+  - Novo `StreamSubscription<RemoteMessage>? _tapSub` registrado em `FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap)` — cobre o cenário "app em background → tap notif → foreground".
+  - `await _messaging.getInitialMessage()` chamado em sequência — cobre cold start. O dispatch é envelopado em `WidgetsBinding.instance.addPostFrameCallback` pra garantir que o Navigator está montado no momento do push (a `initialize` é chamada do `HomeView.initState`, mas o `Navigator` só está pronto após o primeiro frame).
+  - Novo método privado `_handleNotificationTap(RemoteMessage msg)`: lê `msg.data['type']` e usa `_navigatorKey.currentState.push(...)` pra empilhar a tela. Switch case cobre os 8 tipos. Default = no-op (push sem `type` ou tipo desconhecido — silencioso, não quebra).
+  - `dispose` agora também cancela `_tapSub` e limpa `_navigatorKey`. Idempotência mantida.
+- `lib/views/home_view.dart`: `_initPushNotifications` passa `navigatorKey: rootNavigatorKey` pro `initialize`. Único call-site, então 1 linha de mudança.
+- `functions/src/index.ts`: data payload do `sendMessage` callable agora inclui `senderName`. Sem ele, ao tocar push de chat no cold start, ChatView abriria com o nome vazio. Já estava no `title` da notificação, mas data fields ficam separados de `notification`, então melhor explicitar. Deploy só dessa função.
+
+### Resultado:
+**Cobertura de UX completa pra push notifications.** Os 7 tipos de push (proposalCreated, proposal_accepted/rejected, contract_delivered/redelivered/revision_requested/completed, chat_message) agora abrem a tela certa quando tocados. Foreground continua mostrando SnackBar (não navega — comportamento esperado).
+
+**Arquitetura:**
+- Navegação por **push de rota** (não troca de tab). Justificativa: navegar pra tabs internas do `HomeView` exigiria comunicação com estado interno daquele widget (mudar `_currentTab`); empurrar uma rota nova por cima é o padrão Material e funciona em qualquer estado do app. O usuário pode voltar com o back-button.
+- **Cold start defensivo:** o `addPostFrameCallback` evita race com o Navigator não estar montado. Sem ele, em devices lentos a navegação no cold start falharia silenciosamente.
+- **chat_message é o único tipo que precisa de parâmetro do payload** (senderId + senderName). Os outros são telas estáticas, então não precisam de contexto adicional — a tela carrega tudo do Firestore pelo uid do user atual.
+- **Tolerante a payload faltando:** se `data.type` vier null/unknown, o handler retorna sem ação. Se chat_message vier sem senderId, no-op.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed
+- `firebase deploy --only functions:sendMessage` → "Successful update operation" ✔
+
+**Fluxo testável agora (Android — push real):**
+1. Cliente publica → Freelancer (em outro device, app em background ou fechado) propõe.
+2. Notificação "Nova proposta recebida" chega no device do Cliente → tap → app abre direto em **Propostas Recebidas** com a proposta nova no topo.
+3. Cliente aceita → Freelancer recebe push "Proposta aceita" → tap → app abre direto em **Meus Trabalhos** com a proposta em "Aceita".
+4. Freelancer marca entregue → Cliente recebe push "Entrega recebida" → tap → app abre direto em **Meus contratos** no card pronto pra aprovar.
+5. Cliente toca "Mensagem" → manda msg → fecha app inteiro → Freelancer recebe push "Luis Felipe: ..." → tap → app abre direto na **ChatView com o Cliente**, mostrando a msg.
+6. App em foreground continua mostrando SnackBar roxo (não navega — comportamento esperado).
+
+**Próximo passo (Iteração 28):** candidatos restantes do menu:
+- **A — Detalhe do contrato** (timeline + galeria + ações em tela própria, libera mais real estate pro UX)
+- **B — Edição de perfil** (displayName + foto + trigger de propagação nas threads e contratos existentes)
+- **C — Filtros + busca no Feed** (hoje o feed é flat; tem chip "Categoria" mas é só visual em alguns mocks)
+
+Recomendação: **B** (compromisso "Edição de perfil em breve" do tab Perfil + exercita propagação de denormalização — caso clássico de manutenção em sistema com dados duplicados).
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

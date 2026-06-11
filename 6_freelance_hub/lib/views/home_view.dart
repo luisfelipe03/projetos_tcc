@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/services/auth_service.dart';
 import '../core/services/notifications_service.dart';
-import '../main.dart' show rootMessengerKey;
+import '../main.dart' show rootMessengerKey, rootNavigatorKey;
 import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
@@ -46,6 +46,7 @@ class _HomeViewState extends State<HomeView> {
     await NotificationsService.instance.initialize(
       uid: user.uid,
       messengerKey: rootMessengerKey,
+      navigatorKey: rootNavigatorKey,
     );
   }
 
