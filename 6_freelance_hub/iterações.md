@@ -1291,6 +1291,71 @@ Iteração coesa, sem retentativas. Pontos relevantes:
 
 ---
 
+## Iteração 20
+### Prompt usado:
+```plaintext
+Iteração 20 — Meus Contratos.
+
+Primeira UI que consome `contracts/`. Decisão arquitetural sobre onde colocar a entrada:
+- Cliente e Freelancer ambos têm contratos (de pontos de vista opostos do mesmo doc). Em vez de uma tab dedicada (já tem 4) ou refactor de Painel/Feed/etc, expor a tela via botão na tab Perfil — visível pros dois roles, sem mudança em UI existente.
+
+Implementação:
+- `lib/models/contract.dart`: enum ContractStatus { active, delivered, completed, disputed }; classe imutável com todos os campos do doc no Firestore.
+- `lib/core/services/contracts_service.dart`: singleton com 2 streams (streamContractsByClient + streamContractsByFreelancer) ordenadas por createdAt desc.
+- `firestore.indexes.json`: +2 índices compostos (clientId+createdAt, freelancerId+createdAt). Deploy.
+- `lib/views/my_contracts_view.dart`:
+  - StatefulWidget. initState busca currentAppUser → seta _role + escolhe stream conforme role.
+  - Scaffold com TopBar (botão voltar + título "Meus contratos") em vez de header sliver — não está num tab, é tela navegada.
+  - StreamBuilder com 4 estados (loading/error/empty/data).
+  - Card de contrato: projectTitle, status badge colorido (Em andamento/Entregue/Concluído/Em disputa), valor formatado, prazo, **contraparte** (label muda conforme viewer — Cliente vê "Freelancer: Nome X", Freelancer vê "Cliente: ..." placeholder porque não temos clientName denormalizado ainda), data relativa "iniciado há X".
+- `lib/views/home_view.dart`: +import + +botão FilledButton "Meus contratos" antes do "Sair" no `_ProfileTab`, abre MyContractsView via push.
+- Smoke test cobrindo empty state.
+
+Validar analyze + test. Stage tudo.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/models/contract.dart` (~30 linhas).
+- Criou `lib/core/services/contracts_service.dart` (~55 linhas, mesmo pattern do ProposalsService).
+- Editou `firestore.indexes.json`: +2 índices contracts. Deploy ok.
+- Criou `lib/views/my_contracts_view.dart` (~440 linhas): tela completa com TopBar próprio, status badge dedicado, contraparte adaptativa.
+- Editou `lib/views/home_view.dart`: +import + +botão "Meus contratos" no Perfil tab.
+- Editou `test/widget_test.dart`: +import + smoke test empty state.
+- Validação: flutter analyze 0 issues. flutter test 13 passed (12 antes + 1 novo).
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Tela navegada vs tab**: optei por push em vez de adicionar 5ª tab (ou substituir uma existente). Mantém o bottom nav simples e a tela ainda tem um "voltar" claro. Contratos não são consultados com a mesma frequência de Feed/Trabalhos/Projetos — não precisam de tab.
+- **`_role` decide o stream**: detecta o role do user logado e usa `streamContractsByClient` ou `streamContractsByFreelancer`. Adaptação 100% client-side; o doc é o mesmo no Firestore, a diferença é só na query.
+- **Contraparte adaptativa**: o label "Freelancer:" / "Cliente:" + o nome mudam conforme o role do viewer. Atualmente só `freelancerName` está denormalizado no doc — o `clientName` precisaria ser também. Por ora, o Freelancer vê "Cliente: Cliente" (placeholder genérico). Quando aceitar proposta evoluir pra denormalizar `clientName` também, o card fica correto bilateral.
+- **Status badges com paleta diferente**: contratos usam roxo claro pra `active` (em andamento — neutro, esperançoso), âmbar pra `delivered` (entrega aguardando aprovação), verde pra `completed`, vermelho pra `disputed`. Diferente das propostas (pending/accepted/rejected/withdrawn) — semanticamente os 4 estados não correspondem 1:1. Mantive paleta separada por clareza.
+- **`SystemUiOverlayStyle` no Scaffold da tela navegada**: replica o setup das outras telas (SendProposal, etc) — sem isso, em iOS a status bar fica off-tone quando entra na tela.
+- **Não há "ações" no card de contrato**: o card é read-only nesta iteração. Botões de "Marcar entregue" (Freelancer) e "Aprovar entrega" (Cliente) virão na Iteração 21 (workflow de entrega) — vai precisar de + 2 callables.
+- **Estrutura de dado robusta o suficiente pra disputas**: deixei `ContractStatus.disputed` no enum mesmo sem UI consumindo agora, porque mudar enum depois é refactor — deixar planejado é praticamente grátis.
+- **Sem CTA pra abrir o projeto associado**: o card mostra `projectTitle` mas não navega pro `ProjectDetailView`. Por enquanto não vale a pena — a tela de detalhe foi feita pra projetos abertos no feed, status "Em andamento" exigiria uma vista diferente. Em vez de empilhar lógica de exibição condicional, defiro pra futuro.
+
+**Cobertura visual:**
+- Tab "Perfil" (ambos roles) agora tem 2 botões: "Meus contratos" (roxo primário) e "Sair" (outlined vermelho).
+- Nova tela `MyContractsView` acessível via push.
+- 9/10 telas reais (sobra Mensagens nos 2 roles — vai exigir collection nova + arquitetura de chat).
+
+**Fluxo testável agora:**
+1. Cenário completo: Cliente publica, Freelancer propõe, Cliente aceita → contrato é criado em `contracts/`.
+2. Como Cliente: Perfil → "Meus contratos" → card aparece com nome do Freelancer + badge "Em andamento" + valor + prazo.
+3. Como Freelancer (mesmo contrato): Perfil → "Meus contratos" → card aparece com "Cliente: Cliente" (placeholder) + mesmo restante. Stream live: se outro contrato for criado, aparece sem reload.
+4. Empty state pros 2 roles antes de qualquer contrato existir.
+
+**Próximo passo (Iteração 21):** workflow de **entrega** — primeira mudança de status pós-aceite.
+- 2 callables novas: `markContractDelivered({contractId})` (só freelancer, status active → delivered) e `acceptContractDelivery({contractId})` (só cliente, status delivered → completed).
+- Botões "Marcar entregue" (Freelancer) e "Aprovar entrega" / "Solicitar revisão" (Cliente) no card do contrato — só visíveis no status apropriado.
+- Eventualmente, `disputed` precisaria de um fluxo separado (input de motivo, etc).
+- Denormalizar `clientName` no Contract doc (mudança no `acceptProposal` lá no functions/index.ts) pra o card do Freelancer mostrar o nome do Cliente em vez de placeholder.
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

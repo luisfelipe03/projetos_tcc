@@ -7,6 +7,7 @@ import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
 import 'login_view.dart';
+import 'my_contracts_view.dart';
 import 'my_proposals_view.dart';
 import 'received_proposals_view.dart';
 
@@ -286,6 +287,29 @@ class _ProfileTab extends StatelessWidget {
             style: GoogleFonts.inter(fontSize: 12, color: muted),
           ),
           const SizedBox(height: 40),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MyContractsView()),
+              ),
+              icon: const Icon(Icons.assignment_outlined, size: 18),
+              label: const Text('Meus contratos'),
+              style: FilledButton.styleFrom(
+                backgroundColor: _primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(

@@ -8,6 +8,7 @@ import 'package:freelance_hub/views/client_dashboard_view.dart';
 import 'package:freelance_hub/views/create_project_view.dart';
 import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
+import 'package:freelance_hub/views/my_contracts_view.dart';
 import 'package:freelance_hub/views/my_proposals_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
 import 'package:freelance_hub/views/project_detail_view.dart';
@@ -184,6 +185,18 @@ void main() {
       find.text('Vá ao Feed, abra um projeto e envie sua primeira proposta.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('MyContractsView shows empty state when no contracts', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: MyContractsView()),
+    );
+    await tester.pump();
+
+    expect(find.text('Meus contratos'), findsOneWidget);
+    expect(find.text('Nenhum contrato ainda'), findsOneWidget);
   });
 
   testWidgets('ReceivedProposalsView shows empty state when no proposals', (
