@@ -68,5 +68,31 @@ service cloud.firestore {
       allow update: if false;
       allow delete: if false;
     }
+
+    // Threads de mensagens. Doc ID = "{uidA}_{uidB}" ordenado.
+    // Leitura: só os participantes. Create/update via Cloud Function
+    // sendMessage (denormaliza nomes e atualiza lastMessage atomicamente).
+    match /threads/{threadId} {
+      allow read: if request.auth != null
+                  && request.auth.uid in resource.data.participantIds;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+
+      // Mensagens da thread. Autorização derivada do threadId
+      // ("{uidMenor}_{uidMaior}") em vez de get() na thread — permite abrir
+      // a stream antes da primeira mensagem ser enviada (thread ainda não
+      // existe), evitando permission-denied no ChatView. UIDs do Firebase
+      // Auth não contêm "_", então o split é seguro.
+      // Server-side via sendMessage callable; client não escreve direto.
+      match /messages/{messageId} {
+        allow read: if request.auth != null
+                    && (request.auth.uid == threadId.split('_')[0]
+                        || request.auth.uid == threadId.split('_')[1]);
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
   }
 }

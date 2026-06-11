@@ -667,3 +667,117 @@ export const onContractStatusChanged = onDocumentUpdated(
     }
   }
 );
+
+
+/**
+ * Callable: envia mensagem de chat para outro usuário.
+ *
+ * Idempotência da thread: id determinístico = uids ordenados (uidA_uidB).
+ * Cria thread se não existir (lendo nomes dos 2 users pra denormalizar),
+ * grava message na subcollection, atualiza lastMessage* atomicamente.
+ * Push notification pro receiver com preview do texto.
+ */
+export const sendMessage = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const senderUid = request.auth.uid;
+  const receiverId = request.data?.receiverId;
+  const rawText = request.data?.text;
+
+  if (typeof receiverId !== "string" || !receiverId) {
+    throw new HttpsError("invalid-argument", "receiverId é obrigatório.");
+  }
+  if (receiverId === senderUid) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Você não pode enviar mensagem pra si mesmo."
+    );
+  }
+  if (typeof rawText !== "string") {
+    throw new HttpsError("invalid-argument", "Texto é obrigatório.");
+  }
+  const text = rawText.trim();
+  if (text.length === 0) {
+    throw new HttpsError("invalid-argument", "Mensagem vazia.");
+  }
+  if (text.length > 2000) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Mensagem limitada a 2000 caracteres."
+    );
+  }
+
+  const db = getFirestore();
+  const sorted = [senderUid, receiverId].sort();
+  const threadId = `${sorted[0]}_${sorted[1]}`;
+  const threadRef = db.collection("threads").doc(threadId);
+  const messageRef = threadRef.collection("messages").doc();
+
+  // Nome do sender e do receiver — lidos do users/ pra denormalizar.
+  // Lookup fora da transaction porque transactions não permitem reads em
+  // collections diferentes da escrita E os nomes são imutáveis na prática.
+  const [senderSnap, receiverSnap] = await Promise.all([
+    db.collection("users").doc(senderUid).get(),
+    db.collection("users").doc(receiverId).get(),
+  ]);
+  if (!receiverSnap.exists) {
+    throw new HttpsError("not-found", "Destinatário não encontrado.");
+  }
+  const senderName =
+    (senderSnap.data()?.displayName as string | undefined) ?? "";
+  const receiverName =
+    (receiverSnap.data()?.displayName as string | undefined) ?? "";
+
+  await db.runTransaction(async (tx) => {
+    const threadSnap = await tx.get(threadRef);
+    if (!threadSnap.exists) {
+      tx.set(threadRef, {
+        participantIds: sorted,
+        participantNames: {
+          [senderUid]: senderName,
+          [receiverId]: receiverName,
+        },
+        lastMessageText: text,
+        lastMessageSenderId: senderUid,
+        lastMessageAt: FieldValue.serverTimestamp(),
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      tx.update(threadRef, {
+        lastMessageText: text,
+        lastMessageSenderId: senderUid,
+        lastMessageAt: FieldValue.serverTimestamp(),
+      });
+    }
+    tx.set(messageRef, {
+      senderId: senderUid,
+      text,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  // Push pro receiver. Preview truncado pra caber na notificação.
+  const preview = text.length > 100 ? `${text.substring(0, 100)}…` : text;
+  const senderLabel = senderName || "Nova mensagem";
+  await sendPushToUser(
+    receiverId,
+    {
+      title: senderLabel,
+      body: preview,
+    },
+    {
+      type: "chat_message",
+      threadId,
+      senderId: senderUid,
+    }
+  );
+
+  logger.info("Mensagem enviada", {
+    threadId,
+    senderUid,
+    receiverId,
+    length: text.length,
+  });
+  return { threadId };
+});

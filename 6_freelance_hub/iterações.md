@@ -1799,6 +1799,123 @@ Recomendação: **B — Edição de perfil** (foco rápido + recupera o "Foto de
 
 ---
 
+## Iteração 26
+### Prompt usado:
+```plaintext
+Iteração 26 — Mensagens (chat freelancer ↔ cliente).
+
+Fecha o último placeholder de tab. Modelagem:
+- threads/{tid}/messages/{mid} subcollection.
+- threadId determinístico = uids ordenados ({uidA}_{uidB} com uidA<uidB) — uma única thread por par de pessoas, qualquer order de quem inicia cai no mesmo doc.
+- thread doc denormaliza: participantIds, participantNames {uid: name}, lastMessageText, lastMessageSenderId, lastMessageAt, createdAt.
+
+Server (functions/src/index.ts):
+- `sendMessage({receiverId, text})` callable v2:
+  - Valida auth, receiverId != senderUid e string, text 1..2000 chars (trim).
+  - threadId = uids ordenados.
+  - Promise.all([users/sender, users/receiver]) pra ler displayName (denormalizar). Receiver não existe → not-found.
+  - Transaction: lê thread, se não existe cria com participantIds+participantNames+lastMessage*+createdAt; senão update lastMessage*. Sempre cria message na sub com senderId+text+createdAt serverTimestamp.
+  - Push pro receiver: title = nome do sender, body = text truncado a 100 chars.
+
+Rules:
+- threads/{tid} + threads/{tid}/messages/{mid}: read se uid in participantIds. Subcollection valida via get(threads/$tid).data.participantIds. Create/update/delete: false (server-only via callable).
+
+Índice:
+- threads(participantIds array-contains, lastMessageAt desc).
+
+Cliente (Flutter):
+- models/chat_thread.dart + chat_message.dart (imutáveis + helpers otherUid/otherName).
+- core/services/messages_service.dart:
+  - threadIdFor(a, b) helper estático.
+  - streamThreadsByUser(uid), streamMessages(threadId).
+  - sendMessage(receiverId, text) chama callable.
+- views/messages_view.dart NOVO: tab Mensagens (substitui placeholder). Lista de _ThreadCard com avatar de iniciais, nome, preview ("Você: ..." se foi você o último), tempo relativo (agora/Nmin/Nh/Nd/Nsem). Empty state.
+- views/chat_view.dart NOVO: AppBar com avatar+nome+back, lista reversed de bubbles, input bar fixo embaixo com TextField multiline + botão circular send (roxo quando hasText, disabled cinza quando vazio, spinner enquanto envia).
+- views/home_view.dart: +import MessagesView, +branch _currentTab==2 (tab Mensagens em ambos os roles, índice 2).
+- views/my_contracts_view.dart: linha do counterparty agora tem botão "Mensagem" no canto direito que abre ChatView com otherUid/otherName.
+
+Validar analyze + test. Stage.
+```
+
+### Output recebido:
+```markdown
+- Criou models chat_thread.dart + chat_message.dart.
+- Criou messages_service.dart com threadIdFor + 2 streams + sendMessage.
+- Editou firestore.rules: +bloco threads + subcollection messages. Deploy de rules.
+- Editou firestore.indexes.json: +índice array-contains. Deploy.
+- Editou functions/src/index.ts: +sendMessage callable (~110 linhas) com leitura paralela dos users + transaction com upsert da thread + push pro receiver. Deploy.
+- Criou messages_view.dart (~340 linhas) com _Header + 4 estados + _ThreadCard com avatar de iniciais + preview "Você: ...".
+- Criou chat_view.dart (~430 linhas) com _TopBar avatar+nome, lista reverse de _MessageBubble (roxo direita pra "minhas", branco/slate esquerda pras outras, hora HH:MM no rodapé), _InputBar multiline com botão send circular.
+- Editou home_view.dart: +import MessagesView, +branch tab=2 → MessagesView.
+- Editou my_contracts_view.dart: +import ChatView, +_openChat(Contract) no State, +counterpartyUid, +InkWell "Mensagem" no Row do counterparty (ícone chat + texto roxo), +param onOpenChat em _ContractCard.
+- Validação: flutter analyze 0 issues. flutter test 13 passed.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **threadId determinístico via uids ordenados**: maior decisão. Vantagens: 0 lookup pra descobrir se thread existe (sempre é o doc `{min}_{max}`), idempotente (qualquer parte que envie cai no mesmo doc), não exige collection de "índice reverso". Tradeoff: uma única thread por par, sem possibilidade de "chat por projeto" ou "chat por contrato". Pra MVP é correto — UX típica de freelance é uma conversa contínua com o mesmo cliente independente de quantos projetos rolaram.
+- **`participantNames` map denormalizado**: a tab Mensagens lista N threads. Sem denormalizar nome, cada card precisaria de 1 read em `users/{otherUid}` (N reads). Com denormalização, 0 reads extras. Tradeoff: se o user trocar `displayName`, threads antigas continuam mostrando o nome antigo. Aceitável — quando vier edição de perfil, posso adicionar trigger pra propagar.
+- **Promise.all dos 2 user reads fora da transaction**: transactions Firestore exigem leitura antes de escrita e só permitem certos patterns. Os displayNames são essencialmente imutáveis na prática (mudam raramente). Lê fora da tx, usa o snapshot dentro. Risco de race: zero prático.
+- **`reverse: true` no ListView de mensagens**: Firestore retorna msgs `orderBy createdAt desc` — a mais nova primeiro. ListView reverse renderiza isso de baixo pra cima = mensagem mais nova fica na parte de baixo. Sem precisar scroll programático.
+- **Sem scroll-to-bottom programático ao enviar**: o ListView reverse + Firestore stream emitindo a nova msg fazem o trabalho. O Stream emite, o build reconstrói, a nova msg aparece no índice 0 (que renderiza no fundo). Smooth.
+- **Botão "Mensagem" no MyContractsView e não em outros lugares ainda**: ponto de entrada principal — depois do contrato é quando mais precisa conversar (alinhar entrega, tirar dúvida). Pode-se adicionar no card de proposta no futuro pro Cliente conversar antes de aceitar.
+- **Push de chat reutiliza `sendPushToUser`**: a mesma infra de notificação de proposals/contracts roda aqui — title = nome do sender, body = preview do texto (truncado a 100 chars). Data tem `type: chat_message` + `threadId` pra deep link futuro.
+- **Não tem read receipts / typing / online**: pular intencional. Read receipts exigem armazenar `lastReadAt` por user na thread, comparações, badges. Pra MVP fica fora. Typing indicator é ainda mais complexo (Firestore presence é tricky, geralmente requer Realtime Database).
+- **Bubble com border radius assimétrico**: cantos arredondados padrão `(16,16,16,4)` ou `(16,16,4,16)` dependendo do lado. Detalhe pequeno, faz parecer chat de verdade em vez de retângulos.
+
+**Cobertura visual:**
+- Última tab placeholder eliminada. App agora 100% navegável sem nenhum "Em breve".
+- 2 telas novas (lista + chat) + integração em 2 views existentes (home + contracts).
+- Push notification de chat completa o conjunto de 5 push types: proposalCreated, proposal_accepted/rejected, contract_delivered/redelivered/revision_requested/completed, chat_message.
+
+**Fluxo testável agora (Android pra ver push de verdade):**
+1. Cliente publica → Freelancer propõe → Cliente aceita. Ambos vêem o contrato em "Meus contratos".
+2. Cliente abre "Meus contratos" → tap "Mensagem" no card → ChatView abre com nome do Freelancer no topo. Empty state "Comece a conversa".
+3. Digita "Quando você pretende começar?" → tap send → bolha roxa aparece à direita.
+4. Freelancer recebe push "Luis Felipe: Quando você pretende começar?" (Android nativo, iOS SnackBar in-app se app aberto).
+5. Freelancer abre tab "Mensagens" → card do Cliente com preview da msg + tempo "agora".
+6. Tap → ChatView mostra bolha à esquerda (branca/slate). Responde "Amanhã cedo." → bolha roxa à direita.
+7. Cliente recebe push, abre, vê a resposta. Lista threads mostra preview "Amanhã cedo." atualizada.
+8. (Bônus) Outro cenário: dois Clientes diferentes mandam mensagem pro mesmo Freelancer → tab Mensagens lista 2 threads diferentes, ordenadas por lastMessageAt desc.
+
+**Próximo passo (Iteração 27):** core completion + polish. Candidatos:
+- **A — Detalhe do contrato** (tela nova): timeline de status + ações + galeria. Aprofunda a UX existente em vez de adicionar novo loop.
+- **B — Edição de perfil** (tab Perfil): trocar displayName + foto de perfil + trigger que propaga nome novo pra threads e contratos (denormalização viva).
+- **C — Filtros e busca no Feed**: hoje feed é flat. Adicionar filtros por categoria/orçamento ativos + busca textual.
+- **D — Deep link em push notifications**: tocar a notificação abre a tela relevante (chat → ChatView, contrato → MyContractsView, etc).
+
+Recomendação: **B** (libera o "Foto de perfil" prometido + denormaliza nomes nas threads existentes) **→ D** (notificação que abre tela é UX padrão esperada).
+
+---
+
+### Hotfix 26.1 — permission-denied ao abrir chat (thread inexistente)
+
+**Sintoma reportado:** ao tap "Mensagem" no card de contrato com par que **nunca trocou mensagem**, ChatView abre e mostra `Erro: [cloud_firestore/permission-denied] The caller does not have permission to execute the specified operation.` no lugar do empty state.
+
+**Causa raiz:** a regra de leitura de `threads/{tid}/messages` fazia `get(/databases/.../threads/$(threadId)).data.participantIds`. Quando a thread ainda **não existia** (nenhuma mensagem trocada), o `get()` retornava null e a expressão falhava → denied. A `streamMessages` é aberta no `initState` do ChatView, antes da primeira `sendMessage`, então o stream emitia erro de cara.
+
+**Fix:** trocar a regra para validar pelo próprio `threadId`, que é `{uidMenor}_{uidMaior}` — UIDs do Firebase Auth não contêm `_`, então `threadId.split('_')` retorna exatamente 2 partes. Não depende mais de existência do doc.
+
+```
+match /messages/{messageId} {
+  allow read: if request.auth != null
+              && (request.auth.uid == threadId.split('_')[0]
+                  || request.auth.uid == threadId.split('_')[1]);
+  allow create: if false;  // sendMessage callable
+  allow update: if false;
+  allow delete: if false;
+}
+```
+
+**Side-effect:** a leitura passou a ser ligeiramente **mais barata** (sem o `get()` extra que custa 1 read por avaliação de rule).
+
+**Deploy:** `firebase deploy --only firestore:rules` ✔
+
+**Validação:** par novo → tap "Mensagem" → ChatView abre no empty state "Comece a conversa" sem erro. Primeira mensagem é enviada normalmente (callable continua sendo o único caminho de escrita).
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

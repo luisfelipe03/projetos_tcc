@@ -10,6 +10,7 @@ import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
 import 'login_view.dart';
+import 'messages_view.dart';
 import 'my_contracts_view.dart';
 import 'my_proposals_view.dart';
 import 'received_proposals_view.dart';
@@ -114,6 +115,10 @@ class _HomeViewState extends State<HomeView> {
     }
     if (_currentTab == 1 && _role == UserRole.client) {
       return const ReceivedProposalsView();
+    }
+    // Mensagens é a tab índice 2 em ambos os roles.
+    if (_currentTab == 2) {
+      return const MessagesView();
     }
     return _PlaceholderTab(label: _tabs[_currentTab].label);
   }

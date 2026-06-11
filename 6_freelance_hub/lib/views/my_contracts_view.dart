@@ -12,6 +12,7 @@ import '../core/services/contracts_service.dart';
 import '../core/services/storage_service.dart';
 import '../models/contract.dart';
 import '../models/user_role.dart';
+import 'chat_view.dart';
 
 const _primary = Color(0xFF3B309E);
 const _surfaceCream = Color(0xFFFBF9F2);
@@ -129,6 +130,20 @@ class _MyContractsViewState extends State<MyContractsView> {
     } finally {
       if (mounted) setState(() => _processingId = null);
     }
+  }
+
+  void _openChat(Contract c) {
+    final isClient = (_role ?? UserRole.freelancer) == UserRole.client;
+    final otherUid = isClient ? c.freelancerId : c.clientId;
+    final otherName = isClient
+        ? (c.freelancerName.isEmpty ? 'Freelancer' : c.freelancerName)
+        : (c.clientName.isEmpty ? 'Cliente' : c.clientName);
+    if (otherUid.isEmpty) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatView(otherUid: otherUid, otherName: otherName),
+      ),
+    );
   }
 
   String _humanizeError(Object e, String action) {
@@ -338,6 +353,7 @@ class _MyContractsViewState extends State<MyContractsView> {
                   _handleRequestRevision(contracts[i]),
               onResubmitDelivery: () =>
                   _handleResubmitDelivery(contracts[i]),
+              onOpenChat: () => _openChat(contracts[i]),
             ),
           );
         },
@@ -440,6 +456,7 @@ class _ContractCard extends StatelessWidget {
     required this.onAcceptDelivery,
     required this.onRequestRevision,
     required this.onResubmitDelivery,
+    required this.onOpenChat,
   });
 
   final Contract contract;
@@ -453,6 +470,7 @@ class _ContractCard extends StatelessWidget {
   final VoidCallback onAcceptDelivery;
   final VoidCallback onRequestRevision;
   final VoidCallback onResubmitDelivery;
+  final VoidCallback onOpenChat;
 
   @override
   Widget build(BuildContext context) {
@@ -464,6 +482,9 @@ class _ContractCard extends StatelessWidget {
     // Contraparte = a outra parte do contrato em relação ao viewer.
     final counterpartyLabel =
         viewerRole == UserRole.client ? 'Freelancer' : 'Cliente';
+    final counterpartyUid = viewerRole == UserRole.client
+        ? contract.freelancerId
+        : contract.clientId;
     final rawCounterpartyName = viewerRole == UserRole.client
         ? contract.freelancerName
         : contract.clientName;
@@ -543,7 +564,7 @@ class _ContractCard extends StatelessWidget {
                   color: mutedColor,
                 ),
               ),
-              Flexible(
+              Expanded(
                 child: Text(
                   counterpartyName,
                   maxLines: 1,
@@ -555,6 +576,36 @@ class _ContractCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (counterpartyUid.isNotEmpty)
+                InkWell(
+                  onTap: onOpenChat,
+                  borderRadius: BorderRadius.circular(8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.chat_bubble_outline,
+                          size: 14,
+                          color: _primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Mensagem',
+                          style: GoogleFonts.inter(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: _primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           ),
           if (contract.deliveryPhotoUrls.isNotEmpty) ...[
