@@ -30,9 +30,16 @@ class ContractsService {
   }
 
   /// Freelancer marca contrato como entregue (status active → delivered).
-  Future<void> markDelivered(String contractId) async {
+  /// [photoUrls] são URLs https do Firebase Storage com as fotos do trabalho.
+  Future<void> markDelivered(
+    String contractId, {
+    List<String> photoUrls = const [],
+  }) async {
     final callable = _functions.httpsCallable('markContractDelivered');
-    await callable.call<Map<String, dynamic>>({'contractId': contractId});
+    await callable.call<Map<String, dynamic>>({
+      'contractId': contractId,
+      'photoUrls': photoUrls,
+    });
   }
 
   /// Cliente aprova entrega (status delivered → completed; project também).
@@ -61,6 +68,10 @@ class ContractsService {
       ),
       createdAt:
           (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      deliveryPhotoUrls: (data['deliveryPhotoUrls'] as List<dynamic>?)
+              ?.whereType<String>()
+              .toList() ??
+          const <String>[],
     );
   }
 }

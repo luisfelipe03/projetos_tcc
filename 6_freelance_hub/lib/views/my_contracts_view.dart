@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/services/auth_service.dart';
 import '../core/services/contracts_service.dart';
+import '../core/services/storage_service.dart';
 import '../models/contract.dart';
 import '../models/user_role.dart';
 
@@ -37,12 +41,33 @@ class _MyContractsViewState extends State<MyContractsView> {
 
   Future<void> _handleMarkDelivered(Contract c) async {
     if (_processingId != null) return;
+    // Abre o composer para escolher fotos (opcional) e confirmar.
+    final selected = await showModalBottomSheet<List<File>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _DeliveryComposerSheet(),
+    );
+    if (!mounted || selected == null) return;
+
     setState(() => _processingId = c.id);
     try {
-      await ContractsService.instance.markDelivered(c.id);
+      final urls = <String>[];
+      for (final file in selected) {
+        final url = await StorageService.instance.uploadDeliveryPhoto(
+          contractId: c.id,
+          file: file,
+        );
+        urls.add(url);
+      }
+      await ContractsService.instance.markDelivered(c.id, photoUrls: urls);
       if (!mounted) return;
-      _showSnack('Entrega registrada. Aguardando aprovação do cliente.',
-          success: true);
+      _showSnack(
+        urls.isEmpty
+            ? 'Entrega registrada. Aguardando aprovação do cliente.'
+            : 'Entrega registrada com ${urls.length} foto${urls.length == 1 ? '' : 's'}. Aguardando aprovação.',
+        success: true,
+      );
     } catch (e) {
       if (!mounted) return;
       _showSnack(_humanizeError(e, 'marcar como entregue'), success: false);
@@ -431,6 +456,73 @@ class _ContractCard extends StatelessWidget {
               ),
             ],
           ),
+          if (contract.deliveryPhotoUrls.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Text(
+              'Anexos da entrega',
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: mutedColor,
+                letterSpacing: 0.3,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 72,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: contract.deliveryPhotoUrls.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (ctx, i) => GestureDetector(
+                  onTap: () => Navigator.of(ctx).push(
+                    MaterialPageRoute(
+                      builder: (_) => _PhotoFullscreenView(
+                        url: contract.deliveryPhotoUrls[i],
+                      ),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      contract.deliveryPhotoUrls[i],
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (_, child, progress) {
+                        if (progress == null) return child;
+                        return Container(
+                          width: 72,
+                          height: 72,
+                          color: mutedColor.withValues(alpha: 0.15),
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: mutedColor,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (_, _, _) => Container(
+                        width: 72,
+                        height: 72,
+                        color: mutedColor.withValues(alpha: 0.15),
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: mutedColor,
+                          size: 22,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Text(
             _relativeDate(contract.createdAt),
@@ -638,4 +730,302 @@ class _BadgeSpec {
   final String label;
   final Color bg;
   final Color fg;
+}
+
+/// Bottom sheet pra compor a entrega: opcionalmente anexa fotos antes de
+/// confirmar. Pop com `null` = cancelou, pop com lista (possivelmente vazia)
+/// = confirmou.
+class _DeliveryComposerSheet extends StatefulWidget {
+  const _DeliveryComposerSheet();
+
+  @override
+  State<_DeliveryComposerSheet> createState() => _DeliveryComposerSheetState();
+}
+
+class _DeliveryComposerSheetState extends State<_DeliveryComposerSheet> {
+  static const _maxPhotos = 5;
+  final _picker = ImagePicker();
+  final List<File> _photos = [];
+
+  Future<void> _pickFromCamera() async {
+    if (_photos.length >= _maxPhotos) return;
+    try {
+      final picked = await _picker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (picked == null || !mounted) return;
+      setState(() => _photos.add(File(picked.path)));
+    } catch (e) {
+      if (!mounted) return;
+      _showError('Não foi possível abrir a câmera: $e');
+    }
+  }
+
+  Future<void> _pickFromGallery() async {
+    if (_photos.length >= _maxPhotos) return;
+    try {
+      final remaining = _maxPhotos - _photos.length;
+      final picked = await _picker.pickMultiImage(
+        imageQuality: 85,
+        maxWidth: 1920,
+        limit: remaining,
+      );
+      if (picked.isEmpty || !mounted) return;
+      setState(() => _photos.addAll(picked.map((x) => File(x.path))));
+    } catch (e) {
+      if (!mounted) return;
+      _showError('Não foi possível abrir a galeria: $e');
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: const Color(0xFFBA1A1A),
+        content: Text(message, style: GoogleFonts.inter(fontSize: 13)),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _slate800 : Colors.white;
+    final titleColor = isDark ? Colors.white : _slate900;
+    final mutedColor = isDark ? Colors.white70 : _slate500;
+    final atLimit = _photos.length >= _maxPhotos;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: mutedColor.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Confirmar entrega',
+                style: GoogleFonts.dmSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: titleColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Anexe fotos do trabalho (opcional). Até $_maxPhotos imagens.',
+                style: GoogleFonts.inter(fontSize: 13, color: mutedColor),
+              ),
+              const SizedBox(height: 16),
+              if (_photos.isNotEmpty) ...[
+                SizedBox(
+                  height: 80,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _photos.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) => _ThumbWithRemove(
+                      file: _photos[i],
+                      onRemove: () => setState(() => _photos.removeAt(i)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: atLimit ? null : _pickFromCamera,
+                      icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                      label: const Text('Câmera'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _primary,
+                        side: BorderSide(
+                          color: _primary.withValues(
+                            alpha: atLimit ? 0.3 : 1.0,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: atLimit ? null : _pickFromGallery,
+                      icon: const Icon(Icons.photo_library_outlined, size: 18),
+                      label: const Text('Galeria'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _primary,
+                        side: BorderSide(
+                          color: _primary.withValues(
+                            alpha: atLimit ? 0.3 : 1.0,
+                          ),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        textStyle: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(_photos),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: Text(
+                    _photos.isEmpty
+                        ? 'Confirmar sem fotos'
+                        : 'Confirmar entrega (${_photos.length})',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancelar',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: mutedColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThumbWithRemove extends StatelessWidget {
+  const _ThumbWithRemove({required this.file, required this.onRemove});
+
+  final File file;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.file(
+            file,
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+          ),
+        ),
+        Positioned(
+          top: -6,
+          right: -6,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Color(0xFFBA1A1A),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Viewer fullscreen para fotos da entrega.
+class _PhotoFullscreenView extends StatelessWidget {
+  const _PhotoFullscreenView({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 1,
+          maxScale: 4,
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            loadingBuilder: (_, child, progress) {
+              if (progress == null) return child;
+              return const CircularProgressIndicator(color: Colors.white);
+            },
+            errorBuilder: (_, _, _) => const Text(
+              'Falha ao carregar imagem',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

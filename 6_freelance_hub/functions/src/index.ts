@@ -197,6 +197,7 @@ export const rejectProposal = onCall(async (request) => {
 /**
  * Callable: freelancer marca o contrato como entregue.
  * Valida caller == freelancerId e status atual == active.
+ * Aceita lista opcional de URLs de fotos da entrega (Firebase Storage).
  */
 export const markContractDelivered = onCall(async (request) => {
   if (!request.auth) {
@@ -205,6 +206,23 @@ export const markContractDelivered = onCall(async (request) => {
   const contractId = request.data?.contractId;
   if (typeof contractId !== "string" || !contractId) {
     throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+
+  const rawPhotoUrls = request.data?.photoUrls;
+  let photoUrls: string[] = [];
+  if (rawPhotoUrls !== undefined && rawPhotoUrls !== null) {
+    if (!Array.isArray(rawPhotoUrls)) {
+      throw new HttpsError("invalid-argument", "photoUrls deve ser um array.");
+    }
+    if (rawPhotoUrls.length > 10) {
+      throw new HttpsError("invalid-argument", "Máximo de 10 fotos por entrega.");
+    }
+    for (const u of rawPhotoUrls) {
+      if (typeof u !== "string" || !u.startsWith("https://")) {
+        throw new HttpsError("invalid-argument", "Cada photoUrl deve ser uma URL https.");
+      }
+    }
+    photoUrls = rawPhotoUrls as string[];
   }
 
   const db = getFirestore();
@@ -227,10 +245,15 @@ export const markContractDelivered = onCall(async (request) => {
     );
   }
 
-  await contractRef.update({ status: "delivered" });
+  await contractRef.update({
+    status: "delivered",
+    deliveryPhotoUrls: photoUrls,
+    deliveredAt: FieldValue.serverTimestamp(),
+  });
   logger.info("Contrato marcado como entregue", {
     contractId,
     callerUid: request.auth.uid,
+    photoCount: photoUrls.length,
   });
   return { ok: true };
 });

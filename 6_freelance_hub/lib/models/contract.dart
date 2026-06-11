@@ -15,6 +15,7 @@ class Contract {
     required this.acceptedProposalId,
     required this.status,
     required this.createdAt,
+    required this.deliveryPhotoUrls,
   });
 
   final String id;
@@ -30,4 +31,5 @@ class Contract {
   final String acceptedProposalId;
   final ContractStatus status;
   final DateTime createdAt;
+  final List<String> deliveryPhotoUrls;
 }

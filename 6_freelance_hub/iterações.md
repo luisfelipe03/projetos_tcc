@@ -1447,6 +1447,99 @@ Recomendação: **B — Câmera primeiro** (avança um requisito explícito do T
 
 ---
 
+## Iteração 22
+### Prompt usado:
+```plaintext
+Iteração 22 — Câmera (recurso nativo #1).
+
+Decisão de integração: anexar foto da entrega ao fluxo "Marcar como entregue" (em vez de foto de perfil) — mais coeso com workflow existente da Iteração 21, dá valor concreto pro Cliente (vê o resultado), e estabelece pattern de upload de mídia que vai ser reusado depois.
+
+Server-side:
+- Habilitar Firebase Storage (manual no Console — 1 clique).
+- `storage.rules`: write se auth + size < 5MB + contentType image/*; read se auth (limitação MVP — sem custom claims, Storage rules não lêem Firestore).
+- `firebase.json`: +bloco storage.
+- `markContractDelivered` callable v2 atualizado:
+  - Aceita `photoUrls?: string[]` opcional (até 10, cada uma deve ser https).
+  - Valida shape (array, types, count, prefixo).
+  - Grava `deliveryPhotoUrls` e `deliveredAt` no doc.
+- Deploy functions + storage.
+
+Cliente (Flutter):
+- pubspec: +firebase_storage ^12.3.4, +image_picker ^1.1.2.
+- iOS Info.plist: NSCameraUsageDescription + NSPhotoLibraryUsageDescription (sem isso, image_picker crasha com PlatformException ao primeiro uso).
+- model contract.dart: +deliveryPhotoUrls List<String> required.
+- contracts_service.dart: markDelivered aceita named param photoUrls.
+- storage_service.dart NOVO: uploadDeliveryPhoto(contractId, file) → path `delivery_photos/{contractId}/{ts}_{rand}.{ext}`, contentType inferido, retorna download URL.
+- my_contracts_view.dart:
+  - _handleMarkDelivered agora abre BottomSheet (_DeliveryComposerSheet) primeiro:
+    - Botões "Câmera" e "Galeria" (max 5 fotos).
+    - Preview com thumbnail removível.
+    - "Confirmar entrega" (com count ou "sem fotos").
+  - Pop com lista → upload sequencial → callable com URLs.
+  - SnackBar de sucesso menciona quantidade.
+  - Card renderiza Row scrollable de thumbnails 72x72 quando deliveryPhotoUrls não-vazio. Loading/error placeholders.
+  - Tap em thumbnail → _PhotoFullscreenView com InteractiveViewer (zoom 1x-4x).
+
+Validar analyze + test. Stage tudo.
+```
+
+### Output recebido:
+```markdown
+- pubspec.yaml: +2 deps. pub get ok.
+- iOS Info.plist: +NSCameraUsageDescription e NSPhotoLibraryUsageDescription.
+- storage.rules NOVO + firebase.json +bloco storage.
+- functions/src/index.ts: markContractDelivered aceita photoUrls com validação shape, grava deliveryPhotoUrls e deliveredAt. Build TS limpo.
+- lib/models/contract.dart: +deliveryPhotoUrls.
+- lib/core/services/contracts_service.dart: markDelivered named photoUrls; _fromDoc parse defensivo.
+- lib/core/services/storage_service.dart NOVO (~55 linhas).
+- lib/views/my_contracts_view.dart:
+  - +dart:io, +image_picker, +storage_service imports.
+  - _handleMarkDelivered virou async com sheet + upload sequencial + callable.
+  - +_DeliveryComposerSheet StatefulWidget (~190 linhas).
+  - +_ThumbWithRemove (~35 linhas).
+  - +_PhotoFullscreenView (~30 linhas).
+  - _ContractCard: +Row scrollable de thumbnails 72x72 com loadingBuilder/errorBuilder, tap abre fullscreen.
+- Deploy: markContractDelivered update + storage rules released.
+- Validação: flutter analyze 0 issues. flutter test 13 passed.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Por que entrega-com-foto em vez de foto-de-perfil**: foto de perfil seria um upload trivial mas não integraria com nenhum workflow já implementado. Entrega-com-foto fecha um loop real (Freelancer entrega → Cliente vê o resultado → aprova com evidência) e usa o pattern de "upload + URL grava em doc via callable" que vai ser reaproveitado em chat/anexos depois.
+- **Upload no cliente, validação no server**: storage_service faz o upload e devolve URL; o callable só recebe a string. Vantagem: rede mais barata (a CF não precisa receber binário grande), Storage cobra pelo upload direto, e o pattern é padrão Firebase. Tradeoff: validação de "essa URL realmente é do meu storage" cai parcial — o callable valida prefixo https mas não confirma origem. Pra MVP, ok; pra produção, validaria via Cloud Function de download URL signed.
+- **Upload sequencial vs concorrente**: o for await sobe uma foto por vez. Mais simples, e com 5 fotos no máximo a diferença em ux é ~2-3s. Quando crescer pra >10 fotos, paralelizar com Future.wait.
+- **Path determinístico com timestamp + tag**: `{ms}_{rand6hex}.{ext}` evita colisões mesmo se 2 uploads acontecerem no mesmo millisecond. Substituiria por UUID em produção, mas sem dep extra.
+- **`image_picker` configs**: `imageQuality: 85` + `maxWidth: 1920` cortam significativamente o tamanho da foto sem perda visual perceptível em mobile. Sem isso, fotos de iPhone modernas têm 3-5MB e atingem o ceiling de 5MB do rules.
+- **Rules de Storage soltas no read**: aceito como limitação consciente. Storage rules não conseguem ler Firestore — pra restringir só às partes do contrato, precisaria de custom claims ou Cloud Function gerando signed URL. MVP-aceitável porque os paths usam IDs auto-gerados não-listáveis.
+- **Sem Android testado**: o usuário usa iPhone. Adicionei permissões iOS no Info.plist. No Android, `image_picker` >= 1.x já não precisa de READ_EXTERNAL_STORAGE explícita (usa photo picker do SDK). Câmera nativa precisaria CAMERA — adicionar quando o usuário testar em Android.
+- **`deliveredAt: serverTimestamp()` extra**: aproveitei pra registrar timestamp da transição. Hoje não tem UI consumindo, mas vai dar pra mostrar "Entregue em DD/MM" em iterações futuras sem migração.
+- **Fullscreen viewer com InteractiveViewer**: built-in do Flutter, sem dep extra (`photo_view` seria mais rico mas pesado pra MVP).
+
+**Cobertura visual:**
+- Bottom sheet de composição da entrega — primeira UI nova com câmera/galeria nativas.
+- Card de contrato com Row scrollable de thumbnails (visível pros dois lados).
+- Tela fullscreen com zoom.
+- Esses elementos materializam o requisito do TCC "integração com recursos nativos" pela primeira vez no projeto.
+
+**Fluxo testável agora:**
+1. Cenário fim-a-fim a partir do Cliente publica → Freelancer propõe → Cliente aceita (contrato criado).
+2. Freelancer: Perfil → Meus contratos → "Marcar como entregue" → bottom sheet abre.
+3. Tap "Câmera" (iOS pede permissão na 1ª vez) → tira foto → volta pro sheet com thumbnail. Pode adicionar mais via "Galeria" (até 5).
+4. "Confirmar entrega (N)" → spinner ~3-8s (upload + callable) → SnackBar "Entrega registrada com N fotos. Aguardando aprovação." → badge vira "Entregue" + Row de thumbnails aparece no card.
+5. Cliente (sessão paralela): card já mostra os thumbnails. Tap em qualquer um → fullscreen com pinch-to-zoom.
+6. Cliente clica "Aprovar entrega" → contrato vira "Concluído".
+
+**Próximo passo (Iteração 23):** decisões abertas:
+- **A — Mensagens** (chat freelancer ↔ cliente): collection `messages`, modelagem 1-N por contract. Destrava as 2 tabs "Mensagens". Iteração grande — pode quebrar em 23a (modelo + envio) + 23b (lista + tempo real + grupos por dia).
+- **B — Biometria/Auth nativo**: face_id/touch_id pro login (LocalAuthentication). Recurso nativo #2, mais isolado.
+- **C — Geolocalização**: filtrar projetos por proximidade ou enviar localização no chat. Recurso nativo #3, mas precisa de filtro real no feed pra fazer sentido.
+- **D — Notificações push**: FCM quando proposta é aceita, contrato entregue, etc. Reforça o tempo real.
+
+Recomendação: **B — Biometria** como recurso nativo #2 (rápido, isolado, fortalece auth) e depois **A — Mensagens** (a maior pendência funcional).
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext
