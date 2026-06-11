@@ -1075,3 +1075,62 @@ Iteração coesa, sem retentativas. Pontos relevantes:
 Recomendação: B primeiro (UI freelancer fecha mais um loop visível), depois C (server-side é foundational e destrava A).
 
 ---
+
+## Iteração 16
+### Prompt usado:
+```plaintext
+Iteração 16 — "Meus Trabalhos" (opção B).
+
+Tela acessada pela tab Freelancer (índice 1 do bottom nav) — hoje é _PlaceholderTab "Em breve". Substituir por uma view real que lista as propostas que o freelancer logado enviou, com status atual de cada uma.
+
+Implementação:
+- `lib/views/my_proposals_view.dart`:
+  - StatefulWidget. initState busca `AuthService.instance.currentAppUser()` e usa o uid pra inicializar `ProposalsService.instance.streamProposalsByFreelancer(uid)`.
+  - Guard `Firebase.apps.isEmpty` → stream vazia (mantém pattern do FeedView pra testes que não rodam main()).
+  - Header simples: título "Meus Trabalhos" + descrição curta.
+  - StreamBuilder com 4 estados: loading (CircularProgressIndicator), error (`_ErrorState`), empty (`_EmptyState`), data (lista de `_ProposalCard`).
+  - `_ProposalCard`: projectTitle, badge de status colorido (Aguardando/Aceita/Recusada/Retirada), valor formatado, prazo em dias, data relativa.
+  - Sem dependência nova — usa só `firebase_core`, `google_fonts`, e os models/services existentes.
+- `lib/views/home_view.dart`: adiciona import + branch `if (_currentTab == 1 && _role == UserRole.freelancer) return const MyProposalsView();` antes do fallback de placeholder.
+- Smoke test em `test/widget_test.dart` cobrindo empty state (Firebase.apps vazio → stream `[]` → renderiza `Nenhuma proposta ainda`).
+
+Validar com `flutter analyze` + `flutter test`. Stage tudo pro commit.
+```
+
+### Output recebido:
+```markdown
+- Criou `lib/views/my_proposals_view.dart` (~330 linhas): MyProposalsView + _Header + _EmptyState + _ErrorState + _ProposalCard + _MetaItem + _StatusBadge.
+- Editou `lib/views/home_view.dart`: +1 import e +1 branch no `_bodyForCurrentTab` (3 linhas adicionais).
+- Editou `test/widget_test.dart`: +1 import + smoke test de empty state.
+- Validação:
+  - `flutter analyze` → `No issues found! (ran in 1.8s)`.
+  - `flutter test` → 11 passed (10 antes + 1 novo).
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Stream inicializada após `await currentAppUser()`**: como o uid só está disponível assincronamente, a view começa com `_stream = null` (renderiza spinner), e o `setState` no callback do `_initStream` planta a stream real. Pattern simples, sem precisar de `FutureBuilder<Stream<...>>` aninhado.
+- **Reuso de `streamProposalsByFreelancer`**: o método já existia desde a Iteração 15. Esta iteração apenas consumiu. Refletiu uma decisão acertada lá: criar os 2 streams (porProjeto/porFreelancer) já que dependem do mesmo índice composto.
+- **Badge de status com paleta dedicada**: 4 status × 2 cores cada (background + foreground). Mantive todas as cores inline em `_specFor` em vez de criar tema, porque é a primeira (e por enquanto única) view que precisa delas. Se a tela do Cliente "Propostas Recebidas" reusar, extraio pra `core/`.
+- **Formatadores duplicados (`_formatValue`, `_formatDays`, `_relativeDate`)**: convivem com versões parecidas em `Project.formattedBudget` e `Project.relativePostedLabel`. Não unifiquei porque Proposal não estende Project nem compartilha campos — extrair um `core/formatters.dart` agora seria abstração prematura. Quando a 3ª view duplicar, eu refatoro.
+- **Guard `Firebase.apps.isEmpty` no initState**: igual ao FeedView. Sem isso, o teste rodaria `AuthService.currentAppUser()`, que chama `FirebaseAuth.instance.currentUser`, que crasha em PlatformException no test environment.
+
+**Cobertura visual:**
+- Tab "Meus Trabalhos" (Freelancer) agora tem conteúdo real.
+- Tab "Painel" (Cliente) ainda é placeholder — virará a próxima view real (Iteração A) ou ficará pra depois de Cloud Functions.
+- Mensagens (ambos) e Painel (Cliente, índice 1) continuam placeholders.
+
+**Fluxo testável agora:**
+1. Login como Freelancer sem propostas → tab "Meus Trabalhos" mostra empty state ("Nenhuma proposta ainda").
+2. Envia proposta em um projeto via SendProposal (Iteração 15).
+3. Volta pra tab "Meus Trabalhos" → o card da proposta aparece com badge "Aguardando" (status pending), valor, prazo, data relativa.
+4. Stream é em tempo real: se o status mudar no Firestore (manualmente no Console, por enquanto), o badge atualiza sem precisar reabrir a tela.
+
+**Próximo passo:** **Iteração 17** tem 2 candidatos:
+- **A — "Propostas Recebidas"** (UI Cliente, agora simétrica ao Meus Trabalhos). Lista propostas dos projetos que o Cliente publicou, agrupadas por projeto. Aceitar/rejeitar continuam pendentes de Cloud Function — botões aparecem mas mostram SnackBar "Em breve".
+- **C — Cloud Functions setup** (entra `functions/` no projeto, abre caminho pra incrementar `proposalCount`, mudar status de proposta, depois escrow). Marca a transição "primeira lógica server-side".
+
+Recomendação: A agora (fecha o triângulo Cliente-publica → Freelancer-propõe → Cliente-vê) e depois C (destrava aceitar de verdade).
+
+---

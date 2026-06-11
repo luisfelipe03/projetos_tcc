@@ -7,6 +7,7 @@ import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
 import 'login_view.dart';
+import 'my_proposals_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key, this.initialRole = UserRole.freelancer});
@@ -85,6 +86,9 @@ class _HomeViewState extends State<HomeView> {
         currentRole: _role,
         onSignOut: _handleSignOut,
       );
+    }
+    if (_currentTab == 1 && _role == UserRole.freelancer) {
+      return const MyProposalsView();
     }
     return _PlaceholderTab(label: _tabs[_currentTab].label);
   }

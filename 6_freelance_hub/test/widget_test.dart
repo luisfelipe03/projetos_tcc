@@ -8,6 +8,7 @@ import 'package:freelance_hub/views/client_dashboard_view.dart';
 import 'package:freelance_hub/views/create_project_view.dart';
 import 'package:freelance_hub/views/home_view.dart';
 import 'package:freelance_hub/views/login_view.dart';
+import 'package:freelance_hub/views/my_proposals_view.dart';
 import 'package:freelance_hub/views/onboarding_view.dart';
 import 'package:freelance_hub/views/project_detail_view.dart';
 import 'package:freelance_hub/views/send_proposal_view.dart';
@@ -165,6 +166,23 @@ void main() {
     expect(find.text('Preço fixo'), findsOneWidget);
     expect(find.text('Por hora'), findsOneWidget);
     expect(find.text('Design'), findsOneWidget);
+  });
+
+  testWidgets('MyProposalsView shows empty state when no proposals', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: Scaffold(body: MyProposalsView())),
+    );
+    // Stream.value([]) emite no próximo microtask; precisa de pump extra.
+    await tester.pump();
+
+    expect(find.text('Meus Trabalhos'), findsOneWidget);
+    expect(find.text('Nenhuma proposta ainda'), findsOneWidget);
+    expect(
+      find.text('Vá ao Feed, abra um projeto e envie sua primeira proposta.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('SendProposalView builds with form + recap', (tester) async {
