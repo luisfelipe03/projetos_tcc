@@ -13,6 +13,11 @@ Future<void> main() async {
   runApp(const FreelanceHubApp());
 }
 
+/// Key global do ScaffoldMessenger — usada pelo NotificationsService pra
+/// exibir SnackBars in-app quando um push chega em foreground.
+final GlobalKey<ScaffoldMessengerState> rootMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 class FreelanceHubApp extends StatelessWidget {
   const FreelanceHubApp({super.key});
 
@@ -23,6 +28,7 @@ class FreelanceHubApp extends StatelessWidget {
     return MaterialApp(
       title: 'Freelance Hub',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootMessengerKey,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: _seedColor),
         textTheme: GoogleFonts.interTextTheme(ThemeData.light().textTheme),

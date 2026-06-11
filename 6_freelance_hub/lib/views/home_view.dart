@@ -1,8 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/services/auth_service.dart';
+import '../core/services/notifications_service.dart';
+import '../main.dart' show rootMessengerKey;
 import '../models/user_role.dart';
 import 'client_dashboard_view.dart';
 import 'feed_view.dart';
@@ -27,6 +30,23 @@ class _HomeViewState extends State<HomeView> {
 
   late final UserRole _role = widget.initialRole;
   int _currentTab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPushNotifications();
+  }
+
+  Future<void> _initPushNotifications() async {
+    // Guard pra ambiente de teste sem Firebase.initializeApp.
+    if (Firebase.apps.isEmpty) return;
+    final user = await AuthService.instance.currentAppUser();
+    if (user == null || !mounted) return;
+    await NotificationsService.instance.initialize(
+      uid: user.uid,
+      messengerKey: rootMessengerKey,
+    );
+  }
 
   static const _freelancerTabs = [
     _TabSpec(
@@ -99,6 +119,10 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _handleSignOut() async {
+    final user = await AuthService.instance.currentAppUser();
+    if (user != null) {
+      await NotificationsService.instance.dispose(user.uid);
+    }
     await AuthService.instance.signOut();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(

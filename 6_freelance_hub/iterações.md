@@ -1540,6 +1540,95 @@ Recomendação: **B — Biometria** como recurso nativo #2 (rápido, isolado, fo
 
 ---
 
+## Iteração 23
+### Prompt usado:
+```plaintext
+Iteração 23 — Notificações Push (Android-only, com TODO documentado pra iOS APNs).
+
+Decisão de escopo: usuário priorizou notificações pra fechar o core (sobre biometria/recursos extras). Push REAL via FCM + Cloud Function — diferente do `flutter_local_notifications` do habit_flow, que era agendamento local. Aqui são eventos remotos que precisam chegar mesmo com app fechado.
+
+Trade-off de plataforma: iOS push real precisa de APNs (Apple Developer Account, $99/ano). Como o usuário não tem, focamos Android. O código foi escrito pra falhar silenciosamente em iOS — getAPNSToken() retorna null → initialize() retorna early sem registrar nada. Quando o APNs for configurado, deve "só funcionar" sem mudanças.
+
+Cliente (Flutter):
+- pubspec: +firebase_messaging ^15.1.3.
+- main.dart: +rootMessengerKey GlobalKey<ScaffoldMessengerState>; +scaffoldMessengerKey no MaterialApp.
+- lib/core/services/notifications_service.dart NOVO (~150 linhas):
+  - Singleton. initialize(uid, messengerKey):
+    - Guard iOS (getAPNSToken == null → return).
+    - requestPermission().
+    - getToken() + arrayUnion em users/{uid}.fcmTokens.
+    - onTokenRefresh → re-arrayUnion.
+    - onMessage (foreground) → SnackBar via messengerKey.
+  - dispose(uid): arrayRemove do token atual, cancela listeners.
+  - top-level _backgroundMessageHandler annotated @pragma('vm:entry-point') — vazio porque SO já mostra notification automaticamente.
+- home_view.dart: initState chama _initPushNotifications (com guard Firebase.apps.isEmpty pra testes). _handleSignOut chama dispose antes do AuthService.signOut.
+
+Server (functions/src/index.ts):
+- +import getMessaging from firebase-admin.
+- +sendPushToUser(uid, notification, data) helper:
+  - Lê users/{uid}.fcmTokens.
+  - Promise.all em todos os tokens com try/catch individual.
+  - Erros `messaging/registration-token-not-registered` e `messaging/invalid-registration-token` → arrayRemove.
+  - android: { priority: "high" } pra entregar imediatamente.
+- onProposalCreated: depois do increment, sendPushToUser(clientId, "Nova proposta recebida", body) com data {type: proposalCreated, projectId, proposalId}.
+- NOVO trigger onProposalStatusChanged (onDocumentUpdated proposals/{id}):
+  - diff de status; só age em pending → accepted/rejected.
+  - sendPushToUser(freelancerId) com title "Proposta aceita!" ou "Proposta recusada".
+- NOVO trigger onContractStatusChanged (onDocumentUpdated contracts/{id}):
+  - active → delivered: push pro cliente "Entrega recebida".
+  - delivered → completed: push pro freelancer "Contrato concluído!".
+
+Validar analyze + test. Stage tudo.
+```
+
+### Output recebido:
+```markdown
+- pubspec.yaml: +firebase_messaging.
+- main.dart: rootMessengerKey + scaffoldMessengerKey wired.
+- lib/core/services/notifications_service.dart NOVO.
+- lib/views/home_view.dart: +import Firebase + NotificationsService + rootMessengerKey, +initState, +_initPushNotifications (com guard Firebase.apps.isEmpty), +dispose call no signOut.
+- functions/src/index.ts: +import getMessaging, +sendPushToUser helper (~50 linhas), push em onProposalCreated (clientId), 2 triggers novos onDocumentUpdated.
+- Build TS limpo. Deploy: 2 funções novas criadas (onProposalStatusChanged + onContractStatusChanged), 5 atualizadas.
+- Validação inicial: 2 testes de HomeView quebraram porque initState tentava ler Firebase. Corrigido com guard Firebase.apps.isEmpty (pattern já usado em FeedView/MyProposalsView).
+- Re-validação: flutter analyze 0 issues. flutter test 13 passed.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas além do guard de teste. Pontos relevantes:
+
+- **Local notifications vs Push notifications (diferença explicada pro usuário)**: o habit_flow usava `flutter_local_notifications` (agendamento local, sem servidor, sem APNs, funciona iOS+Android grátis). Pro Freelance Hub, os eventos relevantes nascem no servidor (proposta nova, contrato entregue), então **só push real resolve**. Push real em iOS sempre passa por APNs (limitação da Apple, não do Firebase). $99/ano da Apple Developer Account é trava de plataforma — qualquer alternativa (OneSignal, AWS SNS, etc) cai no mesmo lugar.
+- **Strategy "Android-funciona-iOS-cala"**: o `initialize()` detecta iOS sem APNs no `getAPNSToken()` (retorna null) e retorna early. Sem crashes, sem logs barulhentos. Quando o APNs for configurado, o mesmo código funciona — não precisa refactor.
+- **Tokens em array (não single)**: `fcmTokens` é array pra suportar multi-device. Mesmo user logado em 2 celulares recebe push nos dois. Cleanup via `dispose()` no signOut + arrayRemove automático no servidor quando token vira inválido.
+- **Triggers onDocumentUpdated em vez de embutir no callable**: poderia ter colocado o `sendPushToUser` direto nas callables `acceptProposal`/`rejectProposal`/`markContractDelivered`/`acceptContractDelivery`. Triggers são mais robustos — qualquer mudança de status (mesmo manual no Console pra debug) dispara push. Tradeoff: 2 invocações por evento em vez de 1 (custo Cloud Functions desprezível em escala TCC).
+- **`android: { priority: "high" }` no send**: sem isso, FCM pode atrasar o push até alguns minutos pra economizar bateria. High priority é entrega imediata. Padrão pra notificações de UX, não pra background sync.
+- **Top-level background handler vazio + `@pragma('vm:entry-point')`**: o plugin firebase_messaging precisa de uma referência top-level pra inicializar isolate em background. Vazio é correto porque o payload tem `notification`: o sistema operacional desenha a notificação sem precisar de código Dart rodando. Se a gente quisesse processar `data` em background (ex: pre-fetch antes do user clicar), aí o handler teria conteúdo.
+- **Foreground SnackBar via `rootMessengerKey`**: a `GlobalKey<ScaffoldMessengerState>` está no `MaterialApp` em `main.dart`. Qualquer service pode mostrar SnackBar sem precisar de BuildContext. Pattern bom pra notificações vindo de fora do widget tree.
+- **`_initPushNotifications` com guard `Firebase.apps.isEmpty`**: replica o pattern usado em FeedView/MyProposalsView/etc — em ambiente de teste, pula sem crashar.
+- **Sem deep linking ao tocar notificação**: payload tem `data: {type, ids}` mas o app ainda não consome. Iteração futura conectaria `getInitialMessage()` + `onMessageOpenedApp` pra navegar pra tela relevante.
+
+**Cobertura visual:**
+- SnackBar in-app roxo com título + corpo quando push chega em foreground.
+- Notificação nativa do sistema (Android) quando app em background/fechado.
+
+**Fluxo testável agora (Android):**
+1. Como Cliente logado → Console → users/{seuUid} → confere campo `fcmTokens` (array).
+2. Em **outra sessão**, como Freelancer, envia uma proposta no projeto.
+3. Cliente recebe push "Nova proposta recebida — Jose Silva enviou para [projeto]" — banner do sistema se app fechado, SnackBar in-app se aberto.
+4. Cliente aceita → Freelancer recebe "Proposta aceita!".
+5. Freelancer marca como entregue (com ou sem fotos) → Cliente recebe "Entrega recebida".
+6. Cliente aprova → Freelancer recebe "Contrato concluído!".
+
+**iOS:** todos os passos funcionam visualmente igual, exceto que NENHUM push chega no device. Logs mostram "iOS sem APNs configurado". Pra ativar, precisa criar APNs Authentication Key no Apple Developer Portal → upload no Firebase Console → testar em device físico (simulator não recebe APNs real até Xcode 14+ com .apns files).
+
+**Próximo passo (Iteração 24):** voltar pro **core**. Candidatos:
+- **A — Painel Cliente real** (`ClientDashboardView` sai do mock): contar projects, proposals e contracts do Cliente logado e mostrar métricas reais. Substituir "12 projetos ativos / 48 propostas" hardcoded por aggregates ao vivo.
+- **B — Workflow de revisão** ("Solicitar revisão" no botão Cliente): hoje só tem "Aprovar entrega". Cliente recebeu entrega ruim, precisa devolver pro Freelancer corrigir. Novo status `revision_requested` no Contract + nova callable. Sem disputa formal ainda.
+- **C — Detalhe do contrato** (tela nova quando tap no card de MyContractsView): timeline de eventos, fotos em grid, ações contextuais. Hoje o card mostra tudo achatado.
+
+Recomendação: **A** (rápido, fecha um placeholder visível) **→ B** (destrava o ciclo realista de freelance — nem sempre entrega é aprovada de primeira) **→ C**.
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext

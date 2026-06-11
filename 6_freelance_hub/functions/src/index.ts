@@ -1,11 +1,72 @@
-import { onDocumentCreated } from "firebase-functions/v2/firestore";
+import {
+  onDocumentCreated,
+  onDocumentUpdated,
+} from "firebase-functions/v2/firestore";
 import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { logger, setGlobalOptions } from "firebase-functions/v2";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 initializeApp();
 setGlobalOptions({ region: "us-central1" });
+
+/**
+ * Envia push para todos os tokens registrados em users/{uid}.fcmTokens.
+ * Tokens inválidos (messaging/registration-token-not-registered) são removidos
+ * automaticamente do array. Falhas não derrubam o caller.
+ */
+async function sendPushToUser(
+  uid: string,
+  notification: { title: string; body: string },
+  data: Record<string, string> = {}
+): Promise<void> {
+  try {
+    const db = getFirestore();
+    const userSnap = await db.collection("users").doc(uid).get();
+    if (!userSnap.exists) return;
+    const tokens = (userSnap.data()?.fcmTokens as string[] | undefined) ?? [];
+    if (tokens.length === 0) return;
+
+    const messaging = getMessaging();
+    const invalidTokens: string[] = [];
+
+    await Promise.all(
+      tokens.map(async (token) => {
+        try {
+          await messaging.send({
+            token,
+            notification,
+            data,
+            android: { priority: "high" },
+          });
+        } catch (err: unknown) {
+          const code = (err as { code?: string })?.code;
+          if (
+            code === "messaging/registration-token-not-registered" ||
+            code === "messaging/invalid-registration-token"
+          ) {
+            invalidTokens.push(token);
+          } else {
+            logger.warn("Falha ao enviar push", { uid, token, error: err });
+          }
+        }
+      })
+    );
+
+    if (invalidTokens.length > 0) {
+      await db.collection("users").doc(uid).update({
+        fcmTokens: FieldValue.arrayRemove(...invalidTokens),
+      });
+      logger.info("Tokens inválidos removidos", {
+        uid,
+        count: invalidTokens.length,
+      });
+    }
+  } catch (err) {
+    logger.error("sendPushToUser falhou", { uid, error: err });
+  }
+}
 
 /**
  * Trigger disparado ao criar um doc em proposals/{proposalId}.
@@ -48,6 +109,25 @@ export const onProposalCreated = onDocumentCreated(
         proposalId: event.params.proposalId,
         error: err,
       });
+    }
+
+    // Push para o cliente avisando da proposta nova.
+    const clientId = proposal.clientId as string | undefined;
+    const freelancerName = (proposal.freelancerName as string) || "Freelancer";
+    const projectTitle = (proposal.projectTitle as string) || "seu projeto";
+    if (clientId) {
+      await sendPushToUser(
+        clientId,
+        {
+          title: "Nova proposta recebida",
+          body: `${freelancerName} enviou uma proposta para "${projectTitle}".`,
+        },
+        {
+          type: "proposalCreated",
+          projectId: projectId,
+          proposalId: event.params.proposalId,
+        }
+      );
     }
   }
 );
@@ -313,3 +393,97 @@ export const acceptContractDelivery = onCall(async (request) => {
   });
   return { ok: true };
 });
+
+/**
+ * Trigger: proposta atualizada. Notifica o freelancer quando o cliente aceita
+ * ou rejeita (status pending → accepted/rejected). Outras transições são
+ * ignoradas.
+ */
+export const onProposalStatusChanged = onDocumentUpdated(
+  "proposals/{proposalId}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+    if (before.status === after.status) return;
+    if (before.status !== "pending") return;
+
+    const freelancerId = after.freelancerId as string | undefined;
+    const projectTitle = (after.projectTitle as string) || "seu projeto";
+    if (!freelancerId) return;
+
+    let title: string;
+    let body: string;
+    if (after.status === "accepted") {
+      title = "Proposta aceita!";
+      body = `Sua proposta para "${projectTitle}" foi aceita. Você tem um novo contrato.`;
+    } else if (after.status === "rejected") {
+      title = "Proposta recusada";
+      body = `Sua proposta para "${projectTitle}" não foi selecionada desta vez.`;
+    } else {
+      return;
+    }
+
+    await sendPushToUser(
+      freelancerId,
+      { title, body },
+      {
+        type: `proposal_${after.status}`,
+        proposalId: event.params.proposalId,
+      }
+    );
+  }
+);
+
+/**
+ * Trigger: contrato atualizado. Notifica o cliente quando o freelancer marca
+ * como entregue (active → delivered) e o freelancer quando o cliente aprova
+ * a entrega (delivered → completed).
+ */
+export const onContractStatusChanged = onDocumentUpdated(
+  "contracts/{contractId}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+    if (before.status === after.status) return;
+
+    const projectTitle = (after.projectTitle as string) || "seu projeto";
+    const freelancerName =
+      (after.freelancerName as string) || "O freelancer";
+
+    if (before.status === "active" && after.status === "delivered") {
+      const clientId = after.clientId as string | undefined;
+      if (!clientId) return;
+      await sendPushToUser(
+        clientId,
+        {
+          title: "Entrega recebida",
+          body: `${freelancerName} marcou "${projectTitle}" como entregue. Toque para revisar.`,
+        },
+        {
+          type: "contract_delivered",
+          contractId: event.params.contractId,
+        }
+      );
+      return;
+    }
+
+    if (before.status === "delivered" && after.status === "completed") {
+      const freelancerId = after.freelancerId as string | undefined;
+      if (!freelancerId) return;
+      await sendPushToUser(
+        freelancerId,
+        {
+          title: "Contrato concluído!",
+          body: `O cliente aprovou a entrega de "${projectTitle}".`,
+        },
+        {
+          type: "contract_completed",
+          contractId: event.params.contractId,
+        }
+      );
+      return;
+    }
+  }
+);
