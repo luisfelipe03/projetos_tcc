@@ -1,62 +1,84 @@
+import 'dart:async';
+
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/services/auth_service.dart';
+import '../core/services/contracts_service.dart';
+import '../core/services/projects_service.dart';
+import '../core/services/proposals_service.dart';
+import '../models/contract.dart';
+import '../models/project.dart';
+import '../models/proposal.dart';
 import 'create_project_view.dart';
+import 'my_contracts_view.dart';
+import 'project_detail_view.dart';
 
-class ClientDashboardView extends StatelessWidget {
+class ClientDashboardView extends StatefulWidget {
   const ClientDashboardView({super.key});
 
+  @override
+  State<ClientDashboardView> createState() => _ClientDashboardViewState();
+}
+
+class _ClientDashboardViewState extends State<ClientDashboardView> {
   static const _primary = Color(0xFF3B309E);
   static const _slate900 = Color(0xFF0F172A);
   static const _slate500 = Color(0xFF64748B);
   static const _slate800 = Color(0xFF1E293B);
 
-  static const _metrics = <_Metric>[
-    _Metric(
-      label: 'Projetos ativos',
-      value: '12',
-      icon: Icons.trending_up,
-      accent: Color(0xFF3B309E),
-    ),
-    _Metric(
-      label: 'Aguardando revisão',
-      value: '4',
-      icon: Icons.hourglass_top_outlined,
-      accent: Color(0xFFFFC107),
-    ),
-    _Metric(
-      label: 'Total de propostas',
-      value: '48',
-      icon: Icons.people_outline,
-      accent: Color(0xFF086B53),
-    ),
-  ];
+  StreamSubscription<List<Project>>? _projectsSub;
+  StreamSubscription<List<Contract>>? _contractsSub;
+  StreamSubscription<List<Proposal>>? _proposalsSub;
 
-  static const _active = <_ActiveProject>[
-    _ActiveProject(
-      title: 'Reformulação da plataforma de e-commerce',
-      proposalCount: 14,
-      badge: 'MAIS DISCUTIDO',
-      hasHero: true,
-    ),
-    _ActiveProject(
-      title: 'Dashboard de analytics em tempo real',
-      proposalCount: 8,
-      badge: null,
-      hasHero: true,
-    ),
-  ];
+  List<Project> _projects = const [];
+  List<Contract> _contracts = const [];
+  List<Proposal> _proposals = const [];
 
-  static const _pending = <_PendingProject>[
-    _PendingProject(
-      title: 'Kit de UI para app mobile',
-      badge: 'AGUARDANDO REVISÃO',
-    ),
-    _PendingProject(
-      title: 'Auditoria e estratégia de SEO',
-      badge: 'AGUARDANDO REVISÃO',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _initStreams();
+  }
+
+  @override
+  void dispose() {
+    _projectsSub?.cancel();
+    _contractsSub?.cancel();
+    _proposalsSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _initStreams() async {
+    if (Firebase.apps.isEmpty) return;
+    final user = await AuthService.instance.currentAppUser();
+    if (user == null || !mounted) return;
+
+    _projectsSub = ProjectsService.instance
+        .streamMyProjects(user.uid)
+        .listen((list) => mounted ? setState(() => _projects = list) : null);
+
+    _contractsSub = ContractsService.instance
+        .streamContractsByClient(user.uid)
+        .listen((list) => mounted ? setState(() => _contracts = list) : null);
+
+    _proposalsSub = ProposalsService.instance
+        .streamProposalsByClient(user.uid)
+        .listen((list) => mounted ? setState(() => _proposals = list) : null);
+  }
+
+  // Projetos "em movimento" — engloba open (esperando proposta) e active
+  // (proposta aceita, contrato rolando). Exclui completed/closed.
+  List<Project> get _activeProjects => _projects
+      .where((p) =>
+          p.status == ProjectStatus.open || p.status == ProjectStatus.active)
+      .toList();
+
+  // Contratos com entrega aguardando aprovação do cliente.
+  List<Contract> get _pendingReviewContracts => _contracts
+      .where((c) => c.status == ContractStatus.delivered)
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +93,30 @@ class ClientDashboardView extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.08)
         : _primary.withValues(alpha: 0.10);
 
+    final metrics = <_Metric>[
+      _Metric(
+        label: 'Projetos ativos',
+        value: _activeProjects.length.toString(),
+        icon: Icons.trending_up,
+        accent: _primary,
+      ),
+      _Metric(
+        label: 'Aguardando revisão',
+        value: _pendingReviewContracts.length.toString(),
+        icon: Icons.hourglass_top_outlined,
+        accent: const Color(0xFFFFC107),
+      ),
+      _Metric(
+        label: 'Total de propostas',
+        value: _proposals.length.toString(),
+        icon: Icons.people_outline,
+        accent: const Color(0xFF086B53),
+      ),
+    ];
+
+    final topActive = _activeProjects.take(3).toList();
+    final topPending = _pendingReviewContracts.take(3).toList();
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -82,10 +128,10 @@ class ClientDashboardView extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
           sliver: SliverList.separated(
-            itemCount: _metrics.length,
+            itemCount: metrics.length,
             separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (context, i) => _MetricCard(
-              metric: _metrics[i],
+            itemBuilder: (_, i) => _MetricCard(
+              metric: metrics[i],
               cardBg: cardBg,
               borderColor: borderColor,
               titleColor: titleColor,
@@ -127,26 +173,42 @@ class ClientDashboardView extends StatelessWidget {
         SliverToBoxAdapter(
           child: _SectionHeader(
             title: 'Projetos ativos',
-            actionLabel: 'Ver tudo',
+            actionLabel: null,
             titleColor: titleColor,
             actionColor: _primary,
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverList.separated(
-            itemCount: _active.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
-            itemBuilder: (_, i) => _ActiveProjectCard(
-              project: _active[i],
-              cardBg: cardBg,
-              borderColor: borderColor,
+        if (topActive.isEmpty)
+          SliverToBoxAdapter(
+            child: _SectionEmpty(
+              icon: Icons.dashboard_outlined,
+              message: 'Nenhum projeto em movimento ainda.\n'
+                  'Publique um pra começar a receber propostas.',
               titleColor: titleColor,
               mutedColor: mutedColor,
-              isDark: isDark,
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList.separated(
+              itemCount: topActive.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
+              itemBuilder: (_, i) => _ActiveProjectCard(
+                project: topActive[i],
+                cardBg: cardBg,
+                borderColor: borderColor,
+                titleColor: titleColor,
+                mutedColor: mutedColor,
+                isDark: isDark,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => ProjectDetailView(project: topActive[i]),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
         SliverToBoxAdapter(
           child: _SectionHeader(
             title: 'Aguardando aprovação',
@@ -155,19 +217,34 @@ class ClientDashboardView extends StatelessWidget {
             actionColor: _primary,
           ),
         ),
-        SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          sliver: SliverList.separated(
-            itemCount: _pending.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 10),
-            itemBuilder: (_, i) => _PendingProjectCard(
-              project: _pending[i],
-              cardBg: cardBg,
-              borderColor: borderColor,
+        if (topPending.isEmpty)
+          SliverToBoxAdapter(
+            child: _SectionEmpty(
+              icon: Icons.task_alt,
+              message: 'Nada pra revisar agora.',
               titleColor: titleColor,
+              mutedColor: mutedColor,
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            sliver: SliverList.separated(
+              itemCount: topPending.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 10),
+              itemBuilder: (_, i) => _PendingReviewCard(
+                contract: topPending[i],
+                cardBg: cardBg,
+                borderColor: borderColor,
+                titleColor: titleColor,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const MyContractsView(),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
@@ -271,16 +348,17 @@ class _MetricCard extends StatelessWidget {
                   metric.label,
                   style: GoogleFonts.inter(
                     fontSize: 12,
-                    fontWeight: FontWeight.w600,
                     color: mutedColor,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.1,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 4),
                 Text(
                   metric.value,
                   style: GoogleFonts.dmSans(
                     fontSize: 28,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w800,
                     letterSpacing: -0.5,
                     color: titleColor,
                   ),
@@ -293,9 +371,9 @@ class _MetricCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: metric.accent.withValues(alpha: 0.12),
+              color: metric.accent.withValues(alpha: 0.15),
             ),
-            child: Icon(metric.icon, size: 22, color: metric.accent),
+            child: Icon(metric.icon, color: metric.accent, size: 22),
           ),
         ],
       ),
@@ -338,10 +416,8 @@ class _SectionHeader extends StatelessWidget {
               onTap: () {},
               borderRadius: BorderRadius.circular(8),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 4,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -365,18 +441,49 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _ActiveProject {
-  const _ActiveProject({
-    required this.title,
-    required this.proposalCount,
-    required this.badge,
-    required this.hasHero,
+class _SectionEmpty extends StatelessWidget {
+  const _SectionEmpty({
+    required this.icon,
+    required this.message,
+    required this.titleColor,
+    required this.mutedColor,
   });
 
-  final String title;
-  final int proposalCount;
-  final String? badge;
-  final bool hasHero;
+  final IconData icon;
+  final String message;
+  final Color titleColor;
+  final Color mutedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+        decoration: BoxDecoration(
+          color: mutedColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: mutedColor.withValues(alpha: 0.15)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 26, color: mutedColor),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: mutedColor,
+                  height: 1.35,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ActiveProjectCard extends StatelessWidget {
@@ -387,167 +494,188 @@ class _ActiveProjectCard extends StatelessWidget {
     required this.titleColor,
     required this.mutedColor,
     required this.isDark,
+    required this.onTap,
   });
 
-  final _ActiveProject project;
+  final Project project;
   final Color cardBg;
   final Color borderColor;
   final Color titleColor;
   final Color mutedColor;
   final bool isDark;
+  final VoidCallback onTap;
 
   static const _primary = Color(0xFF3B309E);
 
+  String? _badgeFor(Project p) {
+    if (p.status == ProjectStatus.active) return 'EM ANDAMENTO';
+    if (p.proposalCount >= 5) return 'MAIS DISCUTIDO';
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (project.hasHero) const _HeroPlaceholder(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (project.badge != null) ...[
-                  _Badge(label: project.badge!, isDark: isDark),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  project.title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    height: 1.25,
-                    color: titleColor,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 14,
-                          color: mutedColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${project.proposalCount} propostas',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            color: mutedColor,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+    final badge = _badgeFor(project);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _HeroPlaceholder(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (badge != null) ...[
+                    _Badge(label: badge, isDark: isDark),
+                    const SizedBox(height: 8),
+                  ],
+                  Text(
+                    project.title,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      height: 1.25,
+                      color: titleColor,
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Ver projeto',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.people_outline,
+                            size: 14,
+                            color: mutedColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            project.proposalCount == 1
+                                ? '1 proposta'
+                                : '${project.proposalCount} propostas',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              color: mutedColor,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Ver projeto',
+                            style: GoogleFonts.inter(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: _primary,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_forward,
+                            size: 14,
                             color: _primary,
                           ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.arrow_forward,
-                          size: 14,
-                          color: _primary,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _PendingProject {
-  const _PendingProject({required this.title, required this.badge});
-
-  final String title;
-  final String badge;
-}
-
-class _PendingProjectCard extends StatelessWidget {
-  const _PendingProjectCard({
-    required this.project,
+class _PendingReviewCard extends StatelessWidget {
+  const _PendingReviewCard({
+    required this.contract,
     required this.cardBg,
     required this.borderColor,
     required this.titleColor,
+    required this.onTap,
   });
 
-  final _PendingProject project;
+  final Contract contract;
   final Color cardBg;
   final Color borderColor;
   final Color titleColor;
+  final VoidCallback onTap;
 
   static const _primary = Color(0xFF3B309E);
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _Badge(label: project.badge, isDark: Theme.of(context).brightness == Brightness.dark),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  project.title,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: titleColor,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Revisar agora',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: cardBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: borderColor),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Badge(
+              label: 'AGUARDANDO REVISÃO',
+              isDark: Theme.of(context).brightness == Brightness.dark,
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    contract.projectTitle,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: _primary,
+                      color: titleColor,
                     ),
                   ),
-                  const SizedBox(width: 2),
-                  const Icon(Icons.arrow_forward, size: 14, color: _primary),
-                ],
-              ),
-            ],
-          ),
-        ],
+                ),
+                const SizedBox(width: 8),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Revisar agora',
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _primary,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.arrow_forward,
+                      size: 14,
+                      color: _primary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

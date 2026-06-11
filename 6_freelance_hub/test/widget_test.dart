@@ -123,12 +123,17 @@ void main() {
     );
 
     expect(find.text('Painel'), findsOneWidget);
-    // "Projetos ativos" aparece 2x: label da métrica (12) + título da seção.
+    // "Projetos ativos" aparece 2x: label da métrica + título da seção.
     expect(find.text('Projetos ativos'), findsNWidgets(2));
+    expect(find.text('Aguardando revisão'), findsOneWidget);
     expect(find.text('Aguardando aprovação'), findsOneWidget);
     expect(find.text('Publicar Novo Projeto'), findsOneWidget);
     expect(find.text('Total de propostas'), findsOneWidget);
-    expect(find.text('48'), findsOneWidget);
+    // Em ambiente de teste (Firebase.apps.isEmpty), métricas mostram 0 e
+    // as seções caem em empty state.
+    expect(find.text('Nenhum projeto em movimento ainda.\n'
+        'Publique um pra começar a receber propostas.'), findsOneWidget);
+    expect(find.text('Nada pra revisar agora.'), findsOneWidget);
   });
 
   testWidgets('HomeView shows ClientDashboard when initialRole is client', (

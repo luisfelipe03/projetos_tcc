@@ -1629,6 +1629,76 @@ Recomendação: **A** (rápido, fecha um placeholder visível) **→ B** (destra
 
 ---
 
+## Iteração 24
+### Prompt usado:
+```plaintext
+Iteração 24 — Painel Cliente real (opção A do plano).
+
+Substituir o mock hardcoded ("12 / 4 / 48", 2 projetos fake na seção ativa, 2 na seção pendente) por aggregates ao vivo das collections Firestore do cliente logado.
+
+Implementação:
+- streamMyProjects(ownerId) já existe no ProjectsService desde a Iteração 14 — não preciso adicionar nada server-side. Usa índice composto (ownerId, createdAt) que também já existe.
+- Refactor `lib/views/client_dashboard_view.dart` de StatelessWidget pra StatefulWidget:
+  - 3 StreamSubscription privadas (projects, contracts, proposals).
+  - initState chama `_initStreams`: guard Firebase.apps.isEmpty (pra testes), busca currentAppUser, assina os 3 streams. Cada listener chama setState armazenando a lista.
+  - dispose cancela as 3 subs.
+- Métricas computadas das listas:
+  - "Projetos ativos" = count(projects where status in [open, active]) — semanticamente "em movimento", exclui completed/closed.
+  - "Aguardando revisão" = count(contracts where status=delivered) — entregas aguardando aprovação do cliente.
+  - "Total de propostas" = count(proposals) — histórico bruto.
+- Listas (top 3 cada):
+  - Seção "Projetos ativos" → mostra os 3 mais recentes em [open, active]. Card tap abre ProjectDetailView. Badge dinâmico: "EM ANDAMENTO" se status=active, "MAIS DISCUTIDO" se proposalCount>=5.
+  - Seção "Aguardando aprovação" → mostra os 3 contracts delivered. Card tap abre MyContractsView.
+- Empty states inline:
+  - "Nenhum projeto em movimento ainda. Publique um pra começar a receber propostas."
+  - "Nada pra revisar agora."
+- Test ajustado: o assert `find.text('48')` (do mock) removido; agora valida labels textuais e os 2 empty states.
+
+Validar analyze + test. Stage.
+```
+
+### Output recebido:
+```markdown
+- streamMyProjects já existia — pulou o passo de adicionar service method.
+- Reescreveu `lib/views/client_dashboard_view.dart` (~640 → ~620 linhas, refactor + dados reais).
+- Atualizou `test/widget_test.dart` pra refletir empty states.
+- Validação: flutter analyze 0 issues. flutter test 13 passed.
+```
+
+### Resultado:
+Iteração coesa, sem retentativas além do test update esperado. Pontos relevantes:
+
+- **3 subs paralelas em vez de 1 stream combinado**: cada coleção tem seu próprio listener Firestore. Sem rxdart/CombineLatest. O custo é que o build pode rodar até 3x quando o user entra pela 1ª vez (cada stream emite separado), mas isso é imperceptível e o código fica mais simples de entender.
+- **"Projetos ativos" inclui status=open**: discussão semântica que merece nota. "Ativo" pra um cliente típico significa "tô esperando rolar" (open com propostas chegando) OU "tá rolando" (active com freelancer entregando). Excluir open daria a métrica errada quando o cliente publicou e não aceitou ainda. Excluo completed/closed que são estados terminais.
+- **Top 3 cards por seção**: limite arbitrário razoável. Sem paginação por enquanto. "Ver tudo" da seção continua com `onTap: () {}` — quando criar a tela Projetos do Cliente (vista completa) eu wiro.
+- **Badge dinâmico no _ActiveProjectCard**: "EM ANDAMENTO" (status=active) vs "MAIS DISCUTIDO" (>=5 propostas). Heurística simples mas dá personalidade visual diferente. Pode evoluir pra "MAIS RECENTE" ou outros.
+- **Tap em "Aguardando aprovação" abre MyContractsView**: leva o usuário pra tela onde tem o botão "Aprovar entrega" real (Iteração 21). Reuso natural — sem inventar nova tela.
+- **`_SectionEmpty` inline**: containers cinza claros com ícone + texto. Diferente dos empty states fullscreen das outras views (MyProposalsView, etc) porque cabem inline numa página com várias seções. Padrão diferente justificado pelo contexto.
+- **Sem skeleton/shimmer durante load**: quando o user abre o app pela 1ª vez, as 3 listas começam vazias (= mostra "0" e empty states) e depois preenchem em ~500ms. Skeleton seria nice-to-have mas adiciona complexidade pra ganho marginal — métricas mudando 0→N é aceitável visualmente.
+
+**Cobertura visual:**
+- Painel Cliente agora 100% real. As 3 métricas refletem dados do Firestore. Cards listam projects/contracts próprios.
+- Push notification (Iteração 23) + Painel real (Iteração 24) trabalham juntas: quando uma proposta nova chega, o contador "Total de propostas" sobe AO VIVO sem reload (stream propaga em ~500ms).
+
+**Fluxo testável agora:**
+1. Como Cliente novo (sem nada) → Painel mostra 0/0/0 + 2 empty states ("Nenhum projeto em movimento..." e "Nada pra revisar agora.").
+2. Publica 1 projeto → métrica "Projetos ativos" vira 1 em ~500ms + card aparece na seção.
+3. Em outra sessão (Freelancer) → envia proposta → contador "Total de propostas" do Cliente sobe pra 1.
+4. Cliente aceita proposta → status do project vira active → badge no card vira "EM ANDAMENTO".
+5. Freelancer marca como entregue → métrica "Aguardando revisão" vira 1 + card aparece na seção "Aguardando aprovação".
+6. Cliente tap no card "Aguardando revisão" → abre MyContractsView com o botão "Aprovar entrega" verde.
+7. Aprova → contract vira completed → projeto sai da lista de ativos → métricas atualizam.
+
+**Próximo passo (Iteração 25):** **B — Workflow de revisão** (botão "Solicitar revisão"). Hoje cliente só tem "Aprovar entrega"; cenário realista precisa devolver pro Freelancer corrigir.
+- Novo status no Contract enum: `revisionRequested` (Dart) / `revision_requested` (Firestore).
+- Callable `requestContractRevision({contractId, reason})`: status delivered → revision_requested. Cliente only.
+- Callable `resubmitContractDelivery({contractId, photoUrls})`: status revision_requested → delivered. Freelancer only. Reusa lógica de upload.
+- Trigger `onContractStatusChanged` já existe, vai precisar mais 2 branches no diff (delivered→revision_requested, revision_requested→delivered) com push pros 2 lados.
+- UI MyContractsView: novo botão "Solicitar revisão" (Cliente) ao lado de "Aprovar entrega" quando status=delivered. Dialog/sheet pra capturar motivo. Badge "Em revisão" pro novo status. Quando freelancer vê revisionRequested, mostra botão "Reenviar entrega" (reabre o composer da Iteração 22).
+- Visualização do motivo da revisão pro Freelancer.
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext
