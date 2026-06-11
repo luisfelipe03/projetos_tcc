@@ -395,6 +395,141 @@ export const acceptContractDelivery = onCall(async (request) => {
 });
 
 /**
+ * Callable: cliente solicita revisão da entrega.
+ * Valida caller == clientId, status atual == delivered, motivo presente.
+ * Status do contrato → revision_requested. Não mexe no project status — o
+ * trabalho continua "ativo" na visão do projeto, só o contrato muda.
+ */
+export const requestContractRevision = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const contractId = request.data?.contractId;
+  if (typeof contractId !== "string" || !contractId) {
+    throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+  const rawReason = request.data?.reason;
+  if (typeof rawReason !== "string") {
+    throw new HttpsError("invalid-argument", "Motivo é obrigatório.");
+  }
+  const reason = rawReason.trim();
+  if (reason.length < 10) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Descreva o motivo com pelo menos 10 caracteres."
+    );
+  }
+  if (reason.length > 500) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Motivo limitado a 500 caracteres."
+    );
+  }
+
+  const db = getFirestore();
+  const contractRef = db.collection("contracts").doc(contractId);
+  const snap = await contractRef.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "Contrato não encontrado.");
+  }
+  const contract = snap.data()!;
+  if (contract.clientId !== request.auth.uid) {
+    throw new HttpsError(
+      "permission-denied",
+      "Apenas o cliente pode solicitar revisão."
+    );
+  }
+  if (contract.status !== "delivered") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Contrato não está aguardando aprovação."
+    );
+  }
+
+  await contractRef.update({
+    status: "revision_requested",
+    revisionReason: reason,
+    revisionRequestedAt: FieldValue.serverTimestamp(),
+    revisionCount: FieldValue.increment(1),
+  });
+  logger.info("Revisão solicitada", {
+    contractId,
+    callerUid: request.auth.uid,
+  });
+  return { ok: true };
+});
+
+/**
+ * Callable: freelancer reenvia a entrega após revisão.
+ * Valida caller == freelancerId, status atual == revision_requested.
+ * Status do contrato → delivered. Substitui as fotos (nova entrega).
+ */
+export const resubmitContractDelivery = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const contractId = request.data?.contractId;
+  if (typeof contractId !== "string" || !contractId) {
+    throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+
+  const rawPhotoUrls = request.data?.photoUrls;
+  let photoUrls: string[] = [];
+  if (rawPhotoUrls !== undefined && rawPhotoUrls !== null) {
+    if (!Array.isArray(rawPhotoUrls)) {
+      throw new HttpsError("invalid-argument", "photoUrls deve ser um array.");
+    }
+    if (rawPhotoUrls.length > 10) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Máximo de 10 fotos por entrega."
+      );
+    }
+    for (const u of rawPhotoUrls) {
+      if (typeof u !== "string" || !u.startsWith("https://")) {
+        throw new HttpsError(
+          "invalid-argument",
+          "Cada photoUrl deve ser uma URL https."
+        );
+      }
+    }
+    photoUrls = rawPhotoUrls as string[];
+  }
+
+  const db = getFirestore();
+  const contractRef = db.collection("contracts").doc(contractId);
+  const snap = await contractRef.get();
+  if (!snap.exists) {
+    throw new HttpsError("not-found", "Contrato não encontrado.");
+  }
+  const contract = snap.data()!;
+  if (contract.freelancerId !== request.auth.uid) {
+    throw new HttpsError(
+      "permission-denied",
+      "Apenas o freelancer pode reenviar a entrega."
+    );
+  }
+  if (contract.status !== "revision_requested") {
+    throw new HttpsError(
+      "failed-precondition",
+      "Contrato não está em revisão."
+    );
+  }
+
+  await contractRef.update({
+    status: "delivered",
+    deliveryPhotoUrls: photoUrls,
+    deliveredAt: FieldValue.serverTimestamp(),
+  });
+  logger.info("Entrega reenviada", {
+    contractId,
+    callerUid: request.auth.uid,
+    photoCount: photoUrls.length,
+  });
+  return { ok: true };
+});
+
+/**
  * Trigger: proposta atualizada. Notifica o freelancer quando o cliente aceita
  * ou rejeita (status pending → accepted/rejected). Outras transições são
  * ignoradas.
@@ -480,6 +615,51 @@ export const onContractStatusChanged = onDocumentUpdated(
         },
         {
           type: "contract_completed",
+          contractId: event.params.contractId,
+        }
+      );
+      return;
+    }
+
+    if (
+      before.status === "delivered" &&
+      after.status === "revision_requested"
+    ) {
+      const freelancerId = after.freelancerId as string | undefined;
+      if (!freelancerId) return;
+      const reason = (after.revisionReason as string) || "";
+      const reasonPreview =
+        reason.length > 80 ? `${reason.substring(0, 80)}…` : reason;
+      await sendPushToUser(
+        freelancerId,
+        {
+          title: "Revisão solicitada",
+          body: `O cliente pediu ajustes em "${projectTitle}"${
+            reasonPreview ? `: ${reasonPreview}` : "."
+          }`,
+        },
+        {
+          type: "contract_revision_requested",
+          contractId: event.params.contractId,
+        }
+      );
+      return;
+    }
+
+    if (
+      before.status === "revision_requested" &&
+      after.status === "delivered"
+    ) {
+      const clientId = after.clientId as string | undefined;
+      if (!clientId) return;
+      await sendPushToUser(
+        clientId,
+        {
+          title: "Entrega reenviada",
+          body: `${freelancerName} reenviou "${projectTitle}". Toque para revisar.`,
+        },
+        {
+          type: "contract_redelivered",
           contractId: event.params.contractId,
         }
       );

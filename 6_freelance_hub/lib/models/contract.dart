@@ -1,4 +1,10 @@
-enum ContractStatus { active, delivered, completed, disputed }
+enum ContractStatus {
+  active,
+  delivered,
+  revisionRequested,
+  completed,
+  disputed,
+}
 
 class Contract {
   const Contract({
@@ -16,6 +22,8 @@ class Contract {
     required this.status,
     required this.createdAt,
     required this.deliveryPhotoUrls,
+    required this.revisionReason,
+    required this.revisionCount,
   });
 
   final String id;
@@ -32,4 +40,6 @@ class Contract {
   final ContractStatus status;
   final DateTime createdAt;
   final List<String> deliveryPhotoUrls;
+  final String revisionReason;
+  final int revisionCount;
 }

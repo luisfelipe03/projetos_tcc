@@ -39,14 +39,19 @@ class _MyContractsViewState extends State<MyContractsView> {
     _initStream();
   }
 
-  Future<void> _handleMarkDelivered(Contract c) async {
+  Future<void> _handleMarkDelivered(Contract c) =>
+      _handleDelivery(c, isResubmit: false);
+
+  Future<void> _handleResubmitDelivery(Contract c) =>
+      _handleDelivery(c, isResubmit: true);
+
+  Future<void> _handleDelivery(Contract c, {required bool isResubmit}) async {
     if (_processingId != null) return;
-    // Abre o composer para escolher fotos (opcional) e confirmar.
     final selected = await showModalBottomSheet<List<File>>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => const _DeliveryComposerSheet(),
+      builder: (_) => _DeliveryComposerSheet(isResubmit: isResubmit),
     );
     if (!mounted || selected == null) return;
 
@@ -60,17 +65,52 @@ class _MyContractsViewState extends State<MyContractsView> {
         );
         urls.add(url);
       }
-      await ContractsService.instance.markDelivered(c.id, photoUrls: urls);
+      if (isResubmit) {
+        await ContractsService.instance
+            .resubmitDelivery(c.id, photoUrls: urls);
+      } else {
+        await ContractsService.instance.markDelivered(c.id, photoUrls: urls);
+      }
       if (!mounted) return;
+      final action = isResubmit ? 'Reenvio registrado' : 'Entrega registrada';
       _showSnack(
         urls.isEmpty
-            ? 'Entrega registrada. Aguardando aprovação do cliente.'
-            : 'Entrega registrada com ${urls.length} foto${urls.length == 1 ? '' : 's'}. Aguardando aprovação.',
+            ? '$action. Aguardando aprovação do cliente.'
+            : '$action com ${urls.length} foto${urls.length == 1 ? '' : 's'}. Aguardando aprovação.',
         success: true,
       );
     } catch (e) {
       if (!mounted) return;
-      _showSnack(_humanizeError(e, 'marcar como entregue'), success: false);
+      _showSnack(
+        _humanizeError(e, isResubmit ? 'reenviar' : 'marcar como entregue'),
+        success: false,
+      );
+    } finally {
+      if (mounted) setState(() => _processingId = null);
+    }
+  }
+
+  Future<void> _handleRequestRevision(Contract c) async {
+    if (_processingId != null) return;
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _RevisionReasonSheet(),
+    );
+    if (!mounted || reason == null) return;
+
+    setState(() => _processingId = c.id);
+    try {
+      await ContractsService.instance.requestRevision(c.id, reason);
+      if (!mounted) return;
+      _showSnack(
+        'Revisão solicitada. O freelancer foi notificado.',
+        success: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'solicitar revisão'), success: false);
     } finally {
       if (mounted) setState(() => _processingId = null);
     }
@@ -99,7 +139,7 @@ class _MyContractsViewState extends State<MyContractsView> {
         case 'permission-denied':
           return 'Você não tem permissão para $action.';
         case 'failed-precondition':
-          return 'Contrato não está no status esperado.';
+          return 'O estado do contrato mudou. Puxe pra baixo pra atualizar e tente novamente.';
         case 'not-found':
           return 'Contrato não encontrado.';
         default:
@@ -194,66 +234,114 @@ class _MyContractsViewState extends State<MyContractsView> {
     );
   }
 
+  /// Força reassinar a stream — útil quando a UI fica stale (ex.: depois de
+  /// hot reload ou cache local divergente do servidor). RefreshIndicator
+  /// chama isso quando o user puxa pra baixo.
+  Future<void> _refresh() async {
+    if (!mounted) return;
+    setState(() => _loadError = null);
+    await _initStream();
+    // Pequeno delay pra dar feedback visual mesmo quando a re-emissão é instantânea.
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+  }
+
   Widget _buildContent(Color titleColor, Color mutedColor, bool isDark) {
     if (_loadError != null) {
-      return _StateMessage(
-        icon: Icons.error_outline,
-        title: 'Erro',
-        message: _loadError!,
-        titleColor: titleColor,
-        mutedColor: mutedColor,
+      return RefreshIndicator(
+        color: _primary,
+        onRefresh: _refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: _StateMessage(
+                icon: Icons.error_outline,
+                title: 'Erro',
+                message: _loadError!,
+                titleColor: titleColor,
+                mutedColor: mutedColor,
+              ),
+            ),
+          ],
+        ),
       );
     }
     if (_stream == null) {
       return const Center(child: CircularProgressIndicator(color: _primary));
     }
-    return StreamBuilder<List<Contract>>(
-      stream: _stream,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(color: _primary),
+    return RefreshIndicator(
+      color: _primary,
+      onRefresh: _refresh,
+      child: StreamBuilder<List<Contract>>(
+        stream: _stream,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: _primary),
+            );
+          }
+          if (snapshot.hasError) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _StateMessage(
+                    icon: Icons.error_outline,
+                    title: 'Erro',
+                    message: '${snapshot.error}',
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+              ],
+            );
+          }
+          final contracts = snapshot.data ?? const <Contract>[];
+          if (contracts.isEmpty) {
+            return ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  child: _StateMessage(
+                    icon: Icons.assignment_outlined,
+                    title: 'Nenhum contrato ainda',
+                    message: _role == UserRole.client
+                        ? 'Quando você aceitar propostas, os contratos aparecem aqui.'
+                        : 'Quando um cliente aceitar uma de suas propostas, o contrato aparece aqui.',
+                    titleColor: titleColor,
+                    mutedColor: mutedColor,
+                  ),
+                ),
+              ],
+            );
+          }
+          return ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            itemCount: contracts.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            itemBuilder: (_, i) => _ContractCard(
+              contract: contracts[i],
+              viewerRole: _role ?? UserRole.freelancer,
+              isDark: isDark,
+              titleColor: titleColor,
+              mutedColor: mutedColor,
+              isProcessing: _processingId == contracts[i].id,
+              actionsDisabled:
+                  _processingId != null && _processingId != contracts[i].id,
+              onMarkDelivered: () => _handleMarkDelivered(contracts[i]),
+              onAcceptDelivery: () => _handleAcceptDelivery(contracts[i]),
+              onRequestRevision: () =>
+                  _handleRequestRevision(contracts[i]),
+              onResubmitDelivery: () =>
+                  _handleResubmitDelivery(contracts[i]),
+            ),
           );
-        }
-        if (snapshot.hasError) {
-          return _StateMessage(
-            icon: Icons.error_outline,
-            title: 'Erro',
-            message: '${snapshot.error}',
-            titleColor: titleColor,
-            mutedColor: mutedColor,
-          );
-        }
-        final contracts = snapshot.data ?? const <Contract>[];
-        if (contracts.isEmpty) {
-          return _StateMessage(
-            icon: Icons.assignment_outlined,
-            title: 'Nenhum contrato ainda',
-            message: _role == UserRole.client
-                ? 'Quando você aceitar propostas, os contratos aparecem aqui.'
-                : 'Quando um cliente aceitar uma de suas propostas, o contrato aparece aqui.',
-            titleColor: titleColor,
-            mutedColor: mutedColor,
-          );
-        }
-        return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-          itemCount: contracts.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 12),
-          itemBuilder: (_, i) => _ContractCard(
-            contract: contracts[i],
-            viewerRole: _role ?? UserRole.freelancer,
-            isDark: isDark,
-            titleColor: titleColor,
-            mutedColor: mutedColor,
-            isProcessing: _processingId == contracts[i].id,
-            actionsDisabled:
-                _processingId != null && _processingId != contracts[i].id,
-            onMarkDelivered: () => _handleMarkDelivered(contracts[i]),
-            onAcceptDelivery: () => _handleAcceptDelivery(contracts[i]),
-          ),
-        );
-      },
+        },
+      ),
     );
   }
 }
@@ -350,6 +438,8 @@ class _ContractCard extends StatelessWidget {
     required this.actionsDisabled,
     required this.onMarkDelivered,
     required this.onAcceptDelivery,
+    required this.onRequestRevision,
+    required this.onResubmitDelivery,
   });
 
   final Contract contract;
@@ -361,6 +451,8 @@ class _ContractCard extends StatelessWidget {
   final bool actionsDisabled;
   final VoidCallback onMarkDelivered;
   final VoidCallback onAcceptDelivery;
+  final VoidCallback onRequestRevision;
+  final VoidCallback onResubmitDelivery;
 
   @override
   Widget build(BuildContext context) {
@@ -383,6 +475,15 @@ class _ContractCard extends StatelessWidget {
         contract.status == ContractStatus.active;
     final showAcceptDelivery = viewerRole == UserRole.client &&
         contract.status == ContractStatus.delivered;
+    final showRequestRevision = viewerRole == UserRole.client &&
+        contract.status == ContractStatus.delivered;
+    final showResubmitDelivery = viewerRole == UserRole.freelancer &&
+        contract.status == ContractStatus.revisionRequested;
+    // Motivo da revisão é relevante pro freelancer (que precisa agir) ou
+    // como histórico se o contrato já voltou a delivered/completed depois.
+    final showRevisionReason = contract.revisionReason.isNotEmpty &&
+        (contract.status == ContractStatus.revisionRequested ||
+            contract.revisionCount > 0);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -567,14 +668,121 @@ class _ContractCard extends StatelessWidget {
               ),
             ),
           ],
-          if (showAcceptDelivery) ...[
+          if (showRevisionReason) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFC2410C).withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: const Color(0xFFC2410C).withValues(alpha: 0.25),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.replay_circle_filled_outlined,
+                        size: 14,
+                        color: Color(0xFFC2410C),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        contract.revisionCount > 1
+                            ? 'Última revisão solicitada (${contract.revisionCount}ª)'
+                            : 'Revisão solicitada',
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFC2410C),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    contract.revisionReason,
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: titleColor,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (showAcceptDelivery || showRequestRevision) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: (isProcessing || actionsDisabled)
+                        ? null
+                        : onRequestRevision,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFFC2410C),
+                      side: const BorderSide(color: Color(0xFFC2410C)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    child: const Text('Solicitar revisão'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: (isProcessing || actionsDisabled)
+                        ? null
+                        : onAcceptDelivery,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF086B53),
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor:
+                          const Color(0xFF086B53).withValues(alpha: 0.5),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      textStyle: GoogleFonts.inter(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    child: isProcessing
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            ),
+                          )
+                        : const Text('Aprovar'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          if (showResubmitDelivery) ...[
             const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
                 onPressed: (isProcessing || actionsDisabled)
                     ? null
-                    : onAcceptDelivery,
+                    : onResubmitDelivery,
                 icon: isProcessing
                     ? const SizedBox(
                         width: 16,
@@ -584,13 +792,12 @@ class _ContractCard extends StatelessWidget {
                           valueColor: AlwaysStoppedAnimation(Colors.white),
                         ),
                       )
-                    : const Icon(Icons.task_alt, size: 18),
-                label: const Text('Aprovar entrega'),
+                    : const Icon(Icons.upload_outlined, size: 18),
+                label: const Text('Reenviar entrega'),
                 style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFF086B53),
+                  backgroundColor: _primary,
                   foregroundColor: Colors.white,
-                  disabledBackgroundColor:
-                      const Color(0xFF086B53).withValues(alpha: 0.5),
+                  disabledBackgroundColor: _primary.withValues(alpha: 0.5),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -709,6 +916,12 @@ class _StatusBadge extends StatelessWidget {
           bg: Color(0xFFFFF4DC),
           fg: Color(0xFF92571A),
         );
+      case ContractStatus.revisionRequested:
+        return const _BadgeSpec(
+          label: 'Revisão pedida',
+          bg: Color(0xFFFFE4E0),
+          fg: Color(0xFFC2410C),
+        );
       case ContractStatus.completed:
         return const _BadgeSpec(
           label: 'Concluído',
@@ -736,7 +949,9 @@ class _BadgeSpec {
 /// confirmar. Pop com `null` = cancelou, pop com lista (possivelmente vazia)
 /// = confirmou.
 class _DeliveryComposerSheet extends StatefulWidget {
-  const _DeliveryComposerSheet();
+  const _DeliveryComposerSheet({this.isResubmit = false});
+
+  final bool isResubmit;
 
   @override
   State<_DeliveryComposerSheet> createState() => _DeliveryComposerSheetState();
@@ -827,7 +1042,7 @@ class _DeliveryComposerSheetState extends State<_DeliveryComposerSheet> {
               ),
               const SizedBox(height: 18),
               Text(
-                'Confirmar entrega',
+                widget.isResubmit ? 'Reenviar entrega' : 'Confirmar entrega',
                 style: GoogleFonts.dmSans(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
@@ -836,7 +1051,9 @@ class _DeliveryComposerSheetState extends State<_DeliveryComposerSheet> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Anexe fotos do trabalho (opcional). Até $_maxPhotos imagens.',
+                widget.isResubmit
+                    ? 'Anexe as novas fotos do trabalho ajustado. Até $_maxPhotos imagens.'
+                    : 'Anexe fotos do trabalho (opcional). Até $_maxPhotos imagens.',
                 style: GoogleFonts.inter(fontSize: 13, color: mutedColor),
               ),
               const SizedBox(height: 16),
@@ -925,8 +1142,12 @@ class _DeliveryComposerSheetState extends State<_DeliveryComposerSheet> {
                   ),
                   child: Text(
                     _photos.isEmpty
-                        ? 'Confirmar sem fotos'
-                        : 'Confirmar entrega (${_photos.length})',
+                        ? (widget.isResubmit
+                            ? 'Reenviar sem fotos'
+                            : 'Confirmar sem fotos')
+                        : (widget.isResubmit
+                            ? 'Reenviar entrega (${_photos.length})'
+                            : 'Confirmar entrega (${_photos.length})'),
                   ),
                 ),
               ),
@@ -1023,6 +1244,176 @@ class _PhotoFullscreenView extends StatelessWidget {
               'Falha ao carregar imagem',
               style: TextStyle(color: Colors.white),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet pra capturar o motivo da revisão. Pop com `null` = cancelou,
+/// pop com a string trimmed = confirmou. Valida tamanho client-side; o
+/// server revalida 10..500 chars.
+class _RevisionReasonSheet extends StatefulWidget {
+  const _RevisionReasonSheet();
+
+  @override
+  State<_RevisionReasonSheet> createState() => _RevisionReasonSheetState();
+}
+
+class _RevisionReasonSheetState extends State<_RevisionReasonSheet> {
+  static const _minChars = 10;
+  static const _maxChars = 500;
+  final _controller = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bg = isDark ? _slate800 : Colors.white;
+    final titleColor = isDark ? Colors.white : _slate900;
+    final mutedColor = isDark ? Colors.white70 : _slate500;
+    final inputBorder = isDark
+        ? Colors.white.withValues(alpha: 0.15)
+        : const Color(0xFFE2E8F0);
+
+    final trimmed = _controller.text.trim();
+    final canSubmit = trimmed.length >= _minChars;
+
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(24),
+            ),
+          ),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: mutedColor.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Solicitar revisão',
+                style: GoogleFonts.dmSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: titleColor,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Descreva os ajustes que o freelancer precisa fazer. '
+                'Mínimo $_minChars caracteres.',
+                style: GoogleFonts.inter(fontSize: 13, color: mutedColor),
+              ),
+              const SizedBox(height: 14),
+              TextField(
+                controller: _controller,
+                maxLines: 5,
+                minLines: 4,
+                maxLength: _maxChars,
+                textCapitalization: TextCapitalization.sentences,
+                style: GoogleFonts.inter(fontSize: 14, color: titleColor),
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : const Color(0xFFFBF9F2),
+                  hintText: 'Ex.: A paleta de cores está fora do brief — '
+                      'usar o roxo da marca em vez do azul.',
+                  hintStyle: GoogleFonts.inter(
+                    fontSize: 13,
+                    color: mutedColor.withValues(alpha: 0.7),
+                  ),
+                  counterStyle:
+                      GoogleFonts.inter(fontSize: 11, color: mutedColor),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: inputBorder),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: inputBorder),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFC2410C),
+                      width: 1.5,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed:
+                      canSubmit ? () => Navigator.of(context).pop(trimmed) : null,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFC2410C),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor:
+                        const Color(0xFFC2410C).withValues(alpha: 0.4),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    textStyle: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  child: Text(
+                    canSubmit
+                        ? 'Enviar solicitação'
+                        : 'Faltam ${(_minChars - trimmed.length).clamp(0, _minChars)} caracteres',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              SizedBox(
+                width: double.infinity,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'Cancelar',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: mutedColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

@@ -48,6 +48,29 @@ class ContractsService {
     await callable.call<Map<String, dynamic>>({'contractId': contractId});
   }
 
+  /// Cliente solicita revisão da entrega (delivered → revision_requested).
+  /// [reason] precisa ter 10..500 chars (validado client + server).
+  Future<void> requestRevision(String contractId, String reason) async {
+    final callable = _functions.httpsCallable('requestContractRevision');
+    await callable.call<Map<String, dynamic>>({
+      'contractId': contractId,
+      'reason': reason,
+    });
+  }
+
+  /// Freelancer reenvia entrega após revisão (revision_requested → delivered).
+  /// [photoUrls] substituem as anteriores no doc.
+  Future<void> resubmitDelivery(
+    String contractId, {
+    List<String> photoUrls = const [],
+  }) async {
+    final callable = _functions.httpsCallable('resubmitContractDelivery');
+    await callable.call<Map<String, dynamic>>({
+      'contractId': contractId,
+      'photoUrls': photoUrls,
+    });
+  }
+
   Contract _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data();
     return Contract(
@@ -62,16 +85,25 @@ class ContractsService {
       daysEstimate: (data['daysEstimate'] as num?)?.toInt() ?? 0,
       isHourly: data['isHourly'] as bool? ?? false,
       acceptedProposalId: data['acceptedProposalId'] as String? ?? '',
-      status: ContractStatus.values.firstWhere(
-        (s) => s.name == data['status'],
-        orElse: () => ContractStatus.active,
-      ),
+      status: _parseStatus(data['status'] as String?),
       createdAt:
           (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       deliveryPhotoUrls: (data['deliveryPhotoUrls'] as List<dynamic>?)
               ?.whereType<String>()
               .toList() ??
           const <String>[],
+      revisionReason: data['revisionReason'] as String? ?? '',
+      revisionCount: (data['revisionCount'] as num?)?.toInt() ?? 0,
+    );
+  }
+
+  // Firestore guarda `revision_requested` (snake) — o enum Dart é
+  // `revisionRequested` (camel). Mapeia explícito; outros enums batem direto.
+  static ContractStatus _parseStatus(String? raw) {
+    if (raw == 'revision_requested') return ContractStatus.revisionRequested;
+    return ContractStatus.values.firstWhere(
+      (s) => s.name == raw,
+      orElse: () => ContractStatus.active,
     );
   }
 }

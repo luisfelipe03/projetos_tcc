@@ -1699,6 +1699,106 @@ Iteração coesa, sem retentativas além do test update esperado. Pontos relevan
 
 ---
 
+## Iteração 25
+### Prompt usado:
+```plaintext
+Iteração 25 — Workflow de revisão (opção B).
+
+Cliente hoje só tem "Aprovar entrega" no contrato delivered. Adicionar o caminho "Solicitar revisão" + reenvio pelo freelancer, completando o ciclo realista.
+
+Server (functions/src/index.ts):
+- `requestContractRevision({contractId, reason})` callable v2:
+  - Valida auth, contractId, reason (string trimmed, 10..500 chars).
+  - Lê contract → not-found / permission-denied (caller != clientId) / failed-precondition (status != delivered).
+  - Update: status → revision_requested, revisionReason, revisionRequestedAt timestamp, revisionCount += 1.
+  - Não mexe no projeto — o projeto continua "active" durante revisão.
+- `resubmitContractDelivery({contractId, photoUrls})` callable v2:
+  - Mesma validação de markContractDelivered (auth, contractId, photoUrls shape).
+  - Lê contract → not-found / permission-denied (caller != freelancerId) / failed-precondition (status != revision_requested).
+  - Update: status → delivered, deliveryPhotoUrls (SUBSTITUI as anteriores), deliveredAt updated.
+- Trigger `onContractStatusChanged` extends:
+  - delivered → revision_requested: push pro freelancer "Revisão solicitada — {reason truncado a 80 chars}".
+  - revision_requested → delivered: push pro cliente "Entrega reenviada — Toque para revisar".
+
+Client (Flutter):
+- model contract.dart: +ContractStatus.revisionRequested no enum. +revisionReason String, +revisionCount int.
+- contracts_service.dart:
+  - _fromDoc parse novos campos.
+  - _parseStatus mapeia 'revision_requested' (snake) → ContractStatus.revisionRequested (camel).
+  - +requestRevision(contractId, reason) e +resubmitDelivery(contractId, photoUrls).
+- my_contracts_view.dart:
+  - +_handleRequestRevision e +_handleResubmitDelivery (compartilha lógica de upload via _handleDelivery(isResubmit)).
+  - +_RevisionReasonSheet bottom sheet com TextField (10..500 chars), botão laranja "Enviar solicitação" + Cancelar.
+  - _DeliveryComposerSheet aceita isResubmit pra mudar título/labels ("Reenviar entrega" em vez de "Confirmar entrega").
+  - Badge spec pra revisionRequested: laranja-âmbar "Revisão pedida".
+  - Caixa "Revisão solicitada" mostrando revisionReason pro freelancer (e como histórico se revisionCount > 0).
+  - Cliente vendo delivered agora vê 2 botões lado a lado: "Solicitar revisão" (outline laranja) + "Aprovar" (filled verde).
+  - Freelancer vendo revisionRequested vê botão "Reenviar entrega" (filled roxo, ícone upload).
+
+Validar analyze + test. Stage.
+```
+
+### Output recebido:
+```markdown
+- functions/src/index.ts: +requestContractRevision (~70 linhas), +resubmitContractDelivery (~80 linhas), +2 branches no onContractStatusChanged. Build TS limpo. Deploy: 2 funções novas criadas, 7 atualizadas.
+- lib/models/contract.dart: +revisionRequested no enum, +revisionReason + revisionCount required.
+- lib/core/services/contracts_service.dart: +2 métodos, +_parseStatus helper (snake↔camel), parse defensivo dos 2 campos novos.
+- lib/views/my_contracts_view.dart:
+  - +_handleRequestRevision, refactor _handleMarkDelivered/_handleResubmitDelivery em _handleDelivery(isResubmit).
+  - _ContractCard ganha 2 callbacks (onRequestRevision, onResubmitDelivery) + 4 novos flags computed (showRequestRevision, showResubmitDelivery, showRevisionReason).
+  - +badge spec revisionRequested (laranja).
+  - +caixa revisionReason com ícone replay (visível pro freelancer/quando count > 0).
+  - +Row de 2 botões pro Cliente em delivered (Solicitar revisão outline laranja + Aprovar filled verde).
+  - +Botão "Reenviar entrega" pro Freelancer em revision_requested.
+  - +_RevisionReasonSheet com TextField + counter + botão dinâmico ("Faltam X caracteres" / "Enviar solicitação").
+  - _DeliveryComposerSheet aceita isResubmit (muda título de "Confirmar entrega" pra "Reenviar entrega" + label do botão final).
+- Validação: flutter analyze 0 issues. flutter test 13 passed (testes existentes intactos — UI nova não tem assertion).
+```
+
+### Resultado:
+Iteração coesa, sem retentativas. Pontos relevantes:
+
+- **Status `revision_requested` snake_case no Firestore**: o enum Dart usa camelCase (`revisionRequested`), mas Firebase gravar/ler usa `revision_requested` (consistência com `proposalCount`, etc — snake é convenção no docs). Adicionei `_parseStatus` helper porque `.name` do enum não bate. Tradeoff: 1 enum entre N precisa de mapping especial. Vale a pena pra manter Firestore consistente com seu próprio padrão.
+- **Substituir vs acumular fotos no reenvio**: decisão de UX — a entrega reenviada é uma "nova versão", as fotos antigas viram irrelevantes. Cliente que quiser comparar tem que pedir antes. Acumular ficaria confuso visualmente (10+ fotos misturando versões). `revisionCount` no doc registra que houve N revisões — auditoria sem precisar ver as fotos antigas.
+- **`revisionCount` em vez de só boolean `wasRevised`**: prepara pro futuro mostrar "Última revisão solicitada (2ª)" se acontecer ciclo. Realista pra freelance — 1-2 ajustes é comum.
+- **Botão "Solicitar revisão" outline laranja, "Aprovar" filled verde**: hierarquia visual clara — verde é o caminho "feliz" (filled = primário), laranja é o caminho de fricção (outline = secundário). Cliente é nudgeado pra aprovar, mas tem a saída visível.
+- **`_RevisionReasonSheet` separado de `_DeliveryComposerSheet`**: poderia ter tentado generalizar, mas semanticamente são fluxos diferentes (escolher fotos vs escrever texto). Manter 2 sheets simples é mais legível que 1 polimórfico.
+- **`revisionReason` visível pro freelancer mesmo após reenvio**: contrato volta a `delivered` mas a caixa de motivo continua aparecendo (a condição é `revisionCount > 0`). Útil pra ele lembrar o que foi pedido enquanto espera 2ª aprovação. Cliente também vê — fica claro o histórico.
+- **Trigger `onContractStatusChanged` agora tem 4 branches**: active→delivered, delivered→completed, delivered→revision_requested, revision_requested→delivered. Está ficando longo — provavelmente vai precisar refactor pra switch puro quando vier "delivered → disputed". Por ora ifs são OK.
+- **Sem mudança no `project.status` durante revisão**: o projeto continua `active`. Quando aprovar finalmente, vira `completed`. Bom — durante a revisão é só ruído mover o status do projeto.
+
+**Cobertura visual:**
+- Workflow circular agora: entrega → revisão → reenvio → revisão → reenvio → ... → aprovação. Realista.
+- Push em 6 pontos totais (4 antigos + 2 novos): cobre todos os eventos que mudam o estado entre as partes.
+
+**Fluxo testável agora:**
+1. Cliente publica → Freelancer propõe → Cliente aceita (contrato active).
+2. Freelancer "Marcar como entregue" → contrato delivered + push pro Cliente.
+3. Cliente abre Meus contratos → 2 botões: "Solicitar revisão" (laranja) + "Aprovar" (verde).
+4. Tap "Solicitar revisão" → bottom sheet com TextField. Escreve "A paleta tá fora do brief…". Botão vira "Enviar solicitação" quando passa de 10 chars.
+5. Confirma → contrato vira "Revisão pedida" (badge laranja). Cliente vê na tela "aguardando reenvio". Push pro Freelancer chega.
+6. Freelancer vê o card com caixa "Revisão solicitada" + texto do motivo. Tap "Reenviar entrega" abre composer com título "Reenviar entrega". Anexa novas fotos.
+7. Confirma → contrato volta a "Entregue". Cliente vê push "Entrega reenviada — Toque para revisar". Caixa de motivo continua visível (histórico).
+8. Cliente aprova → contrato "Concluído". Projeto → completed. Fim.
+
+**Hotfix da Iteração 25 (mesmo commit ou commit separado):** durante validação, o usuário viu o erro `failed-precondition` mostrado como "Contrato não está no status esperado." num cenário onde a UI do Freelancer ficou stale (badge "Em andamento" + botão "Marcar como entregue" mesmo com o status real sendo `revision_requested` no Firestore). Causa raiz: hot reload no app não recarregou o método estático novo `_parseStatus` que mapeia `revision_requested` (snake) → `ContractStatus.revisionRequested` (camel). O fallback `orElse: () => ContractStatus.active` chutou pra active, fazendo a UI mostrar o botão errado.
+
+Fix aplicado (sem deploy server-side):
+- `_humanizeError` em `my_contracts_view.dart` agora retorna "O estado do contrato mudou. Puxe pra baixo pra atualizar e tente novamente." — instrução acionável.
+- RefreshIndicator wrappa a tela MyContractsView. Pull-to-refresh chama `_refresh()` que limpa `_loadError` e re-executa `_initStream` — cria nova subscription do Firestore que re-emite o estado real.
+- `physics: AlwaysScrollableScrollPhysics()` em todos os ListViews (incluindo empty/error states) pra que o gesture funcione mesmo sem conteúdo.
+
+Lição arquitetural: hot reload em singleton com método estático pode manter versão antiga em memória. Pra desenvolvimento da próxima vez: stop+run sempre que enum/parser mudar. Pra produção: pull-to-refresh agora cobre o caso de cache divergente.
+
+**Próximo passo (Iteração 26):** voltar ao core. Candidatos:
+- **A — Detalhe do contrato** (tela nova quando tap no card de MyContractsView): timeline de eventos (criado / entregue em X / revisão em Y / aprovado), fotos em grid maior, ações contextuais.
+- **B — Edição de perfil** (Profile tab hoje é placeholder "Edição em breve"): trocar displayName + foto de perfil. Reusa storage + image_picker.
+- **C — Mensagens** (chat freelancer ↔ cliente): collection messages, streams paginados. Maior, fecha o último placeholder de tab. Já mencionado várias vezes — provavelmente o "mais valioso" funcionalmente.
+
+Recomendação: **B — Edição de perfil** (foco rápido + recupera o "Foto de perfil" que era a alternativa de câmera na Iteração 22) ou direto **C** se quiser fechar a tab Mensagens de uma vez.
+
+---
+
 ## Iteração 17
 ### Prompt usado:
 ```plaintext
