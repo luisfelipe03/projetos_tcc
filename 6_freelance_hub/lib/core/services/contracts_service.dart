@@ -29,6 +29,15 @@ class ContractsService {
         .map((snap) => snap.docs.map(_fromDoc).toList());
   }
 
+  /// Observa UM contrato em tempo real (pra ContractDetailView).
+  /// Emite `null` se o doc não existir/foi removido.
+  Stream<Contract?> streamContract(String contractId) {
+    return _collection.doc(contractId).snapshots().map((snap) {
+      if (!snap.exists) return null;
+      return _fromMap(snap.id, snap.data()!);
+    });
+  }
+
   /// Freelancer marca contrato como entregue (status active → delivered).
   /// [photoUrls] são URLs https do Firebase Storage com as fotos do trabalho.
   Future<void> markDelivered(
@@ -72,9 +81,12 @@ class ContractsService {
   }
 
   Contract _fromDoc(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data();
+    return _fromMap(doc.id, doc.data());
+  }
+
+  Contract _fromMap(String id, Map<String, dynamic> data) {
     return Contract(
-      id: doc.id,
+      id: id,
       projectId: data['projectId'] as String? ?? '',
       projectTitle: data['projectTitle'] as String? ?? '',
       clientId: data['clientId'] as String? ?? '',
@@ -96,6 +108,7 @@ class ContractsService {
       revisionCount: (data['revisionCount'] as num?)?.toInt() ?? 0,
     );
   }
+
 
   // Firestore guarda `revision_requested` (snake) — o enum Dart é
   // `revisionRequested` (camel). Mapeia explícito; outros enums batem direto.

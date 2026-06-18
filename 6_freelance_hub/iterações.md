@@ -2160,3 +2160,74 @@ Recomendação: **A** (fecha o loop de contrato com tela rica, libera real estat
 
 ---
 
+## Iteração 29
+### Prompt usado:
+```plaintext
+Iteração 29 — Detalhe do contrato (opção A).
+
+Hoje a UX inteira de contrato vive no card de MyContractsView: meta + status + fotos thumbnail + 3 variantes de botão + caixinha laranja com motivo de revisão. Tudo amontoado num card de 16px de padding. Construir tela própria pra contrato:
+
+1. Tela nova ContractDetailView(contractId) que observa UM contrato em tempo real (single-doc snapshot).
+2. Layout vertical de cards: header (título + status badge grande), contraparte (avatar + nome + Mensagem), linha do tempo (marcos verticais), razão da revisão se houver, galeria 3-col.
+3. Bottom bar fixa com ações contextuais por status × role.
+4. Refatorar MyContractsView: card simplifica (sem ações inline, sem fotos thumb, sem caixa de revisão), tap inteiro vai pra ContractDetailView.
+5. Extrair widgets reusáveis (badge, sheets, fullscreen) pra lib/widgets/contract_widgets.dart.
+6. Atualizar NotificationsService: push de contract_* (4 tipos) abre ContractDetailView(data.contractId) em vez de lista.
+```
+
+### Output:
+**Service:**
+- `contracts_service.dart`:
+  - Novo `streamContract(contractId): Stream<Contract?>` — observa UM doc. Emite `null` se sumir.
+  - `_fromDoc` agora delega pra `_fromMap(id, data)` que aceita também `DocumentSnapshot.data()`. Reuso sem duplicar parsing.
+
+**Widgets compartilhados (novo arquivo):**
+- `lib/widgets/contract_widgets.dart` (~530 linhas): exports públicos — `ContractStatusBadge` (com flag `large` pra detail), `ContractPhotoFullscreenView`, `DeliveryComposerSheet`, `RevisionReasonSheet`, helpers `formatContractValue`, `relativeContractDate`. Movidos de `my_contracts_view.dart`.
+
+**Tela nova:**
+- `lib/views/contract_detail_view.dart` (~830 linhas): StreamBuilder<Contract?> assina o single-doc. Composição de cards desacoplados (`_HeaderCard`, `_CounterpartyCard`, `_TimelineCard`, `_RevisionReasonCard`, `_GalleryCard`). Ações ficam num Container com SafeArea colado no rodapé — não scroll-flutua com o conteúdo.
+- **Timeline visual:** lista de 3-4 marcos (Iniciado / Entrega enviada / [Revisão se houver] / Concluído). Cada marco = círculo com ícone + traço vertical até o próximo. Cor: roxo se ativo, cinza se pendente, laranja no marco de revisão, verde no marco final concluído. Subtitle traduz o subestado.
+- **Foto da contraparte:** carregada lazy via `WidgetsBinding.addPostFrameCallback` no primeiro build (1 read em `users/{counterpartyUid}`). Sem foto → iniciais.
+- **Galeria em grid 3-col** (vs lista horizontal antiga). Tap → `ContractPhotoFullscreenView`.
+
+**Refatoração:**
+- `my_contracts_view.dart` reescrito (1473 → 395 linhas):
+  - Card simples: título + badge, valor / prazo / "N anexos" como chips, contraparte + chevron, data relativa. **Sem botões, sem fotos, sem caixa de revisão.**
+  - InkWell envolve o card → tap dispara `ContractDetailView(contractId)`.
+  - Apaga todos os handlers de ação, `_humanizeError`, `_processingId` — migraram pro detail.
+  - Imports limpos: `cloud_functions`, `image_picker`, `dart:io`, `chat_view` removidos.
+
+**Notifications:**
+- `notifications_service.dart`: case dos 4 tipos `contract_*` agora lê `msg.data['contractId']` e abre `ContractDetailView(contractId: ...)`. Fallback pra `MyContractsView` se vier sem id (defensivo).
+
+### Resultado:
+**UX:** loop completo do contrato em tela própria, com timeline narrativa em vez de amontoado de botões. MyContractsView volta a ser uma lista limpa de cards navegáveis. Push de contrato leva direto ao card no detail, em 1 tap.
+
+**Arquitetura:**
+- **Stream single-doc** = update em tempo real do detail. Mudou o status no server? A tela se reorganiza sozinha (botões certos aparecem/somem, timeline avança, badge muda) sem refresh.
+- **Helpers públicos** em `widgets/` permitem reuso futuro (ex: card resumido em ClientDashboard).
+- **Carga da foto desacoplada do stream**: stream observa só o contrato; foto vem por fetch separado (1 read). A foto raramente muda durante a vida do contrato; quando muda, próxima abertura pega.
+- **Ações no rodapé fixo**, não no scroll: quando o contrato é longo (várias fotos + revisão + timeline), o botão de ação primária continua visível. Padrão Material para detail views ricos.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed (testes existentes do MyContractsView seguram o empty state)
+
+**Fluxo testável agora:**
+1. Cliente aceita proposta → contrato active aparece em "Meus contratos" no Freelancer.
+2. Tap no card → ContractDetailView abre. Header com título + badge "Em andamento". Contraparte mostra Cliente com foto/iniciais. Timeline: ✓ Contrato iniciado / ○ Entrega enviada / ○ Concluído. Bottom bar: "Marcar como entregue".
+3. Freelancer marca entregue (3 fotos). UI em tempo real: badge → "Entregue", marco "Entrega enviada" → roxo. Card "Anexos da entrega" grid 3-col. Bottom bar some.
+4. Cliente recebe push "Entrega recebida" → tap → abre direto no detail com galeria + bottom bar "Solicitar revisão | Aprovar entrega".
+5. Cliente solicita revisão com motivo. UI: marco "Revisão solicitada (1ª)" entra entre Entrega e Concluído (laranja). Card laranja com motivo aparece. Bottom bar some.
+6. Freelancer recebe push → tap → vê timeline com revisão + card com motivo. Bottom bar "Reenviar entrega". Reenvia com novas fotos.
+7. Cliente vê galeria atualizada, marco "Revisão" vira "Reenviada pelo freelancer", bottom bar volta com Aprovar/Solicitar revisão.
+8. Cliente aprova → badge "Concluído", último marco verde, bottom bar some. Read-only daí em diante.
+
+**Próximo passo (Iteração 30):** sobrou só **C — Filtros + busca no Feed** do menu original. Outras direções possíveis:
+- Avaliações mútuas pós-conclusão (rating 1-5 + comentário; mostra média no perfil)
+- Notificações in-app persistidas (badge na sineta + lista de notifs)
+- Disputa de contrato (estado `disputed` existe no enum mas sem fluxo)
+
+Recomendação: **C — Filtros** primeiro (entrega valor imediato pro freelancer descobrir trabalhos), depois **avaliações** (fecha o ciclo do contrato com confiança social — essencial pra marketplace).
+
+---

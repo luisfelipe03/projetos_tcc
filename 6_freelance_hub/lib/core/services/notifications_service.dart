@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../views/chat_view.dart';
+import '../../views/contract_detail_view.dart';
 import '../../views/my_contracts_view.dart';
 import '../../views/my_proposals_view.dart';
 import '../../views/received_proposals_view.dart';
@@ -212,9 +213,19 @@ class NotificationsService {
       case 'contract_redelivered':
       case 'contract_completed':
       case 'contract_revision_requested':
-        navigator.push(MaterialPageRoute(
-          builder: (_) => const MyContractsView(),
-        ));
+        // Push de contrato sempre carrega contractId no data; deep link vai
+        // direto pra detail. Fallback pra lista se vier sem id (defensivo,
+        // não deve acontecer com o CF atual).
+        final contractId = msg.data['contractId'] as String? ?? '';
+        if (contractId.isNotEmpty) {
+          navigator.push(MaterialPageRoute(
+            builder: (_) => ContractDetailView(contractId: contractId),
+          ));
+        } else {
+          navigator.push(MaterialPageRoute(
+            builder: (_) => const MyContractsView(),
+          ));
+        }
       case 'chat_message':
         final senderId = msg.data['senderId'] as String? ?? '';
         final senderName = msg.data['senderName'] as String? ?? '';
