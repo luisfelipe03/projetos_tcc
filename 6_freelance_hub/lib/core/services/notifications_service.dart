@@ -105,6 +105,10 @@ class NotificationsService {
       _foregroundSub = FirebaseMessaging.onMessage.listen((msg) {
         final n = msg.notification;
         if (n == null) return;
+        // Em foreground o sistema não mostra a notificação; usamos SnackBar
+        // in-app. Action "Abrir" reaproveita o handler de tap pra cobrir o caso
+        // de o user querer pular pra tela relevante mesmo com app aberto.
+        final hasDeepLink = msg.data['type'] != null;
         messengerKey.currentState
           ?..hideCurrentSnackBar()
           ..showSnackBar(
@@ -112,6 +116,7 @@ class NotificationsService {
               backgroundColor: const Color(0xFF3B309E),
               behavior: SnackBarBehavior.floating,
               margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 6),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -141,6 +146,13 @@ class NotificationsService {
                     ),
                 ],
               ),
+              action: hasDeepLink
+                  ? SnackBarAction(
+                      label: 'Abrir',
+                      textColor: Colors.white,
+                      onPressed: () => _handleNotificationTap(msg),
+                    )
+                  : null,
             ),
           );
       });

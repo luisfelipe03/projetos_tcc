@@ -66,6 +66,7 @@ class AuthService {
       throw StateError('Documento de usuário não encontrado para uid $uid.');
     }
     final data = doc.data()!;
+    final photoUrl = data['photoUrl'] as String?;
     return AppUser(
       uid: uid,
       email: data['email'] as String? ?? '',
@@ -74,7 +75,27 @@ class AuthService {
         (r) => r.name == (data['role'] as String?),
         orElse: () => UserRole.freelancer,
       ),
+      photoUrl: (photoUrl == null || photoUrl.isEmpty) ? null : photoUrl,
     );
+  }
+
+  /// Atualiza nome e/ou foto do usuário no doc `users/{uid}`.
+  /// O server tem um trigger `onUserUpdated` que propaga o displayName novo
+  /// pra denormalizações (threads, contracts, proposals) automaticamente.
+  Future<void> updateProfile({
+    required String uid,
+    String? displayName,
+    String? photoUrl,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (displayName != null) {
+      updates['displayName'] = displayName;
+    }
+    if (photoUrl != null) {
+      updates['photoUrl'] = photoUrl;
+    }
+    if (updates.isEmpty) return;
+    await _usersCollection.doc(uid).update(updates);
   }
 
   String mapAuthError(FirebaseAuthException e) {

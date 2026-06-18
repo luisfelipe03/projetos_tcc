@@ -21,5 +21,18 @@ service firebase.storage {
                    && request.resource.size < 5 * 1024 * 1024
                    && request.resource.contentType.matches('image/.*');
     }
+
+    // Foto de perfil do user. Path: profile_photos/{uid}/{fileName}.
+    //
+    // Leitura: pública pra usuário autenticado (avatar aparece em chats,
+    // cards de proposta, etc — qualquer parte do app que liste pessoas).
+    // Escrita: SÓ o próprio user (o path inclui o uid). 5MB max + image/*.
+    match /profile_photos/{uid}/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 5 * 1024 * 1024
+                   && request.resource.contentType.matches('image/.*');
+    }
   }
 }

@@ -782,3 +782,135 @@ export const sendMessage = onCall(async (request) => {
   });
   return { threadId };
 });
+
+/**
+ * Trigger: usuário editou o perfil. Propaga o `displayName` novo pras
+ * denormalizações em outras coleções:
+ *  - threads onde uid ∈ participantIds → participantNames[uid]
+ *  - contracts onde clientId == uid    → clientName
+ *  - contracts onde freelancerId == uid → freelancerName
+ *  - proposals onde freelancerId == uid → freelancerName
+ *
+ * photoUrl NÃO é denormalizado em nenhuma coleção (foto é lida via 1 read
+ * direto do doc do user na ChatView). Mudança só em photoUrl é no-op.
+ *
+ * Custo de write é proporcional ao histórico do user. Batches de 500 docs
+ * cobrem 99% dos casos; se algum dia user tiver >500 docs de um tipo, o
+ * código abaixo loopa em lotes.
+ */
+export const onUserUpdated = onDocumentUpdated(
+  "users/{uid}",
+  async (event) => {
+    const before = event.data?.before.data();
+    const after = event.data?.after.data();
+    if (!before || !after) return;
+
+    const oldName = (before.displayName as string) || "";
+    const newName = (after.displayName as string) || "";
+    if (oldName === newName) {
+      // Mudança só em photoUrl ou fcmTokens — nada a propagar.
+      return;
+    }
+
+    const uid = event.params.uid;
+    const db = getFirestore();
+    logger.info("Propagando displayName novo", { uid, oldName, newName });
+
+    await Promise.all([
+      propagateInThreads(db, uid, newName),
+      propagateInContracts(db, uid, newName),
+      propagateInProposals(db, uid, newName),
+    ]);
+  }
+);
+
+async function commitInBatches(
+  db: FirebaseFirestore.Firestore,
+  refs: FirebaseFirestore.DocumentReference[],
+  data: Record<string, unknown>
+) {
+  const chunkSize = 400;
+  for (let i = 0; i < refs.length; i += chunkSize) {
+    const slice = refs.slice(i, i + chunkSize);
+    const batch = db.batch();
+    for (const ref of slice) {
+      batch.update(ref, data);
+    }
+    await batch.commit();
+  }
+}
+
+async function propagateInThreads(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  newName: string
+) {
+  const snap = await db
+    .collection("threads")
+    .where("participantIds", "array-contains", uid)
+    .get();
+  if (snap.empty) return;
+  const refs = snap.docs.map((d) => d.ref);
+  await commitInBatches(db, refs, {
+    [`participantNames.${uid}`]: newName,
+  });
+  logger.info("Threads atualizadas", { uid, count: refs.length });
+}
+
+async function propagateInContracts(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  newName: string
+) {
+  const asClient = await db
+    .collection("contracts")
+    .where("clientId", "==", uid)
+    .get();
+  if (!asClient.empty) {
+    await commitInBatches(
+      db,
+      asClient.docs.map((d) => d.ref),
+      { clientName: newName }
+    );
+    logger.info("Contracts (cliente) atualizados", {
+      uid,
+      count: asClient.size,
+    });
+  }
+  const asFreelancer = await db
+    .collection("contracts")
+    .where("freelancerId", "==", uid)
+    .get();
+  if (!asFreelancer.empty) {
+    await commitInBatches(
+      db,
+      asFreelancer.docs.map((d) => d.ref),
+      { freelancerName: newName }
+    );
+    logger.info("Contracts (freelancer) atualizados", {
+      uid,
+      count: asFreelancer.size,
+    });
+  }
+}
+
+async function propagateInProposals(
+  db: FirebaseFirestore.Firestore,
+  uid: string,
+  newName: string
+) {
+  const snap = await db
+    .collection("proposals")
+    .where("freelancerId", "==", uid)
+    .get();
+  if (snap.empty) return;
+  await commitInBatches(
+    db,
+    snap.docs.map((d) => d.ref),
+    { freelancerName: newName }
+  );
+  logger.info("Proposals (freelancer) atualizadas", {
+    uid,
+    count: snap.size,
+  });
+}

@@ -11,10 +11,18 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.auth.uid == uid
                     && request.resource.data.role in ['client', 'freelancer'];
+      // Update: SÓ o próprio user, SÓ os campos displayName / photoUrl
+      // (perfil editável da Iteração 28). role/email/createdAt imutáveis.
+      // fcmTokens é mexido em chamadas separadas (arrayUnion/arrayRemove),
+      // que continuam permitidas porque a regra valida diff.affectedKeys —
+      // que naquele caso é só ['fcmTokens']. Pra cobrir os 2 casos, listamos
+      // o conjunto permitido.
       allow update: if request.auth != null
                     && request.auth.uid == uid
-                    // role não pode mudar após criação.
-                    && request.resource.data.role == resource.data.role;
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.diff(resource.data)
+                        .affectedKeys()
+                        .hasOnly(['displayName', 'photoUrl', 'fcmTokens']);
       allow delete: if false;
     }
 

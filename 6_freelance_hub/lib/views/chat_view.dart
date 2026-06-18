@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,7 @@ class _ChatViewState extends State<ChatView> {
   Stream<List<ChatMessage>>? _stream;
   String? _viewerUid;
   String? _loadError;
+  String? _otherPhotoUrl;
   bool _sending = false;
 
   @override
@@ -69,9 +71,25 @@ class _ChatViewState extends State<ChatView> {
         _viewerUid = user.uid;
         _stream = MessagesService.instance.streamMessages(threadId);
       });
+      _loadOtherPhoto();
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadError = 'Falha ao carregar mensagens: $e');
+    }
+  }
+
+  Future<void> _loadOtherPhoto() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.otherUid)
+          .get();
+      if (!mounted || !doc.exists) return;
+      final url = doc.data()?['photoUrl'] as String?;
+      if (url == null || url.isEmpty) return;
+      setState(() => _otherPhotoUrl = url);
+    } catch (_) {
+      // Falhar aqui não bloqueia o chat — só fica com iniciais.
     }
   }
 
@@ -156,7 +174,11 @@ class _ChatViewState extends State<ChatView> {
           bottom: false,
           child: Column(
             children: [
-              _TopBar(titleColor: titleColor, name: widget.otherName),
+              _TopBar(
+                titleColor: titleColor,
+                name: widget.otherName,
+                photoUrl: _otherPhotoUrl,
+              ),
               Expanded(
                 child: _buildMessages(titleColor, mutedColor, isDark),
               ),
@@ -259,10 +281,15 @@ class _ChatViewState extends State<ChatView> {
 }
 
 class _TopBar extends StatelessWidget {
-  const _TopBar({required this.titleColor, required this.name});
+  const _TopBar({
+    required this.titleColor,
+    required this.name,
+    this.photoUrl,
+  });
 
   final Color titleColor;
   final String name;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -274,23 +301,7 @@ class _TopBar extends StatelessWidget {
             onPressed: () => Navigator.maybePop(context),
             icon: Icon(Icons.arrow_back, color: titleColor),
           ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _primary.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              _initials(name),
-              style: GoogleFonts.dmSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: _primary,
-              ),
-            ),
-          ),
+          _buildAvatar(),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -306,6 +317,42 @@ class _TopBar extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar() {
+    final url = photoUrl;
+    if (url != null && url.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          url,
+          width: 36,
+          height: 36,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _initialsAvatar(),
+        ),
+      );
+    }
+    return _initialsAvatar();
+  }
+
+  Widget _initialsAvatar() {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: _primary.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        _initials(name),
+        style: GoogleFonts.dmSans(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: _primary,
+        ),
       ),
     );
   }

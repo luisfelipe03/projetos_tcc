@@ -7,7 +7,9 @@ import '../core/services/auth_service.dart';
 import '../core/services/notifications_service.dart';
 import '../main.dart' show rootMessengerKey, rootNavigatorKey;
 import '../models/user_role.dart';
+import '../models/app_user.dart';
 import 'client_dashboard_view.dart';
+import 'edit_profile_view.dart';
 import 'feed_view.dart';
 import 'login_view.dart';
 import 'messages_view.dart';
@@ -267,13 +269,49 @@ class _PlaceholderTab extends StatelessWidget {
   }
 }
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends StatefulWidget {
   const _ProfileTab({required this.currentRole, required this.onSignOut});
 
   final UserRole currentRole;
   final Future<void> Function() onSignOut;
 
+  @override
+  State<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends State<_ProfileTab> {
   static const _primary = Color(0xFF3B309E);
+
+  AppUser? _user;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    if (!Firebase.apps.isNotEmpty) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
+    final user = await AuthService.instance.currentAppUser();
+    if (!mounted) return;
+    setState(() {
+      _user = user;
+      _loading = false;
+    });
+  }
+
+  Future<void> _openEdit() async {
+    final updated = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const EditProfileView()),
+    );
+    if (updated == true) {
+      await _loadUser();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -281,50 +319,53 @@ class _ProfileTab extends StatelessWidget {
     final muted = isDark ? Colors.white60 : const Color(0xFF94A3B8);
     final titleColor = isDark ? Colors.white : const Color(0xFF0F172A);
 
+    if (_loading) {
+      return const Center(child: CircularProgressIndicator(color: _primary));
+    }
+
+    final name = _user?.displayName ?? '';
+    final email = _user?.email ?? '';
+    final photoUrl = _user?.photoUrl;
+
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _primary.withValues(alpha: 0.18),
-              border: Border.all(color: _primary, width: 2),
-            ),
-            child: const Icon(Icons.person, color: _primary, size: 44),
+          _ProfileAvatar(
+            photoUrl: photoUrl,
+            name: name,
+            size: 96,
           ),
           const SizedBox(height: 16),
           Text(
-            'Perfil',
+            name.isEmpty ? 'Perfil' : name,
             style: GoogleFonts.dmSans(
               fontSize: 22,
               fontWeight: FontWeight.w700,
               color: titleColor,
             ),
           ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              email,
+              style: GoogleFonts.inter(fontSize: 13, color: muted),
+            ),
+          ],
           const SizedBox(height: 4),
           Text(
-            'Você está como ${currentRole.displayName}.',
-            style: GoogleFonts.inter(fontSize: 14, color: muted),
+            'Você está como ${widget.currentRole.displayName}.',
+            style: GoogleFonts.inter(fontSize: 13, color: muted),
           ),
-          const SizedBox(height: 4),
-          Text(
-            'Edição de perfil em breve.',
-            style: GoogleFonts.inter(fontSize: 12, color: muted),
-          ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const MyContractsView()),
-              ),
-              icon: const Icon(Icons.assignment_outlined, size: 18),
-              label: const Text('Meus contratos'),
+              onPressed: _openEdit,
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Editar perfil'),
               style: FilledButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
@@ -343,7 +384,30 @@ class _ProfileTab extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: onSignOut,
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const MyContractsView()),
+              ),
+              icon: const Icon(Icons.assignment_outlined, size: 18),
+              label: const Text('Meus contratos'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _primary,
+                side: const BorderSide(color: _primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: widget.onSignOut,
               icon: const Icon(Icons.logout, size: 18),
               label: const Text('Sair'),
               style: OutlinedButton.styleFrom(
@@ -363,5 +427,66 @@ class _ProfileTab extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({
+    required this.photoUrl,
+    required this.name,
+    required this.size,
+  });
+
+  final String? photoUrl;
+  final String name;
+  final double size;
+
+  static const _primary = Color(0xFF3B309E);
+
+  @override
+  Widget build(BuildContext context) {
+    final url = photoUrl;
+    if (url != null && url.isNotEmpty) {
+      return ClipOval(
+        child: Image.network(
+          url,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) => _initialsFallback(),
+        ),
+      );
+    }
+    return _initialsFallback();
+  }
+
+  Widget _initialsFallback() {
+    final initials = _initialsOf(name);
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _primary.withValues(alpha: 0.18),
+        border: Border.all(color: _primary, width: 2),
+      ),
+      child: Text(
+        initials,
+        style: GoogleFonts.dmSans(
+          fontSize: size * 0.34,
+          fontWeight: FontWeight.w700,
+          color: _primary,
+        ),
+      ),
+    );
+  }
+
+  static String _initialsOf(String name) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return '?';
+    final parts = trimmed.split(RegExp(r'\s+'));
+    if (parts.length == 1) return parts.first[0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
   }
 }

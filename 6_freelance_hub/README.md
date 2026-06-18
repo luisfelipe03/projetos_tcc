@@ -2,24 +2,24 @@
 
 Desenvolver um aplicativo Flutter de alta complexidade que funcione como uma **plataforma de marketplace para freelancers**, permitindo que clientes publiquem projetos, freelancers enviem propostas, e ambos gerenciem contratos com sistema de escrow simulado, chat em tempo real e avaliações mútuas.
 
-O foco do projeto está na **implementação completa do aplicativo**, incluindo front-end com protótipos de alta fidelidade, lógica de negócio crítica via Edge Functions e persistência com Supabase (PostgreSQL).
+O foco do projeto está na **implementação completa do aplicativo**, incluindo front-end com protótipos de alta fidelidade, lógica de negócio crítica via Edge Functions e persistência com Firebase (PostgreSQL).
 
 ---
 
 # **Objetivo**
 
-Avaliar até que ponto o modelo de IA consegue projetar, implementar e organizar um aplicativo Flutter de alta complexidade, envolvendo múltiplos papéis de usuário (cliente e freelancer), ciclo de vida de contratos com máquina de estados, transações financeiras simuladas e comunicação em tempo real — com backend via Supabase.
+Avaliar até que ponto o modelo de IA consegue projetar, implementar e organizar um aplicativo Flutter de alta complexidade, envolvendo múltiplos papéis de usuário (cliente e freelancer), ciclo de vida de contratos com máquina de estados, transações financeiras simuladas e comunicação em tempo real — com backend via Firebase.
 
 ### Funcionalidades previstas
 
-* Cadastro e autenticação com Supabase Auth (e-mail/senha e Google)
+* Cadastro e autenticação com Firebase Auth (e-mail/senha e Google)
 * Dois papéis de usuário: **Cliente** e **Freelancer**, com navegação e permissões distintas (RBAC)
 * Publicação, edição e remoção de projetos pelo cliente
 * Envio e gerenciamento de propostas pelo freelancer
 * Sistema de **escrow simulado** — valor bloqueado ao aceitar proposta, liberado ao aprovar entrega
 * Ciclo de vida completo do contrato: `pending → active → delivered → completed / disputed`
 * **Chat em tempo real** entre cliente e freelancer vinculado ao contrato
-* Upload de arquivos de entrega via Supabase Storage
+* Upload de arquivos de entrega via Firebase Storage
 * Sistema de **avaliações mútuas** (reviews) após conclusão do contrato
 * Carteira digital (wallet) com saldo, transações e histórico
 * Suporte a **tema claro (Light Mode) e escuro (Dark Mode)**
@@ -34,9 +34,9 @@ Avaliar até que ponto o modelo de IA consegue projetar, implementar e organizar
 
 * **Gerenciamento de estado:** `riverpod`
 * **Navegação:** `go_router` com controle de acesso por papel (RBAC)
-* **Backend:** Supabase (PostgreSQL) + Supabase Auth + Supabase Storage + Edge Functions
+* **Backend:** Firebase (Firestore) + Firebase Auth + Firebase Storage + Cloud Functions
 * **Formulários:** `reactive_forms` ou `flutter_form_builder`
-* **Chat:** Supabase Realtime Broadcast para mensagens em tempo real + persistência em tabela `messages`
+* **Chat:** Firebase Realtime Broadcast para mensagens em tempo real + persistência em tabela `messages`
 
 ### Modelo de dados (PostgreSQL)
 
@@ -48,7 +48,7 @@ Tabelas principais: `users`, `wallets`, `projects`, `proposals`, `contracts`, `m
 
 ### Edge Functions
 
-Toda lógica crítica roda em Supabase Edge Functions (Deno/TypeScript):
+Toda lógica crítica roda em Firebase Edge Functions (Deno/TypeScript):
 * `accept-proposal` — cria o contrato e bloqueia o valor no escrow
 * `submit-delivery` — altera status para `delivered`
 * `approve-delivery` — libera o escrow, credita o freelancer, desbloqueia reviews
