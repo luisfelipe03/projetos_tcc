@@ -8,6 +8,7 @@ import '../core/services/notifications_service.dart';
 import '../main.dart' show rootMessengerKey, rootNavigatorKey;
 import '../models/user_role.dart';
 import '../models/app_user.dart';
+import '../widgets/rating_stars.dart';
 import 'client_dashboard_view.dart';
 import 'edit_profile_view.dart';
 import 'feed_view.dart';
@@ -352,6 +353,29 @@ class _ProfileTabState extends State<_ProfileTab> {
             Text(
               email,
               style: GoogleFonts.inter(fontSize: 13, color: muted),
+            ),
+          ],
+          if (_user?.ratingAverage != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                RatingStars(
+                  value: _user!.ratingAverage!.round(),
+                  size: 18,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  '${_user!.ratingAverage!.toStringAsFixed(1)} '
+                  '(${_user!.ratingCount} '
+                  '${_user!.ratingCount == 1 ? "avaliação" : "avaliações"})',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: muted,
+                  ),
+                ),
+              ],
             ),
           ],
           const SizedBox(height: 4),

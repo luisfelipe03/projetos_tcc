@@ -9,10 +9,14 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/services/auth_service.dart';
 import '../core/services/contracts_service.dart';
+import '../core/services/reviews_service.dart';
 import '../core/services/storage_service.dart';
 import '../models/contract.dart';
+import '../models/review.dart';
 import '../models/user_role.dart';
 import '../widgets/contract_widgets.dart';
+import '../widgets/rating_stars.dart';
+import '../widgets/submit_review_sheet.dart';
 import 'chat_view.dart';
 
 const _primary = Color(0xFF3B309E);
@@ -37,9 +41,13 @@ class ContractDetailView extends StatefulWidget {
 class _ContractDetailViewState extends State<ContractDetailView> {
   Stream<Contract?>? _stream;
   UserRole? _viewerRole;
+  String? _viewerUid;
   String? _loadError;
-  String? _processingAction; // 'deliver' | 'accept' | 'revision' | 'resubmit'
+  String? _processingAction; // 'deliver' | 'accept' | 'revision' | 'resubmit' | 'review'
   String? _counterpartyPhotoUrl;
+  Review? _myReview;
+  Review? _counterpartyReview;
+  bool _reviewsLoadedForCompleted = false;
 
   @override
   void initState() {
@@ -64,11 +72,84 @@ class _ContractDetailViewState extends State<ContractDetailView> {
       }
       setState(() {
         _viewerRole = user.role;
+        _viewerUid = user.uid;
         _stream = ContractsService.instance.streamContract(widget.contractId);
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _loadError = 'Falha ao carregar contrato: $e');
+    }
+  }
+
+  Future<void> _loadReviews(Contract contract) async {
+    if (_reviewsLoadedForCompleted) return;
+    final viewerUid = _viewerUid ?? '';
+    if (viewerUid.isEmpty) return;
+    if (contract.status != ContractStatus.completed) return;
+
+    _reviewsLoadedForCompleted = true;
+    final counterpartyUid = viewerUid == contract.clientId
+        ? contract.freelancerId
+        : contract.clientId;
+    try {
+      final results = await Future.wait([
+        ReviewsService.instance.getMyReview(
+          contractId: contract.id,
+          reviewerId: viewerUid,
+        ),
+        ReviewsService.instance.getMyReview(
+          contractId: contract.id,
+          reviewerId: counterpartyUid,
+        ),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _myReview = results[0];
+        _counterpartyReview = results[1];
+      });
+    } catch (_) {
+      // Falha aqui não bloqueia o detail — pior caso o user toca em "Avaliar"
+      // e o erro do callable mostra SnackBar.
+    }
+  }
+
+  Future<void> _handleSubmitReview(Contract contract) async {
+    if (_processingAction != null) return;
+    final viewerUid = _viewerUid ?? '';
+    if (viewerUid.isEmpty) return;
+
+    final isClient = (_viewerRole ?? UserRole.freelancer) == UserRole.client;
+    final revieweeName = isClient
+        ? (contract.freelancerName.isEmpty
+            ? 'o freelancer'
+            : contract.freelancerName)
+        : (contract.clientName.isEmpty ? 'o cliente' : contract.clientName);
+
+    final draft = await showModalBottomSheet<ReviewDraft>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => SubmitReviewSheet(revieweeName: revieweeName),
+    );
+    if (!mounted || draft == null) return;
+
+    setState(() => _processingAction = 'review');
+    try {
+      await ReviewsService.instance.submitReview(
+        contractId: contract.id,
+        rating: draft.rating,
+        comment: draft.comment,
+      );
+      if (!mounted) return;
+      _showSnack('Avaliação enviada. Obrigado!', success: true);
+      // Re-fetch pra mostrar a review nova na UI.
+      _reviewsLoadedForCompleted = false;
+      await _loadReviews(contract);
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(_humanizeError(e, 'avaliar'), success: false);
+    } finally {
+      if (mounted) setState(() => _processingAction = null);
     }
   }
 
@@ -347,6 +428,14 @@ class _ContractDetailViewState extends State<ContractDetailView> {
           });
         }
 
+        // Reviews só fazem sentido pra contratos concluídos. Lazy load 1x.
+        if (contract.status == ContractStatus.completed &&
+            !_reviewsLoadedForCompleted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadReviews(contract);
+          });
+        }
+
         final actions = _buildActions(
           contract: contract,
           viewerRole: viewerRole,
@@ -400,6 +489,21 @@ class _ContractDetailViewState extends State<ContractDetailView> {
                     const SizedBox(height: 12),
                     _GalleryCard(
                       urls: contract.deliveryPhotoUrls,
+                      cardBg: cardBg,
+                      titleColor: titleColor,
+                      mutedColor: mutedColor,
+                      borderColor: borderColor,
+                    ),
+                  ],
+                  if (contract.status == ContractStatus.completed) ...[
+                    const SizedBox(height: 12),
+                    _ReviewsCard(
+                      contract: contract,
+                      myReview: _myReview,
+                      counterpartyReview: _counterpartyReview,
+                      counterpartyName: counterpartyName,
+                      submitting: _processingAction == 'review',
+                      onSubmit: () => _handleSubmitReview(contract),
                       cardBg: cardBg,
                       titleColor: titleColor,
                       mutedColor: mutedColor,
@@ -1245,6 +1349,176 @@ class _GalleryCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ReviewsCard extends StatelessWidget {
+  const _ReviewsCard({
+    required this.contract,
+    required this.myReview,
+    required this.counterpartyReview,
+    required this.counterpartyName,
+    required this.submitting,
+    required this.onSubmit,
+    required this.cardBg,
+    required this.titleColor,
+    required this.mutedColor,
+    required this.borderColor,
+  });
+
+  final Contract contract;
+  final Review? myReview;
+  final Review? counterpartyReview;
+  final String counterpartyName;
+  final bool submitting;
+  final VoidCallback onSubmit;
+  final Color cardBg;
+  final Color titleColor;
+  final Color mutedColor;
+  final Color borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Avaliações',
+            style: GoogleFonts.dmSans(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: titleColor,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _myReviewSection(),
+          const SizedBox(height: 14),
+          Container(height: 1, color: borderColor),
+          const SizedBox(height: 14),
+          _counterpartyReviewSection(),
+        ],
+      ),
+    );
+  }
+
+  Widget _myReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'SUA AVALIAÇÃO',
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: mutedColor,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (myReview != null) ...[
+          RatingStars(value: myReview!.rating, size: 22),
+          if (myReview!.comment.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              myReview!.comment,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: titleColor,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ] else ...[
+          Text(
+            'Como foi trabalhar com $counterpartyName? Sua avaliação ajuda '
+            'outras pessoas a decidirem.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: mutedColor,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: submitting ? null : onSubmit,
+              icon: submitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
+                      ),
+                    )
+                  : const Icon(Icons.star_rounded, size: 18),
+              label: const Text('Avaliar agora'),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF3B309E),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _counterpartyReviewSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'AVALIAÇÃO DA CONTRAPARTE',
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: mutedColor,
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (counterpartyReview != null) ...[
+          RatingStars(value: counterpartyReview!.rating, size: 22),
+          if (counterpartyReview!.comment.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              counterpartyReview!.comment,
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                color: titleColor,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ] else ...[
+          Text(
+            'Aguardando avaliação de $counterpartyName.',
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              color: mutedColor,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

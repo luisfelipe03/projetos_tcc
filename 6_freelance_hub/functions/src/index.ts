@@ -914,3 +914,140 @@ async function propagateInProposals(
     count: snap.size,
   });
 }
+
+/**
+ * Callable: parte do contrato envia avaliação da contraparte.
+ *
+ * Idempotência via doc ID determinístico `{contractId}_{reviewerId}` —
+ * tentar enviar 2x falha com `already-exists` (rule).
+ *
+ * Operação atômica (transaction):
+ *  1. Lê o contrato + verifica que caller é cliente OU freelancer.
+ *  2. Verifica que contrato está em `completed`.
+ *  3. Verifica que a review ainda não existe.
+ *  4. Cria doc em `reviews/{contractId}_{reviewerId}`.
+ *  5. Agrega no doc do revieweeId: ratingTotal += rating, ratingCount += 1.
+ *
+ * Depois (fora da transaction): push notification pro revieweeId.
+ */
+export const submitReview = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const reviewerId = request.auth.uid;
+  const contractId = request.data?.contractId as string | undefined;
+  const ratingRaw = request.data?.rating as number | undefined;
+  const commentRaw = (request.data?.comment as string | undefined) ?? "";
+
+  if (!contractId) {
+    throw new HttpsError("invalid-argument", "contractId é obrigatório.");
+  }
+  if (
+    typeof ratingRaw !== "number" ||
+    !Number.isInteger(ratingRaw) ||
+    ratingRaw < 1 ||
+    ratingRaw > 5
+  ) {
+    throw new HttpsError("invalid-argument", "Avaliação precisa ser de 1 a 5.");
+  }
+  const comment = commentRaw.trim();
+  if (comment.length > 500) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Comentário com no máximo 500 caracteres."
+    );
+  }
+
+  const db = getFirestore();
+  const contractRef = db.collection("contracts").doc(contractId);
+  const reviewRef = db.collection("reviews").doc(`${contractId}_${reviewerId}`);
+
+  let revieweeId = "";
+  let projectTitle = "";
+  let projectId = "";
+  let reviewerName = "";
+
+  await db.runTransaction(async (tx) => {
+    const contractSnap = await tx.get(contractRef);
+    if (!contractSnap.exists) {
+      throw new HttpsError("not-found", "Contrato não encontrado.");
+    }
+    const contract = contractSnap.data()!;
+    const clientId = contract.clientId as string;
+    const freelancerId = contract.freelancerId as string;
+    const status = contract.status as string;
+
+    if (reviewerId !== clientId && reviewerId !== freelancerId) {
+      throw new HttpsError(
+        "permission-denied",
+        "Apenas as partes do contrato podem avaliar."
+      );
+    }
+    if (status !== "completed") {
+      throw new HttpsError(
+        "failed-precondition",
+        "Só é possível avaliar contratos concluídos."
+      );
+    }
+
+    revieweeId = reviewerId === clientId ? freelancerId : clientId;
+    projectTitle = (contract.projectTitle as string) || "";
+    projectId = (contract.projectId as string) || "";
+    reviewerName =
+      reviewerId === clientId
+        ? ((contract.clientName as string) || "")
+        : ((contract.freelancerName as string) || "");
+
+    const existing = await tx.get(reviewRef);
+    if (existing.exists) {
+      throw new HttpsError(
+        "already-exists",
+        "Você já avaliou este contrato."
+      );
+    }
+
+    tx.set(reviewRef, {
+      contractId,
+      projectId,
+      projectTitle,
+      reviewerId,
+      reviewerName,
+      revieweeId,
+      rating: ratingRaw,
+      comment,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    const revieweeRef = db.collection("users").doc(revieweeId);
+    tx.update(revieweeRef, {
+      ratingTotal: FieldValue.increment(ratingRaw),
+      ratingCount: FieldValue.increment(1),
+    });
+  });
+
+  logger.info("Review submetida", {
+    contractId,
+    reviewerId,
+    revieweeId,
+    rating: ratingRaw,
+  });
+
+  // Push notification pro avaliado (fora da transaction — falha aqui não
+  // reverte o write da review).
+  const ratingLabel =
+    ratingRaw === 5 ? "5 estrelas" : `${ratingRaw} estrela${ratingRaw === 1 ? "" : "s"}`;
+  await sendPushToUser(
+    revieweeId,
+    {
+      title: "Nova avaliação",
+      body: `${reviewerName || "Alguém"} deixou ${ratingLabel} em "${projectTitle}".`,
+    },
+    {
+      type: "review_received",
+      contractId,
+      reviewerId,
+    }
+  );
+
+  return { ok: true };
+});

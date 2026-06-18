@@ -2306,3 +2306,106 @@ Tudo client-side (filter em memória da lista carregada do stream). Feed flat co
 Recomendação: **Avaliações** (fecha o loop, gera confiança social, libera componente `_RatingStars` reusável).
 
 ---
+
+## Iteração 31
+### Prompt usado:
+```plaintext
+Iteração 31 — Avaliações mútuas pós-conclusão.
+
+Quando um contrato é concluído, hoje o ciclo para — o status fica "Concluído" e cada parte segue a vida. Falta o feedback social que dá confiança ao marketplace:
+
+1. Tanto cliente quanto freelancer podem avaliar a contraparte com rating 1-5 + comentário opcional, mas SÓ depois que o contrato está em status `completed`.
+2. Doc ID determinístico `reviews/{contractId}_{reviewerId}` previne dupla avaliação. Imutável após enviada.
+3. Server agrega ratingTotal/ratingCount no doc do avaliado (denormalização clássica pra evitar query custosa toda vez que abre um perfil).
+4. UI:
+   - Bottom sheet pra coletar (stars interativas + comentário).
+   - Card "Avaliações" na ContractDetailView quando status == completed: minha review se já dei, CTA pra avaliar se não; review da contraparte se houver, "Aguardando" se não.
+   - Tab Perfil mostra média + contagem do user logado.
+5. Push notification "Nova avaliação" pro avaliado.
+6. Rules: reviews read auth (perfil público), write bloqueado (só CF).
+```
+
+### Output:
+**Model + Service:**
+- `lib/models/review.dart`: classe `Review` imutável (id, contractId, projectId, projectTitle, reviewerId, reviewerName, revieweeId, rating, comment, createdAt).
+- `lib/core/services/reviews_service.dart`:
+  - `static reviewIdFor({contractId, reviewerId})` — id determinístico reusado client + server.
+  - `submitReview({contractId, rating, comment})` — callable wrapper.
+  - `streamReviewsByUser(uid)` — stream de reviews recebidas (pra perfil público futuro).
+  - `getMyReview({contractId, reviewerId})` — single doc read (pra checar se já avaliou).
+
+**Cloud Function (`functions/src/index.ts`):**
+- Callable `submitReview`:
+  - Validação client + server: rating inteiro 1-5, comment <= 500 chars trimmed.
+  - Transaction atômica:
+    1. Lê o contrato, valida caller ∈ {clientId, freelancerId}.
+    2. Valida `status === 'completed'` (não pode avaliar antes).
+    3. Calcula `revieweeId` = a outra parte.
+    4. Lê `reviews/{contractId}_{reviewerId}` — se existe, throw `already-exists`.
+    5. Cria a review com `createdAt: serverTimestamp()`.
+    6. `users/{revieweeId}.ratingTotal += rating`, `ratingCount += 1` via `FieldValue.increment`.
+  - Push pro avaliado fora da transaction (`type: review_received`, com `contractId` + `reviewerId`). Falha aqui não reverte o write — review já tá persistida.
+- Trailer human-readable: "{Nome} deixou 5 estrelas em \"{Projeto}\"."
+
+**Rules (`firestore.rules`):**
+- Novo bloco `reviews/{reviewId}`: `read: auth != null`, `create/update/delete: false`. Toda escrita só via callable (admin SDK bypassa rules).
+- `users update.affectedKeys` JÁ ignora ratingTotal/ratingCount: o agregado roda no admin SDK que bypassa rules, então não precisa whitelistar. Confirmado funcionando.
+
+**Widgets:**
+- `lib/widgets/rating_stars.dart`: `RatingStars(value, max, size, interactive, onChanged)`. Read-only mostra cheias vs outlined; interactive registra GestureDetector em cada estrela e dispara `onChanged(1-based)`. Usado tanto no submit sheet quanto na exibição de reviews.
+- `lib/widgets/submit_review_sheet.dart`: bottom sheet com:
+  - Stars interativas size 36 + label adaptativo ("Toque nas estrelas pra avaliar" → "Excelente" pra 5).
+  - TextField multiline pra comentário (max 500, opcional).
+  - Botão "Enviar avaliação" desabilitado até rating > 0.
+  - Pop com `ReviewDraft(rating, comment)` ou null.
+
+**ContractDetailView integração:**
+- Estado novo: `_viewerUid`, `_myReview`, `_counterpartyReview`, `_reviewsLoadedForCompleted` (guard de single-load).
+- `_loadReviews(contract)` chamado em `addPostFrameCallback` quando contrato vira completed. Faz 2 reads paralelos via `Future.wait` (a minha + a da contraparte) usando o id determinístico.
+- `_handleSubmitReview(contract)` abre `SubmitReviewSheet`, chama callable, re-fetch reviews. SnackBar verde no sucesso.
+- Novo `_ReviewsCard` renderizado apenas quando `status == completed`:
+  - Seção "SUA AVALIAÇÃO": stars + comentário SE já avaliei, ou "Avaliar agora" CTA SE não.
+  - Divider.
+  - Seção "AVALIAÇÃO DA CONTRAPARTE": stars + comentário SE recebi, ou "Aguardando avaliação de X." (itálico) SE não.
+
+**AppUser + Perfil tab:**
+- `AppUser` ganhou campos `ratingTotal: int`, `ratingCount: int`, getter `ratingAverage: double?`.
+- `auth_service._loadUser` lê os 2 campos do doc.
+- `_ProfileTab` (HomeView) mostra linha de RatingStars (size 18) + "4.5 (12 avaliações)" abaixo do email quando `ratingAverage != null`.
+
+### Resultado:
+**Loop social completo:** contrato concluído → ambas as partes avaliam → média denormalizada no perfil pra ser exibida em tempo constante. RatingStars vira componente reusável (perfil público no futuro, listas de freelancers etc).
+
+**Arquitetura:**
+- **Doc ID determinístico** = idempotência sem cost de query. Tentar avaliar 2x falha cedo na transaction (`already-exists`).
+- **Agregação no doc do avaliado**: 0 query no read do perfil. Trade-off: update no doc do user precisa transação pra evitar race (`FieldValue.increment` resolve isso atomicamente, mas a transação já cobre).
+- **Push notification não-bloqueante**: review é o estado verdadeiro; push é cosmético. Erro no FCM não anula a review.
+- **Imutabilidade**: review uma vez enviada não pode ser editada (rule bloqueia update). Decisão consciente — avaliação editável depois compromete confiança histórica.
+- **RatingStars genérico**: `interactive` é flag única que troca o comportamento. Sem 2 componentes redundantes.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed
+- `tsc` (functions) → compila limpo
+- `firebase deploy --only firestore:rules,functions:submitReview` → "Successful create operation" ✔
+
+**Fluxo testável agora (cliente + freelancer):**
+1. Cliente aceita proposta → freelancer entrega → cliente aprova → status = `completed`.
+2. Ambos abrem o ContractDetailView. Card novo "Avaliações" aparece no rodapé do scroll. Seção "Sua avaliação" mostra CTA "Avaliar agora"; "Contraparte" mostra "Aguardando avaliação de X.".
+3. Cliente toca "Avaliar agora" → bottom sheet. Toca 5 estrelas (label vira "Excelente"). Escreve "Entregou no prazo, comunicação excelente." → Enviar.
+4. Server cria review + incrementa `users/{freelancerId}.ratingTotal += 5, ratingCount += 1`. Push "Nova avaliação" chega no freelancer (Android: notif sistema; iOS: SnackBar in-app).
+5. Cliente vê a UI atualizar: "Sua avaliação" virou ★★★★★ + texto. "Contraparte" ainda "Aguardando".
+6. Freelancer abre o detail → vê "Aguardando" virou ★★★★★ do cliente. Toca "Avaliar agora" → 4 estrelas + "Cliente pagou em dia." → Enviar.
+7. Cliente abre Perfil → "★ 4.0 (1 avaliação)" abaixo do email.
+8. Freelancer abre Perfil → "★ 5.0 (1 avaliação)".
+9. Tentar avaliar 2x cai em `already-exists` (botão CTA já some, mas se forçar via callable falha com erro humano).
+
+**Próximo passo (Iteração 32):** opções restantes:
+- **Notificações in-app persistidas**: badge na sineta do header + lista de notifs em tela própria. Hoje push é fire-and-forget; perde se app fechado e user não tocou.
+- **Disputa de contrato**: estado `disputed` existe no enum mas sem fluxo. Workflow com mediação manual.
+- **Convidar freelancer pra projeto**: cliente lista freelancers (por rating!) e convida diretamente — inverso da proposta. Agora que rating existe, dá pra ordenar a lista.
+- **Perfil público clicável**: tocar no nome do freelancer/cliente em qualquer lugar abre `PublicProfileView` com avatar + média + reviews recebidas. Complementa este loop social.
+
+Recomendação: **Perfil público** (capitaliza o que acabamos de construir; reviews ficam visíveis em lugar próprio em vez de só dentro de um contrato).
+
+---

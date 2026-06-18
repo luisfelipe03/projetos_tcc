@@ -76,6 +76,8 @@ class AuthService {
         orElse: () => UserRole.freelancer,
       ),
       photoUrl: (photoUrl == null || photoUrl.isEmpty) ? null : photoUrl,
+      ratingTotal: (data['ratingTotal'] as num?)?.toInt() ?? 0,
+      ratingCount: (data['ratingCount'] as num?)?.toInt() ?? 0,
     );
   }
 
