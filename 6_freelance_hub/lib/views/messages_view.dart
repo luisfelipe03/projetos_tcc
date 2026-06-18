@@ -6,6 +6,7 @@ import '../core/services/auth_service.dart';
 import '../core/services/messages_service.dart';
 import '../models/chat_thread.dart';
 import 'chat_view.dart';
+import 'public_profile_view.dart';
 
 const _primary = Color(0xFF3B309E);
 const _surfaceCream = Color(0xFFFBF9F2);
@@ -271,20 +272,30 @@ class _ThreadCard extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: _primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                _initials(otherName),
-                style: GoogleFonts.dmSans(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: _primary,
+            InkWell(
+              onTap: otherUid.isEmpty
+                  ? null
+                  : () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PublicProfileView(uid: otherUid),
+                        ),
+                      ),
+              borderRadius: BorderRadius.circular(22),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _initials(otherName),
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: _primary,
+                  ),
                 ),
               ),
             ),

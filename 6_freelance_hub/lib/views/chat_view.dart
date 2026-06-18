@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/messages_service.dart';
 import '../models/chat_message.dart';
+import 'public_profile_view.dart';
 
 const _primary = Color(0xFF3B309E);
 const _surfaceCream = Color(0xFFFBF9F2);
@@ -178,6 +179,14 @@ class _ChatViewState extends State<ChatView> {
                 titleColor: titleColor,
                 name: widget.otherName,
                 photoUrl: _otherPhotoUrl,
+                onOpenProfile: widget.otherUid.isEmpty
+                    ? null
+                    : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                PublicProfileView(uid: widget.otherUid),
+                          ),
+                        ),
               ),
               Expanded(
                 child: _buildMessages(titleColor, mutedColor, isDark),
@@ -285,14 +294,35 @@ class _TopBar extends StatelessWidget {
     required this.titleColor,
     required this.name,
     this.photoUrl,
+    this.onOpenProfile,
   });
 
   final Color titleColor;
   final String name;
   final String? photoUrl;
+  final VoidCallback? onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
+    final identity = Row(
+      children: [
+        _buildAvatar(),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            name.isEmpty ? 'Conversa' : name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.dmSans(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+              color: titleColor,
+            ),
+          ),
+        ),
+      ],
+    );
     return Padding(
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       child: Row(
@@ -301,20 +331,20 @@ class _TopBar extends StatelessWidget {
             onPressed: () => Navigator.maybePop(context),
             icon: Icon(Icons.arrow_back, color: titleColor),
           ),
-          _buildAvatar(),
-          const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              name.isEmpty ? 'Conversa' : name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.dmSans(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -0.2,
-                color: titleColor,
-              ),
-            ),
+            child: onOpenProfile == null
+                ? identity
+                : InkWell(
+                    onTap: onOpenProfile,
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 4,
+                        horizontal: 4,
+                      ),
+                      child: identity,
+                    ),
+                  ),
           ),
         ],
       ),

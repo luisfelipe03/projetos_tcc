@@ -2409,3 +2409,76 @@ Quando um contrato é concluído, hoje o ciclo para — o status fica "Concluíd
 Recomendação: **Perfil público** (capitaliza o que acabamos de construir; reviews ficam visíveis em lugar próprio em vez de só dentro de um contrato).
 
 ---
+
+## Iteração 32
+### Prompt usado:
+```plaintext
+Iteração 32 — Perfil público clicável.
+
+Reviews hoje só aparecem dentro do ContractDetailView do contrato específico. Quem quer saber se vale a pena trabalhar com X precisaria abrir cada contrato — UX ruim. Construir:
+
+1. PublicProfileView(uid): header com avatar grande + nome + role badge + média de rating; lista de TODAS as reviews recebidas em ordem desc (stars + comment + project title + reviewer name + relative date).
+2. Botão "Enviar mensagem" no perfil se o viewer != target.
+3. Tornar avatar+nome clicáveis pra abrir o perfil em: ContractDetailView (_CounterpartyCard), ChatView (_TopBar), MessagesView (_ThreadCard avatar).
+4. Índice firestore composite (revieweeId asc, createdAt desc) pra streamReviewsByUser não falhar.
+5. AuthService.fetchUser(uid) público pra ler perfil de qualquer user.
+```
+
+### Output:
+**Service:**
+- `auth_service.dart`: novo `fetchUser(uid)` público. Wrap em try/catch que retorna null quando o doc não existe (em vez de propagar `StateError` de `_loadUser`). Cobre uid inválido ou user deletado.
+
+**Tela nova:**
+- `lib/views/public_profile_view.dart` (~470 linhas):
+  - StatefulWidget com `_init`: fetch user via `AuthService.fetchUser(uid)` + assina `streamReviewsByUser(uid)`. Estados: loading / error / loaded.
+  - Header (`_Header`): back button, avatar grande (`_BigAvatar`, ~110px), nome em DM Sans 22, role badge roxa, linha "★★★★★ 4.5 (12 avaliações)" usando o componente reusável. Se viewer != target → CTA "Enviar mensagem" full-width que abre `ChatView`.
+  - Lista de `_ReviewCard` cada um com stars + nome do reviewer + project title em caps + comment (se houver) + relative date (segundos→horas→dias→semanas→meses).
+  - Empty state quando ratingCount == 0: card cinza com ícone de estrela e "Nenhuma avaliação ainda."
+  - `viewerIsSelf` calculado via `FirebaseAuth.instance.currentUser.uid` — abrir o próprio perfil só lista reviews, sem botão Mensagem (não faz sentido falar consigo mesmo).
+
+**Índice Firestore (`firestore.indexes.json`):**
+- Composite `reviews` (revieweeId ASC, createdAt DESC). Sem ele, `where('revieweeId', '==', uid).orderBy('createdAt', desc)` falharia em runtime.
+- Deploy via `firebase deploy --only firestore:indexes` — sucesso na hora porque é build incremental.
+
+**Integração nas telas:**
+- `ContractDetailView`:
+  - `_CounterpartyCard` ganha parâmetro `onOpenProfile: VoidCallback?`. Quando não-null, o bloco avatar+label+nome vira `InkWell`. Botão Mensagem mantém área separada (não compete pelo gesto).
+  - Caller passa `() => push(PublicProfileView(uid: counterpartyUid))`. Quando `counterpartyUid.isEmpty` → callback null → InkWell desabilitado.
+- `ChatView`:
+  - `_TopBar` ganha parâmetro `onOpenProfile`. Avatar + nome ficam dentro de um único InkWell (área grande pra tap).
+  - `widget.otherUid.isEmpty` → callback null → não-clicável.
+- `MessagesView`:
+  - `_ThreadCard`: tap no card como um todo continua abrindo `ChatView` (UX padrão de lista de chat). O **avatar** dentro do card ganha um InkWell separado que abre o `PublicProfileView` em vez do chat.
+  - Trade-off consciente: hit area do avatar é pequena (44px), mas é o padrão de WhatsApp/Telegram.
+
+### Resultado:
+**Reviews migraram de "dentro de cada contrato" pra "perfil próprio" do usuário.** Tap em qualquer avatar/nome em ContractDetailView, ChatView ou MessagesView abre a tela. Lista completa em ordem decrescente. Header mostra a média de forma destacada — comprador/contratante decide rápido se vale a pena.
+
+**Arquitetura:**
+- **Fetch + stream separados:** dados do perfil (1 read) ficam em estado local; reviews (potencialmente N docs) vêm via stream pra ficarem live (review nova aparece automaticamente).
+- **`viewerIsSelf`** decidido client-side. Server não precisa saber — o botão Mensagem é UX, não autorização (clicar em "Enviar mensagem" pra si mesmo seria absurdo mas não inseguro).
+- **InkWell focado, não card-wrap em MessagesView:** preserva a expectativa de que tap em card de mensagem = abrir chat. Avatar como "atalho secundário" é convenção que usuário entende em apps de chat.
+- **Composite index pra reviews:** primeira query sem ordenação seria ordenada por __name__; pra UX "mais recentes primeiro" precisamos do composite index. Custo amortizado.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed
+- `firebase deploy --only firestore:indexes` → "deployed indexes successfully" ✔
+
+**Fluxo testável agora:**
+1. Cliente abre ContractDetailView de um contrato concluído. Card "Contraparte" mostra avatar + nome do Freelancer + botão Mensagem.
+2. Tap em qualquer parte do bloco avatar+nome → **PublicProfileView abre**: avatar 110px + nome grande + badge "Freelancer" + "★ 5.0 (3 avaliações)".
+3. Scroll: lista de cards com cada review. Stars no topo, reviewer name em negrito, project title em caps cinza, comment abaixo, "há 2 dias" no canto.
+4. Botão "Enviar mensagem" full-width → abre `ChatView` com o freelancer.
+5. Mesmo fluxo via ChatView (tap no header) e MessagesView (tap no avatar do card).
+6. Abrir o próprio perfil (próprio uid): mostra reviews recebidas como qualquer outro, mas sem botão Mensagem.
+
+**Próximo passo (Iteração 33):** opções:
+- **Notificações in-app persistidas**: badge na sineta + lista em tela própria (`NotificationsView`). Hoje push é fire-and-forget; perde se app fechado e user não tocou. Persistir em `users/{uid}/notifications/{id}` com status read/unread.
+- **Convidar freelancer pra projeto**: cliente abre lista de freelancers ordenada por rating → convida. Inverso da proposta. Combina bem com o ranking que acabamos de habilitar.
+- **Disputa de contrato**: estado `disputed` no enum mas sem fluxo. Mediação manual.
+- **Listar projetos publicados no perfil do cliente**: complementa o `PublicProfileView`. Se viewer é freelancer e target é cliente, mostrar projetos abertos pra dar contexto.
+
+Recomendação: **Notificações in-app persistidas** (escala bem com tudo que já existe — proposta, contrato, chat, review já mandam push; falta só persistir e listar). Padrão de marketplace maduro.
+
+---

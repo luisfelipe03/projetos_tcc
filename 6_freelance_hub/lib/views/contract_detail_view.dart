@@ -18,6 +18,7 @@ import '../widgets/contract_widgets.dart';
 import '../widgets/rating_stars.dart';
 import '../widgets/submit_review_sheet.dart';
 import 'chat_view.dart';
+import 'public_profile_view.dart';
 
 const _primary = Color(0xFF3B309E);
 const _surfaceCream = Color(0xFFFBF9F2);
@@ -467,6 +468,14 @@ class _ContractDetailViewState extends State<ContractDetailView> {
                     mutedColor: mutedColor,
                     borderColor: borderColor,
                     onOpenChat: () => _openChat(contract),
+                    onOpenProfile: counterpartyUid.isEmpty
+                        ? null
+                        : () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    PublicProfileView(uid: counterpartyUid),
+                              ),
+                            ),
                   ),
                   const SizedBox(height: 12),
                   _TimelineCard(
@@ -865,6 +874,7 @@ class _CounterpartyCard extends StatelessWidget {
     required this.mutedColor,
     required this.borderColor,
     required this.onOpenChat,
+    required this.onOpenProfile,
   });
 
   final String label;
@@ -876,9 +886,43 @@ class _CounterpartyCard extends StatelessWidget {
   final Color mutedColor;
   final Color borderColor;
   final VoidCallback onOpenChat;
+  final VoidCallback? onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
+    final identityRow = Row(
+      children: [
+        _Avatar(name: name, photoUrl: photoUrl, size: 48),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: GoogleFonts.inter(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: mutedColor,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.dmSans(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: titleColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -888,34 +932,14 @@ class _CounterpartyCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Avatar(name: name, photoUrl: photoUrl, size: 48),
-          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label.toUpperCase(),
-                  style: GoogleFonts.inter(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: mutedColor,
-                    letterSpacing: 0.6,
+            child: onOpenProfile == null
+                ? identityRow
+                : InkWell(
+                    onTap: onOpenProfile,
+                    borderRadius: BorderRadius.circular(8),
+                    child: identityRow,
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: titleColor,
-                  ),
-                ),
-              ],
-            ),
           ),
           if (canOpenChat)
             FilledButton.icon(

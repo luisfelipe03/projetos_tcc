@@ -58,6 +58,16 @@ class AuthService {
     return _loadUser(user.uid);
   }
 
+  /// Carrega o perfil público de qualquer usuário (pra PublicProfileView).
+  /// Retorna `null` se o doc não existir (user deletado ou uid inválido).
+  Future<AppUser?> fetchUser(String uid) async {
+    try {
+      return await _loadUser(uid);
+    } on StateError {
+      return null;
+    }
+  }
+
   Future<void> signOut() => _auth.signOut();
 
   Future<AppUser> _loadUser(String uid) async {
