@@ -2231,3 +2231,78 @@ Hoje a UX inteira de contrato vive no card de MyContractsView: meta + status + f
 Recomendação: **C — Filtros** primeiro (entrega valor imediato pro freelancer descobrir trabalhos), depois **avaliações** (fecha o ciclo do contrato com confiança social — essencial pra marketplace).
 
 ---
+
+## Iteração 30
+### Prompt usado:
+```plaintext
+Iteração 30 — Filtros + busca no Feed (opção C).
+
+Feed hoje tem search bar que não filtra nada e 3 chips placeholder ("Todos os filtros", "Categoria", "Orçamento") que só trocam um estado mock. Habilitar descoberta:
+
+1. Busca textual em tempo real (case-insensitive) em title, description, skills, category, clientName.
+2. Filtros multi-select por categoria (mesmas do CreateProjectView).
+3. Filtros por faixa de orçamento (faixas predefinidas, multi-select).
+4. Filtro por tipo: todos / preço fixo / por hora.
+5. Bottom sheet "Filtros" com tudo (Limpar + Aplicar).
+6. Chips de filtros ativos na linha de filtros, removíveis individualmente.
+7. Empty state pra "0 resultados após filtros".
+
+Tudo client-side (filter em memória da lista carregada do stream). Feed flat com até dezenas de projetos = filter local é OK. Server-side ficaria pra quando o catálogo crescer.
+```
+
+### Output:
+**Modelo (`lib/models/project.dart`):**
+- `const projectCategories` (movida de `create_project_view.dart`): 'Design', 'Desenvolvimento', 'Marketing', 'Conteúdo', 'Outros'. Fonte canônica única.
+- `enum BudgetRange` com 5 faixas predefinidas (Até R$500 / R$500-2k / R$2k-5k / R$5k-20k / R$20k+). Cada variante carrega label, min, max (max=infinity pra última).
+- `enum BudgetTypeFilter { any, fixed, hourly }`.
+- `class ProjectFilters` imutável: searchQuery, categories Set, budgetRanges Set, budgetType. Getters `isEmpty`, `activeCount`. Métodos `copyWith`, `removeCategory`, `removeBudgetRange`, `clearAll`.
+- Método `Project.matchesFilters(filters): bool` — AND entre dimensões, OR dentro de cada Set. Busca casa por substring em `[title, description, category, clientName, ...skills].join(' ')` lowercased. Orçamento usa intersecção de intervalos.
+
+**Bottom sheet (novo):**
+- `lib/widgets/feed_filters_sheet.dart` (~340 linhas): `FeedFiltersSheet(initial: filters)` retorna `ProjectFilters` via `Navigator.pop`. Seções: Categoria (chips multi-select), Orçamento (chips das 5 faixas), Tipo (segmented "Todos / Preço fixo / Por hora"). Botão Limpar no header + Aplicar no rodapé. Estado local interno; `_apply` chama `widget.initial.copyWith(...)` — preserva a searchQuery (controlada pela SearchBar do FeedView).
+
+**FeedView refatorado:**
+- Estado `_activeFilter` mock removido. Novo `_filters: ProjectFilters`.
+- SearchController listener propaga texto pro `_filters.searchQuery` em real time. Filter aplicado antes de renderizar.
+- Suffix X na SearchBar quando tem texto.
+- Chips do header substituídos por `_buildFilterChips`:
+  - `_FiltersButton(activeCount, onTap: _openFiltersSheet)` — badge com contagem se `activeCount > 0`.
+  - Para cada categoria/range/tipo ativo, um `_ActiveChip(label, onRemove)` removível inline.
+- Empty state com `Icons.search_off` quando `allProjects.isNotEmpty` mas filter retornou vazio.
+
+**Dedupe:**
+- `create_project_view.dart` agora usa `static const _categories = projectCategories` (import de `models/project.dart`).
+
+**Teste:**
+- `widget_test.dart`: assertion `find.text('Todos os filtros')` → `find.text('Filtros')` (label do `_FiltersButton`).
+
+### Resultado:
+**Descoberta real no Feed.** Busca textual viva cobrindo 5 campos. Filtros estruturados via bottom sheet ergonômico. Chips ativos visíveis e removíveis sem reabrir o sheet. Busca + filtros compõem (AND).
+
+**Arquitetura:**
+- **Client-side por escolha consciente:** Firestore não suporta full-text nativo; pra MVP em catálogo pequeno, filter em memória é mais simples e flexível (qualquer combinação sem índices novos). Migração server-side é só trocar `streamOpenProjects()` por query parametrizada quando escalar — `ProjectFilters` já é o contrato.
+- **Imutabilidade do `ProjectFilters`:** mudança vira `copyWith`. Sem aliasing acidental em Sets (uso de `{...set}` antes de mutar).
+- **`projectCategories` único source of truth:** mudou a lista? Feed filter + CreateProject form pegam de uma vez.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed
+
+**Fluxo testável agora:**
+1. Freelancer abre o Feed → vê todos os projetos abertos. Chip "Filtros" sem badge.
+2. Digita "ui" na SearchBar → cards somem exceto os que casam. X aparece pra limpar.
+3. Tap em "Filtros" → bottom sheet. Marca "Design" + "Por hora". Aplica.
+4. Volta pro Feed. Chip "Filtros" mostra badge "2". Dois `_ActiveChip` aparecem ("Design", "Por hora") removíveis. Lista filtrada.
+5. Tap no X de "Por hora" → chip some, badge vira "1", lista re-aplica filter ao vivo.
+6. Combina com search — restringe ainda mais. Se vazio: empty state "Nenhum projeto encontrado".
+7. Reabre o sheet → estado preservado. "Limpar" no header zera os filtros (searchQuery continua, é do FeedView).
+
+**Próximo passo (Iteração 31):** opções restantes:
+- **Avaliações mútuas pós-conclusão**: rating 1-5 + comentário ao concluir contrato; média no Perfil. Fecha o ciclo social.
+- **Notificações in-app persistidas**: badge na sineta + lista de notifs (hoje só push + SnackBar foreground).
+- **Disputa de contrato**: estado `disputed` no enum mas sem fluxo.
+- **Convidar freelancer pra projeto**: inverso da proposta (cliente convida).
+
+Recomendação: **Avaliações** (fecha o loop, gera confiança social, libera componente `_RatingStars` reusável).
+
+---

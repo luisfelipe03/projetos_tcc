@@ -77,7 +77,7 @@ void main() {
     await tester.pump();
 
     expect(find.text('Feed de Projetos'), findsOneWidget);
-    expect(find.text('Todos os filtros'), findsOneWidget);
+    expect(find.text('Filtros'), findsOneWidget);
     expect(find.text('Redesign de UI de app mobile'), findsOneWidget);
     // Tabs do bottom nav.
     expect(find.text('Feed'), findsOneWidget);

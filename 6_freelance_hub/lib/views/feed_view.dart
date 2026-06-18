@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/services/projects_service.dart';
 import '../models/project.dart';
+import '../widgets/feed_filters_sheet.dart';
 import 'project_detail_view.dart';
 
 class FeedView extends StatefulWidget {
@@ -22,7 +23,7 @@ class _FeedViewState extends State<FeedView> {
   static const _slate800 = Color(0xFF1E293B);
 
   final _searchController = TextEditingController();
-  String _activeFilter = 'Todos os filtros';
+  ProjectFilters _filters = const ProjectFilters();
   final Set<String> _bookmarked = <String>{};
   late final Stream<List<Project>> _projectsStream;
 
@@ -33,12 +34,79 @@ class _FeedViewState extends State<FeedView> {
     _projectsStream = Firebase.apps.isNotEmpty
         ? ProjectsService.instance.streamOpenProjects()
         : Stream<List<Project>>.value(mockProjects);
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  void _onSearchChanged() {
+    final q = _searchController.text;
+    if (q == _filters.searchQuery) return;
+    setState(() => _filters = _filters.copyWith(searchQuery: q));
+  }
+
+  Future<void> _openFiltersSheet() async {
+    final result = await showModalBottomSheet<ProjectFilters>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => FeedFiltersSheet(initial: _filters),
+    );
+    if (!mounted || result == null) return;
+    setState(() => _filters = result);
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    // Listener já chama setState pelo _onSearchChanged.
   }
 
   @override
   void dispose() {
+    _searchController.removeListener(_onSearchChanged);
     _searchController.dispose();
     super.dispose();
+  }
+
+  List<Widget> _buildFilterChips(bool isDark) {
+    final chips = <Widget>[
+      _FiltersButton(
+        activeCount: _filters.activeCount,
+        onTap: _openFiltersSheet,
+        isDark: isDark,
+      ),
+    ];
+    for (final c in _filters.categories) {
+      chips
+        ..add(const SizedBox(width: 8))
+        ..add(_ActiveChip(
+          label: c,
+          onRemove: () =>
+              setState(() => _filters = _filters.removeCategory(c)),
+          isDark: isDark,
+        ));
+    }
+    for (final r in _filters.budgetRanges) {
+      chips
+        ..add(const SizedBox(width: 8))
+        ..add(_ActiveChip(
+          label: r.label,
+          onRemove: () =>
+              setState(() => _filters = _filters.removeBudgetRange(r)),
+          isDark: isDark,
+        ));
+    }
+    if (_filters.budgetType != BudgetTypeFilter.any) {
+      chips
+        ..add(const SizedBox(width: 8))
+        ..add(_ActiveChip(
+          label: _filters.budgetType == BudgetTypeFilter.fixed
+              ? 'Preço fixo'
+              : 'Por hora',
+          onRemove: () => setState(() =>
+              _filters = _filters.copyWith(budgetType: BudgetTypeFilter.any)),
+          isDark: isDark,
+        ));
+    }
+    return chips;
   }
 
   @override
@@ -74,6 +142,7 @@ class _FeedViewState extends State<FeedView> {
                 bg: inputBg,
                 hintColor: _slate400,
                 textColor: titleColor,
+                onClear: _searchController.text.isEmpty ? null : _clearSearch,
               ),
             ),
           ),
@@ -83,34 +152,7 @@ class _FeedViewState extends State<FeedView> {
               child: ListView(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _FilterChip(
-                    label: 'Todos os filtros',
-                    icon: Icons.tune,
-                    active: _activeFilter == 'Todos os filtros',
-                    onTap: () =>
-                        setState(() => _activeFilter = 'Todos os filtros'),
-                    isDark: isDark,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Categoria',
-                    icon: Icons.expand_more,
-                    iconTrailing: true,
-                    active: _activeFilter == 'Categoria',
-                    onTap: () => setState(() => _activeFilter = 'Categoria'),
-                    isDark: isDark,
-                  ),
-                  const SizedBox(width: 8),
-                  _FilterChip(
-                    label: 'Orçamento',
-                    icon: Icons.expand_more,
-                    iconTrailing: true,
-                    active: _activeFilter == 'Orçamento',
-                    onTap: () => setState(() => _activeFilter = 'Orçamento'),
-                    isDark: isDark,
-                  ),
-                ],
+                children: _buildFilterChips(isDark),
               ),
             ),
           ),
@@ -142,14 +184,29 @@ class _FeedViewState extends State<FeedView> {
                   ),
                 );
               }
-              final projects = snap.data ?? const [];
-              if (projects.isEmpty) {
+              final allProjects = snap.data ?? const <Project>[];
+              if (allProjects.isEmpty) {
                 return SliverToBoxAdapter(
                   child: _StateMessage(
                     icon: Icons.inbox_outlined,
                     title: 'Nenhum projeto disponível',
                     subtitle:
                         'Os projetos publicados pelos clientes aparecerão aqui.',
+                    color: mutedColor,
+                    titleColor: titleColor,
+                  ),
+                );
+              }
+              final projects = _filters.isEmpty
+                  ? allProjects
+                  : allProjects.where((p) => p.matchesFilters(_filters)).toList();
+              if (projects.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: _StateMessage(
+                    icon: Icons.search_off,
+                    title: 'Nenhum projeto encontrado',
+                    subtitle:
+                        'Ajuste os filtros ou a busca para ver outros projetos.',
                     color: mutedColor,
                     titleColor: titleColor,
                   ),
@@ -314,12 +371,14 @@ class _SearchBar extends StatelessWidget {
     required this.bg,
     required this.hintColor,
     required this.textColor,
+    this.onClear,
   });
 
   final TextEditingController controller;
   final Color bg;
   final Color hintColor;
   final Color textColor;
+  final VoidCallback? onClear;
 
   @override
   Widget build(BuildContext context) {
@@ -327,12 +386,20 @@ class _SearchBar extends StatelessWidget {
       controller: controller,
       cursorColor: const Color(0xFF3B309E),
       style: GoogleFonts.inter(fontSize: 14, color: textColor),
+      textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         filled: true,
         fillColor: bg,
         hintText: 'Buscar projetos, habilidades…',
         hintStyle: GoogleFonts.inter(fontSize: 14, color: hintColor),
         prefixIcon: Icon(Icons.search, color: hintColor, size: 20),
+        suffixIcon: onClear == null
+            ? null
+            : IconButton(
+                icon: Icon(Icons.close, color: hintColor, size: 18),
+                onPressed: onClear,
+                tooltip: 'Limpar busca',
+              ),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
@@ -354,36 +421,33 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({
-    required this.label,
-    required this.icon,
-    required this.active,
+/// Botão "Filtros" no topo do feed — abre o FeedFiltersSheet. Mostra badge
+/// com a contagem de filtros ativos (sem contar a busca).
+class _FiltersButton extends StatelessWidget {
+  const _FiltersButton({
+    required this.activeCount,
     required this.onTap,
     required this.isDark,
-    this.iconTrailing = false,
   });
 
-  final String label;
-  final IconData icon;
-  final bool active;
+  final int activeCount;
   final VoidCallback onTap;
   final bool isDark;
-  final bool iconTrailing;
 
   @override
   Widget build(BuildContext context) {
     const primary = Color(0xFF3B309E);
-    final bg = active
+    final hasActive = activeCount > 0;
+    final bg = hasActive
         ? primary
         : (isDark ? const Color(0xFF1E293B) : Colors.white);
-    final textColor = active
+    final textColor = hasActive
         ? Colors.white
         : (isDark ? Colors.white : const Color(0xFF334155));
-    final iconColor = active
+    final iconColor = hasActive
         ? Colors.white
         : (isDark ? Colors.white70 : const Color(0xFF64748B));
-    final borderColor = active
+    final borderColor = hasActive
         ? primary
         : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0));
 
@@ -400,24 +464,92 @@ class _FilterChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!iconTrailing) ...[
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: 6),
-            ],
+            Icon(Icons.tune, size: 16, color: iconColor),
+            const SizedBox(width: 6),
             Text(
-              label,
+              'Filtros',
               style: GoogleFonts.inter(
                 fontSize: 13,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: textColor,
               ),
             ),
-            if (iconTrailing) ...[
+            if (hasActive) ...[
               const SizedBox(width: 6),
-              Icon(icon, size: 18, color: iconColor),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$activeCount',
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Chip de um filtro ativo (categoria, faixa, tipo) — mostra o label + X
+/// pra remover. Sempre roxo claro pra indicar "ativo".
+class _ActiveChip extends StatelessWidget {
+  const _ActiveChip({
+    required this.label,
+    required this.onRemove,
+    required this.isDark,
+  });
+
+  final String label;
+  final VoidCallback onRemove;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    const primary = Color(0xFF3B309E);
+    final bg = isDark
+        ? primary.withValues(alpha: 0.30)
+        : primary.withValues(alpha: 0.12);
+    final textColor = isDark ? Colors.white : primary;
+
+    return Container(
+      padding: const EdgeInsets.only(left: 12, right: 4, top: 6, bottom: 6),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: primary.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+          InkResponse(
+            onTap: onRemove,
+            radius: 16,
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: Icon(Icons.close, size: 14, color: textColor),
+            ),
+          ),
+        ],
       ),
     );
   }

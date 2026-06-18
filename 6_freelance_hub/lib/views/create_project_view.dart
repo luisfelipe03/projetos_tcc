@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/services/auth_service.dart';
 import '../core/services/projects_service.dart';
 import '../core/text_formatters.dart';
+import '../models/project.dart';
 
 enum _BudgetType { fixed, hourly }
 
@@ -26,13 +27,7 @@ class _CreateProjectViewState extends State<CreateProjectView> {
   static const _bgDark = Color(0xFF0B1020);
   static const _error = Color(0xFFBA1A1A);
 
-  static const _categories = [
-    'Design',
-    'Desenvolvimento',
-    'Marketing',
-    'Conteúdo',
-    'Outros',
-  ];
+  static const _categories = projectCategories;
 
   static const _skills = [
     'UI/UX',

@@ -1,5 +1,95 @@
 enum ProjectStatus { open, active, delivered, completed, disputed, closed }
 
+/// Categorias canônicas usadas em todo o app (Feed filtros, CreateProject form,
+/// model). Manter aqui evita drift entre as telas.
+const List<String> projectCategories = [
+  'Design',
+  'Desenvolvimento',
+  'Marketing',
+  'Conteúdo',
+  'Outros',
+];
+
+/// Faixas predefinidas de orçamento — mostradas como chips multi-select no
+/// bottom sheet de filtros. A faixa de um projeto `[minBudget, maxBudget]`
+/// casa se houver intersecção com qualquer faixa selecionada.
+enum BudgetRange {
+  upTo500(label: 'Até R\$ 500', min: 0, max: 500),
+  upTo2k(label: 'R\$ 500 – R\$ 2 mil', min: 500, max: 2000),
+  upTo5k(label: 'R\$ 2 mil – R\$ 5 mil', min: 2000, max: 5000),
+  upTo20k(label: 'R\$ 5 mil – R\$ 20 mil', min: 5000, max: 20000),
+  above20k(label: 'R\$ 20 mil ou mais', min: 20000, max: double.infinity);
+
+  const BudgetRange({
+    required this.label,
+    required this.min,
+    required this.max,
+  });
+
+  final String label;
+  final double min;
+  final double max;
+}
+
+/// Tipo de orçamento como filtro. `any` = mostra ambos (estado default).
+enum BudgetTypeFilter { any, fixed, hourly }
+
+/// Estado imutável dos filtros aplicados no Feed. Construído pelo
+/// FeedFiltersSheet e consumido por `Project.matchesFilters`.
+class ProjectFilters {
+  const ProjectFilters({
+    this.searchQuery = '',
+    this.categories = const <String>{},
+    this.budgetRanges = const <BudgetRange>{},
+    this.budgetType = BudgetTypeFilter.any,
+  });
+
+  final String searchQuery;
+  final Set<String> categories;
+  final Set<BudgetRange> budgetRanges;
+  final BudgetTypeFilter budgetType;
+
+  bool get isEmpty =>
+      searchQuery.trim().isEmpty &&
+      categories.isEmpty &&
+      budgetRanges.isEmpty &&
+      budgetType == BudgetTypeFilter.any;
+
+  /// Quantos filtros (sem contar a busca) estão ativos — usado no badge do
+  /// botão "Filtros" no header.
+  int get activeCount {
+    var n = 0;
+    if (categories.isNotEmpty) n += categories.length;
+    if (budgetRanges.isNotEmpty) n += budgetRanges.length;
+    if (budgetType != BudgetTypeFilter.any) n += 1;
+    return n;
+  }
+
+  ProjectFilters copyWith({
+    String? searchQuery,
+    Set<String>? categories,
+    Set<BudgetRange>? budgetRanges,
+    BudgetTypeFilter? budgetType,
+  }) {
+    return ProjectFilters(
+      searchQuery: searchQuery ?? this.searchQuery,
+      categories: categories ?? this.categories,
+      budgetRanges: budgetRanges ?? this.budgetRanges,
+      budgetType: budgetType ?? this.budgetType,
+    );
+  }
+
+  ProjectFilters removeCategory(String category) => copyWith(
+        categories: {...categories}..remove(category),
+      );
+
+  ProjectFilters removeBudgetRange(BudgetRange range) => copyWith(
+        budgetRanges: {...budgetRanges}..remove(range),
+      );
+
+  ProjectFilters clearAll() => const ProjectFilters();
+}
+
 class Project {
   const Project({
     required this.id,
@@ -32,6 +122,47 @@ class Project {
   final ProjectStatus status;
   final String clientName;
   final bool hasHeroImage;
+
+  /// True se o projeto satisfaz TODOS os critérios em [filters] (AND lógico
+  /// entre dimensões; OR dentro de cada Set). Filtros vazios = match.
+  bool matchesFilters(ProjectFilters filters) {
+    // Busca textual: case-insensitive substring em title, description, skills,
+    // category e clientName. Empty query = passa.
+    final q = filters.searchQuery.trim().toLowerCase();
+    if (q.isNotEmpty) {
+      final haystack = [
+        title,
+        description,
+        category,
+        clientName,
+        ...skills,
+      ].join(' ').toLowerCase();
+      if (!haystack.contains(q)) return false;
+    }
+
+    if (filters.categories.isNotEmpty &&
+        !filters.categories.contains(category)) {
+      return false;
+    }
+
+    if (filters.budgetRanges.isNotEmpty) {
+      final hasOverlap = filters.budgetRanges.any(
+        (r) => minBudget <= r.max && maxBudget >= r.min,
+      );
+      if (!hasOverlap) return false;
+    }
+
+    switch (filters.budgetType) {
+      case BudgetTypeFilter.fixed:
+        if (isHourly) return false;
+      case BudgetTypeFilter.hourly:
+        if (!isHourly) return false;
+      case BudgetTypeFilter.any:
+        break;
+    }
+
+    return true;
+  }
 
   String formattedBudget() {
     final min = _formatCurrency(minBudget);
