@@ -77,6 +77,26 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Carteira do usuário. Doc ID = uid. Read só pelo próprio dono (dados
+    // financeiros não vazam pra lista de freelancers etc). Write bloqueado —
+    // toda mutação passa pelas callables que validam regras de negócio.
+    match /wallets/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // Histórico de transações. Read se viewer é o `userId` do doc; write
+    // bloqueado (server-only via callables atomic transactions).
+    match /transactions/{txId} {
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
     // Avaliações pós-conclusão. Doc ID = "{contractId}_{reviewerId}".
     // Read: público pra qualquer authed (avaliações compõem perfil público).
     // Write/update/delete: bloqueado — só via Cloud Function submitReview

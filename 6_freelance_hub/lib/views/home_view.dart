@@ -17,6 +17,7 @@ import 'messages_view.dart';
 import 'my_contracts_view.dart';
 import 'my_proposals_view.dart';
 import 'received_proposals_view.dart';
+import 'wallet_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key, this.initialRole = UserRole.freelancer});
@@ -393,6 +394,29 @@ class _ProfileTabState extends State<_ProfileTab> {
               style: FilledButton.styleFrom(
                 backgroundColor: _primary,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                textStyle: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const WalletView()),
+              ),
+              icon: const Icon(Icons.account_balance_wallet_outlined, size: 18),
+              label: const Text('Carteira'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _primary,
+                side: const BorderSide(color: _primary),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

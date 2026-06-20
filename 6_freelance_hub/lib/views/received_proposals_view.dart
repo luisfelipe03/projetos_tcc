@@ -94,6 +94,14 @@ class _ReceivedProposalsViewState extends State<ReceivedProposalsView> {
         case 'permission-denied':
           return 'Você não tem permissão para $action esta proposta.';
         case 'failed-precondition':
+          // failed-precondition cobre 2 motivos hoje: status já mudou OU saldo
+          // insuficiente / carteira não inicializada. Server traz a mensagem
+          // específica — exibe direto quando indica saldo.
+          final msg = e.message ?? '';
+          if (msg.contains('Saldo insuficiente') ||
+              msg.contains('Carteira')) {
+            return msg;
+          }
           return 'Proposta não está mais pendente.';
         case 'not-found':
           return 'Proposta não encontrada.';

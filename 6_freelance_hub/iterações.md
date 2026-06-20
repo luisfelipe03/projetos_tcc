@@ -2482,3 +2482,123 @@ Reviews hoje só aparecem dentro do ContractDetailView do contrato específico. 
 Recomendação: **Notificações in-app persistidas** (escala bem com tudo que já existe — proposta, contrato, chat, review já mandam push; falta só persistir e listar). Padrão de marketplace maduro.
 
 ---
+
+## Iteração 33
+### Prompt usado:
+```plaintext
+Iteração 33 — Wallet + escrow simulado.
+
+O README prometeu "sistema de escrow simulado — valor bloqueado ao aceitar proposta, liberado ao aprovar entrega" + "carteira digital (wallet) com saldo, transações e histórico". É a peça que faltava pra cumprir a promessa central do marketplace transacional.
+
+Modelo:
+- Collection wallets/{uid} separada de users (README: isola financeiro de leitura pública). Campos: availableBalance, escrowBalance, updatedAt.
+- Collection transactions/{auto-id}: log imutável. type ∈ {deposit, escrow_lock, escrow_release}, amount, balanceDelta (+1/-1), contractId, projectTitle, counterpartyName, userId, createdAt.
+
+Modificações nas callables:
+- acceptProposal: dentro da transaction atual, ler wallets/{clientId}, validar availableBalance >= contractValue, debitar disponível + creditar escrow + criar tx escrow_lock. Lança failed-precondition se sem saldo.
+- acceptContractDelivery: dentro da transaction, debitar escrow do cliente + creditar disponível do freelancer + criar 2 transactions (uma de cada lado).
+- requestContractRevision / resubmitContractDelivery: não mexem no escrow (saldo permanece bloqueado).
+
+Novas:
+- Trigger onUserCreated cria wallets/{uid} com 0/0 no signup.
+- Callable simulateDeposit: credita disponível, cap R$ 50.000 por depósito (cap defensivo). Sem gateway real.
+
+UI:
+- Tela WalletView (lib/views/wallet_view.dart): card roxo com gradient mostrando saldo disponível grande + linha "Bloqueado em escrow R$ X" + botão "Adicionar fundos (modo demo)". Histórico abaixo (cards com ícone, label, projeto, valor com +/− colorido).
+- Bottom sheet DepositSheet: chips com 4 valores predefinidos (R$ 100, 500, 1k, 5k).
+- Botão "Carteira" no Perfil tab (acima de Meus contratos, padrão Mercado Pago/PicPay).
+- Humanizar erro failed-precondition em ReceivedProposalsView: se mensagem do server contém "Saldo insuficiente" ou "Carteira", exibe direto em vez do fallback "Proposta não está mais pendente".
+
+Rules: wallets read só próprio dono, write bloqueado. transactions read se userId == auth.uid, write bloqueado.
+
+Index: composite transactions (userId asc, createdAt desc).
+```
+
+### Output:
+**Models (`lib/models/wallet.dart`):**
+- `enum WalletTransactionType { deposit, escrowLock, escrowRelease }` + parser que mapeia snake↔camel pro Firestore.
+- `class Wallet` imutável: uid, availableBalance, escrowBalance, updatedAt + factory `Wallet.empty(uid)` pro corner case do doc ainda não existente.
+- `class WalletTransaction` imutável: id, userId, type, amount, balanceDelta (+1 ou -1, server preenche pra UI não precisar inferir), contractId, projectTitle, counterpartyName, createdAt.
+- `formatCurrencyBrl(value)`: "R$ 3.000,00" com 2 casas + separador de milhar + sinal pra negativos.
+- Helpers `walletFromMap` / `walletTransactionFromMap` que aceitam `DateTime` ou `Timestamp.toDate()` via dynamic — model fica puro sem depender de cloud_firestore.
+
+**Service (`lib/core/services/wallet_service.dart`):**
+- `streamWallet(uid)`: single-doc stream. Se !exists emite `Wallet.empty(uid)` em vez de propagar erro (corner case raro de signup com trigger atrasado).
+- `streamTransactions(uid)`: lista live ordem desc por createdAt.
+- `simulateDeposit(amount)`: chama callable.
+
+**Cloud Functions:**
+- `onUserCreated` trigger em `users/{uid}` — `set` em wallets/{uid} com saldo zero se ainda não existir (idempotente).
+- `simulateDeposit` callable: valida amount > 0 e ≤ R$ 50.000. Transaction atômica: cria/incrementa wallet + cria tx type=deposit. Tolera wallet inexistente (cria com o valor depositado).
+- `acceptProposal` modificada:
+  - Adicionada read da `wallets/{clientId}` ANTES de qualquer write (regra Firestore transactions).
+  - Validação: `availableBalance >= contractValue` → `failed-precondition` com mensagem "Saldo insuficiente para aceitar esta proposta. Adicione fundos na carteira."
+  - Writes adicionados: `wallets/{clientId}` decrementa disponível e incrementa escrow via `FieldValue.increment`; nova tx em transactions com balanceDelta=-1.
+- `acceptContractDelivery` modificada:
+  - Read da `wallets/{freelancerId}` (pode não existir — corner case).
+  - Writes: cliente.escrowBalance decrementa; freelancer.availableBalance incrementa (ou criar wallet completa se ainda não existe); 2 transactions (escrow_release pra cliente com delta=-1, pra freelancer com delta=+1).
+- `requestContractRevision` e `resubmitContractDelivery` intencionalmente **NÃO** alterados: durante uma revisão o escrow segue bloqueado.
+
+**Rules (`firestore.rules`):**
+- `wallets/{uid}`: read só pelo próprio `uid`, write/update/delete bloqueado.
+- `transactions/{txId}`: read se `resource.data.userId == request.auth.uid`, write bloqueado.
+
+**Index (`firestore.indexes.json`):**
+- Composite `transactions` (userId ASC, createdAt DESC) — necessário pra `where('userId').orderBy('createdAt')` em runtime.
+
+**Tela (`lib/views/wallet_view.dart`, ~590 linhas):**
+- Header com back + "Carteira".
+- `_BalanceCard`: gradient roxo (primary → primary container) com label "SALDO DISPONÍVEL" + valor 32pt + linha branca semi-transparente com ícone de lock e "Bloqueado em escrow R$ X" + botão "Adicionar fundos (modo demo)" branco com texto roxo.
+- `_TransactionCard`: avatar circular com ícone tipo-específico (add / lock_outline / check_circle_outline), label humanizado ("Depósito (demo)", "Valor bloqueado em contrato", "Recebimento de Jose", "Pagamento liberado para Jose"), project title abaixo, relative date, valor à direita com prefixo +/− colorido (verde successGreen pra positivo, laranja pra negativo).
+- `_DepositSheet`: 4 chips multi-select (R$ 100, 500, 1k, 5k) + botão "Confirmar depósito de R$ X". Pop com o valor escolhido.
+- Empty state: "Nenhuma transação ainda. Adicione fundos pra aceitar propostas como cliente."
+
+**UI integração:**
+- `home_view.dart` `_ProfileTab`: novo botão outline roxo "Carteira" com ícone `account_balance_wallet_outlined`, acima de "Meus contratos".
+- `received_proposals_view.dart` `_humanizeError`: `failed-precondition` com `e.message` contendo "Saldo insuficiente" ou "Carteira" → exibe a mensagem do server direto (informa que é problema de saldo, não de status). Fallback continua "Proposta não está mais pendente."
+
+### Resultado:
+**Promessa do README cumprida.** Cliente publica → freelancer envia proposta → **cliente precisa ter saldo** pra aceitar (botão Aceitar falha com mensagem clara se zero) → ao aceitar, valor sai do disponível e entra no escrow → freelancer entrega → cliente aprova → escrow do cliente esvazia, disponível do freelancer cresce. Tudo em transactions atômicas (read-then-write consistente — não tem como "dar saque" do que ainda não foi liberado nem aceitar proposta que ultrapasse o saldo via race).
+
+**Arquitetura:**
+- **Collection separada `wallets/` (não sub-doc em users):** isola dados financeiros das rules de leitura "pública" do user — qualquer authed pode ler `users/{uid}` pra exibir nome/foto, mas só o dono lê `wallets/{uid}`. README explícito sobre isso.
+- **`balanceDelta` denormalizado:** UI não precisa decifrar do `type` se a transação foi crédito ou débito — server já marca +1/-1 pro user específico (o mesmo `escrow_release` tem delta=-1 pro cliente e +1 pro freelancer).
+- **Transactions atômicas, não Cloud Tasks:** o escrow é simulado, então 2 writes coordenados (status do contrato + movimentação de saldo) cabem na mesma `runTransaction`. Em produção com gateway real seria callback async; aqui é simples e consistente.
+- **Trigger pra inicializar wallet em signup:** evita lidar com "wallet ainda não existe" em todo path. Fallback no `simulateDeposit` e `acceptContractDelivery` cobre o corner case raríssimo de user que entra na tela antes do trigger rodar.
+- **Cap R$ 50.000 por depósito:** previne user explorar e zerar o ecossistema de demo gerando R$ infinitos. Não impede cadeia de depósitos sucessivos — é só barreira UX.
+- **Escrow é "saída de dinheiro" do cliente, não suspensão:** ao liberar pro freelancer, dinheiro SAI da carteira do cliente (em vez de voltar pro disponível). Modela escrow real corretamente.
+
+**Validações:**
+- `flutter analyze` → 0 issues
+- `flutter test` → 13 passed
+- `tsc` (functions) → compila limpo
+- `firebase deploy --only firestore:rules,firestore:indexes,functions:onUserCreated,functions:simulateDeposit,functions:acceptProposal,functions:acceptContractDelivery` → rules + indexes + 4 funções operadas (algumas updates, outras creates) ✔
+
+**Fluxo testável agora:**
+1. Cliente novo faz signup → trigger `onUserCreated` cria `wallets/{uid}` com 0/0.
+2. Cliente vai Perfil → "Carteira" → vê "SALDO DISPONÍVEL R$ 0,00" + "Bloqueado em escrow R$ 0,00".
+3. Cliente publica projeto R$ 3.000 → freelancer envia proposta de R$ 3.000.
+4. Cliente vai "Propostas Recebidas" → tap Aceitar → SnackBar vermelho "Saldo insuficiente para aceitar esta proposta. Adicione fundos na carteira."
+5. Cliente abre Carteira → "Adicionar fundos" → chip R$ 5.000 → Confirmar. SnackBar verde "R$ 5.000,00 adicionado à carteira."
+6. Carteira atualiza em tempo real: disponível R$ 5.000, escrow R$ 0. Histórico mostra "Depósito (demo) +R$ 5.000,00".
+7. Volta em Propostas Recebidas → Aceitar → contrato criado. Carteira: disponível R$ 2.000, escrow R$ 3.000. Tx "Valor bloqueado em contrato −R$ 3.000,00".
+8. Freelancer marca entregue → cliente aprova → carteira do cliente: disponível R$ 2.000, escrow R$ 0. Tx "Pagamento liberado para [freelancer] −R$ 3.000,00".
+9. Freelancer abre Carteira (primeira vez): disponível R$ 3.000, escrow R$ 0. Tx "Recebimento de [cliente] +R$ 3.000,00".
+
+**Custos:**
+- Aceitar proposta = 1 read extra (wallet) + 2 writes extras (wallet + transaction). Aceitável.
+- Aprovar entrega = 1 read extra + 4 writes extras (2 wallets + 2 transactions). Sem impacto perceptível.
+- Tela Wallet = 2 streams (saldo single-doc + transactions ordenadas). Reads ficam ativos enquanto a tela está aberta.
+
+**Limitação consciente:** sem fluxo de **refund** (cancelamento de contrato volta saldo pro cliente). Hoje contrato cancelado só existe via revisão eterna; se for implementar disputa/cancelamento, precisará de `releaseEscrowToClient` callable simétrica à atual.
+
+**Próximo passo (Iteração 34):** opções do README pendentes:
+- **Edição/remoção de projetos**: hoje só `createProject`. CTA "Editar" + "Remover" em ProjectDetailView pra dono. Pequeno-médio.
+- **Disputa de contrato**: callable `openDispute` + status `disputed` + tela de mediação. Inclui refund de escrow (resolve a limitação acima). Médio.
+- **Toggle manual de tema**: hoje só ThemeMode.system. Pequeno.
+- **Google sign-in**: hoje só email+senha. Pequeno.
+- **i18n**: tudo PT-BR hardcoded. Grande.
+
+Recomendação: **disputa + refund** (fecha o ciclo do escrow com saída pra cancelamento + cumpre o `disputed` que está no enum desde a Iteração 14). Depois disso, polish (tema/Google/edição de projeto) ou i18n.
+
+---

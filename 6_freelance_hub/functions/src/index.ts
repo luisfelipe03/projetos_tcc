@@ -159,8 +159,11 @@ export const acceptProposal = onCall(async (request) => {
   const contractRef = db.collection("contracts").doc(); // auto ID
 
   const callerUid = request.auth.uid;
+  const clientWalletRef = db.collection("wallets").doc(callerUid);
+  const escrowTxRef = db.collection("transactions").doc(); // auto id
 
   const result = await db.runTransaction(async (tx) => {
+    // === Todas as READS antes de qualquer WRITE ===
     const proposalSnap = await tx.get(proposalRef);
     if (!proposalSnap.exists) {
       throw new HttpsError("not-found", "Proposta não encontrada.");
@@ -196,6 +199,27 @@ export const acceptProposal = onCall(async (request) => {
         .where("status", "==", "pending")
     );
 
+    // Carteira do cliente: precisa ter saldo suficiente pra bloquear no escrow.
+    // Por isso lemos DENTRO da transaction — read-then-write consistente.
+    const walletSnap = await tx.get(clientWalletRef);
+    if (!walletSnap.exists) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Carteira ainda não inicializada. Reabra o app e tente novamente."
+      );
+    }
+    const wallet = walletSnap.data()!;
+    const available = (wallet.availableBalance as number) ?? 0;
+    const contractValue = (proposal.value as number) ?? 0;
+    if (available < contractValue) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Saldo insuficiente para aceitar esta proposta. Adicione fundos na " +
+          "carteira."
+      );
+    }
+
+    // === Writes ===
     tx.update(proposalRef, { status: "accepted" });
 
     for (const doc of otherPendingSnap.docs) {
@@ -218,6 +242,25 @@ export const acceptProposal = onCall(async (request) => {
       isHourly: proposal.isHourly,
       acceptedProposalId: proposalId,
       status: "active",
+      createdAt: FieldValue.serverTimestamp(),
+    });
+
+    // Move valor do "disponível" pro "escrow" do cliente (ainda na conta dele,
+    // mas bloqueado até a aprovação da entrega).
+    tx.update(clientWalletRef, {
+      availableBalance: FieldValue.increment(-contractValue),
+      escrowBalance: FieldValue.increment(contractValue),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    tx.set(escrowTxRef, {
+      userId: callerUid,
+      type: "escrow_lock",
+      amount: contractValue,
+      balanceDelta: -1, // débito do disponível
+      contractId: contractRef.id,
+      projectTitle: proposal.projectTitle,
+      counterpartyName: proposal.freelancerName,
       createdAt: FieldValue.serverTimestamp(),
     });
 
@@ -355,8 +398,11 @@ export const acceptContractDelivery = onCall(async (request) => {
   const db = getFirestore();
   const contractRef = db.collection("contracts").doc(contractId);
   const callerUid = request.auth.uid;
+  const clientTxRef = db.collection("transactions").doc();
+  const freelancerTxRef = db.collection("transactions").doc();
 
   await db.runTransaction(async (tx) => {
+    // === READS ===
     const contractSnap = await tx.get(contractRef);
     if (!contractSnap.exists) {
       throw new HttpsError("not-found", "Contrato não encontrado.");
@@ -383,11 +429,70 @@ export const acceptContractDelivery = onCall(async (request) => {
       throw new HttpsError("not-found", "Projeto não encontrado.");
     }
 
+    const clientId = contract.clientId as string;
+    const freelancerId = contract.freelancerId as string;
+    const value = (contract.value as number) ?? 0;
+    const projectTitle = (contract.projectTitle as string) ?? "";
+    const clientName = (contract.clientName as string) ?? "";
+    const freelancerName = (contract.freelancerName as string) ?? "";
+
+    const clientWalletRef = db.collection("wallets").doc(clientId);
+    const freelancerWalletRef = db.collection("wallets").doc(freelancerId);
+
+    // Lemos as 2 carteiras antes de qualquer write (regra de transactions).
+    // Tolerância: se a carteira do freelancer ainda não existe (signup
+    // sem trigger consolidado), criamos abaixo com {available, escrow: 0}.
+    const freelancerWalletSnap = await tx.get(freelancerWalletRef);
+
+    // === WRITES ===
     tx.update(contractRef, { status: "completed" });
     tx.update(projectRef, { status: "completed" });
+
+    // Libera o escrow do cliente — saldo SAI da carteira dele (não volta pro
+    // disponível). É como pagar de fato: o dinheiro sai.
+    tx.update(clientWalletRef, {
+      escrowBalance: FieldValue.increment(-value),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    // Credita o freelancer no disponível.
+    if (freelancerWalletSnap.exists) {
+      tx.update(freelancerWalletRef, {
+        availableBalance: FieldValue.increment(value),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      tx.set(freelancerWalletRef, {
+        availableBalance: value,
+        escrowBalance: 0,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    // 2 transactions imutáveis no histórico — uma de cada lado.
+    tx.set(clientTxRef, {
+      userId: clientId,
+      type: "escrow_release",
+      amount: value,
+      balanceDelta: -1, // saiu do escrow do cliente
+      contractId,
+      projectTitle,
+      counterpartyName: freelancerName,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    tx.set(freelancerTxRef, {
+      userId: freelancerId,
+      type: "escrow_release",
+      amount: value,
+      balanceDelta: 1, // entrou no disponível do freelancer
+      contractId,
+      projectTitle,
+      counterpartyName: clientName,
+      createdAt: FieldValue.serverTimestamp(),
+    });
   });
 
-  logger.info("Entrega aprovada e contrato concluído", {
+  logger.info("Entrega aprovada, escrow liberado", {
     contractId,
     callerUid,
   });
@@ -1049,5 +1154,90 @@ export const submitReview = onCall(async (request) => {
     }
   );
 
+  return { ok: true };
+});
+
+// ============================================================================
+// Wallet + escrow
+// ============================================================================
+
+/**
+ * Trigger: user criou conta → cria a carteira correspondente com saldo zero.
+ * Idempotente — `set` com merge: false em doc inexistente; se já existir
+ * (corner case raro), a trigger refaz com zero, mas no flow normal só roda 1x.
+ */
+export const onUserCreated = onDocumentCreated(
+  "users/{uid}",
+  async (event) => {
+    const uid = event.params.uid;
+    const db = getFirestore();
+    const walletRef = db.collection("wallets").doc(uid);
+    const existing = await walletRef.get();
+    if (existing.exists) return;
+    await walletRef.set({
+      availableBalance: 0,
+      escrowBalance: 0,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    logger.info("Carteira criada", { uid });
+  }
+);
+
+/**
+ * Callable: depósito simulado. Sem gateway real — só pra modo demo do TCC.
+ * Cap defensivo em R$ 50.000 por depósito. Transaction atômica wallet + tx.
+ */
+export const simulateDeposit = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Login necessário.");
+  }
+  const amountRaw = request.data?.amount as number | undefined;
+  if (
+    typeof amountRaw !== "number" ||
+    !Number.isFinite(amountRaw) ||
+    amountRaw <= 0
+  ) {
+    throw new HttpsError("invalid-argument", "Valor inválido.");
+  }
+  if (amountRaw > 50000) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Depósito simulado máximo: R$ 50.000."
+    );
+  }
+
+  const uid = request.auth.uid;
+  const db = getFirestore();
+  const walletRef = db.collection("wallets").doc(uid);
+  const txRef = db.collection("transactions").doc();
+
+  await db.runTransaction(async (tx) => {
+    const walletSnap = await tx.get(walletRef);
+    if (walletSnap.exists) {
+      tx.update(walletRef, {
+        availableBalance: FieldValue.increment(amountRaw),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    } else {
+      // Corner case: user logado antes do trigger onUserCreated rodar.
+      tx.set(walletRef, {
+        availableBalance: amountRaw,
+        escrowBalance: 0,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+    tx.set(txRef, {
+      userId: uid,
+      type: "deposit",
+      amount: amountRaw,
+      balanceDelta: 1,
+      contractId: "",
+      projectTitle: "",
+      counterpartyName: "",
+      createdAt: FieldValue.serverTimestamp(),
+    });
+  });
+
+  logger.info("Depósito simulado", { uid, amount: amountRaw });
   return { ok: true };
 });
