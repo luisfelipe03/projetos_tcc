@@ -2,7 +2,7 @@
 
 Desenvolver um aplicativo Flutter de alta complexidade que funcione como uma **plataforma de marketplace para freelancers**, permitindo que clientes publiquem projetos, freelancers enviem propostas, e ambos gerenciem contratos com sistema de escrow simulado, chat em tempo real e avaliações mútuas.
 
-O foco do projeto está na **implementação completa do aplicativo**, incluindo front-end com protótipos de alta fidelidade, lógica de negócio crítica via Edge Functions e persistência com Firebase (PostgreSQL).
+O foco do projeto está na **implementação completa do aplicativo**, incluindo front-end com protótipos de alta fidelidade, lógica de negócio crítica via Cloud Functions e persistência com Firebase Firestore.
 
 ---
 
@@ -12,48 +12,60 @@ Avaliar até que ponto o modelo de IA consegue projetar, implementar e organizar
 
 ### Funcionalidades previstas
 
-* Cadastro e autenticação com Firebase Auth (e-mail/senha e Google)
+* Cadastro e autenticação com Firebase Auth (e-mail/senha)
 * Dois papéis de usuário: **Cliente** e **Freelancer**, com navegação e permissões distintas (RBAC)
-* Publicação, edição e remoção de projetos pelo cliente
+* Publicação de projetos pelo cliente
 * Envio e gerenciamento de propostas pelo freelancer
 * Sistema de **escrow simulado** — valor bloqueado ao aceitar proposta, liberado ao aprovar entrega
-* Ciclo de vida completo do contrato: `pending → active → delivered → completed / disputed`
-* **Chat em tempo real** entre cliente e freelancer vinculado ao contrato
+* Ciclo de vida do contrato: `active → delivered → revisionRequested ↔ delivered → completed`
+* **Chat em tempo real** entre cliente e freelancer
 * Upload de arquivos de entrega via Firebase Storage
 * Sistema de **avaliações mútuas** (reviews) após conclusão do contrato
-* Carteira digital (wallet) com saldo, transações e histórico
-* Suporte a **tema claro (Light Mode) e escuro (Dark Mode)**
-* Internacionalização (i18n) com suporte a múltiplos idiomas
-* Busca e filtros de projetos por categoria, orçamento e status
+* Carteira digital (wallet) com saldo disponível, escrow e histórico de transações
+* **Push notifications** com deep link para a tela relevante
+* Edição de perfil (nome + foto) com propagação automática nas denormalizações
+* Busca e filtros de projetos por categoria, orçamento e tipo
+* Suporte a **tema claro e escuro** (segue o sistema operacional)
 
 ---
 
 # **Arquitetura e Stack Técnica**
 
-### Stack recomendada
+### Stack utilizada
 
-* **Gerenciamento de estado:** `riverpod`
-* **Navegação:** `go_router` com controle de acesso por papel (RBAC)
-* **Backend:** Firebase (Firestore) + Firebase Auth + Firebase Storage + Cloud Functions
-* **Formulários:** `reactive_forms` ou `flutter_form_builder`
-* **Chat:** Firebase Realtime Broadcast para mensagens em tempo real + persistência em tabela `messages`
+* **Gerenciamento de estado:** `StatefulWidget` + `StreamBuilder` (reatividade ponta-a-ponta via streams do Firestore)
+* **Navegação:** `Navigator` imperativo
+* **Backend:** Firebase (Firestore) + Firebase Auth + Firebase Storage + Cloud Functions + Firebase Cloud Messaging
+* **Formulários:** `Form` + `TextFormField` nativos do Flutter
+* **Chat:** subcollection `threads/{tid}/messages/{mid}` no Firestore com snapshots em tempo real
 
-### Modelo de dados (PostgreSQL)
+### Modelo de dados (Firestore)
 
-Tabelas principais: `users`, `wallets`, `projects`, `proposals`, `contracts`, `messages` e `transactions`.
+Collections principais: `users`, `wallets`, `projects`, `proposals`, `contracts`, `threads` (com subcollection `messages`), `reviews` e `transactions`.
 
-* O campo `status` dos contratos só pode ser alterado via **Edge Functions** — as Row Level Security (RLS) policies bloqueiam escrita direta pelo cliente.
-* `wallets` é separada de `users` para isolar dados financeiros das policies de leitura pública de perfis.
-* `messages` possui foreign key para `contracts` e as RLS policies validam participação no contrato.
+* O campo `status` dos contratos só pode ser alterado via **Cloud Functions** — as Security Rules bloqueiam escrita direta pelo cliente.
+* `wallets` é separada de `users` para isolar dados financeiros das rules de leitura pública dos perfis.
+* `messages` ficam em subcollection da thread, com leitura validada pelo `threadId` ordenado dos uids dos participantes.
 
-### Edge Functions
+### Cloud Functions
 
-Toda lógica crítica roda em Firebase Edge Functions (Deno/TypeScript):
-* `accept-proposal` — cria o contrato e bloqueia o valor no escrow
-* `submit-delivery` — altera status para `delivered`
-* `approve-delivery` — libera o escrow, credita o freelancer, desbloqueia reviews
-* `request-revision` — retorna status para `active`
-* `open-dispute` — marca como `disputed`
+Toda lógica crítica roda em Firebase Cloud Functions (Node.js/TypeScript):
+
+**Callables:**
+* `acceptProposal` — cria o contrato, valida saldo do cliente e bloqueia o valor no escrow
+* `rejectProposal` — marca proposta como rejeitada
+* `markContractDelivered` / `resubmitContractDelivery` — atualiza status e fotos da entrega
+* `acceptContractDelivery` — libera o escrow para o freelancer e fecha o projeto
+* `requestContractRevision` — volta o contrato para `revisionRequested`
+* `sendMessage` — cria/atualiza thread, posta mensagem e dispara push
+* `submitReview` — registra avaliação imutável e agrega rating no perfil
+* `simulateDeposit` — credita saldo na carteira (modo demonstração)
+
+**Triggers:**
+* `onProposalCreated` — incrementa `proposalCount` e notifica o cliente
+* `onProposalStatusChanged` / `onContractStatusChanged` — disparam push notifications nos eventos chave
+* `onUserCreated` — inicializa a carteira do usuário com saldo zero
+* `onUserUpdated` — propaga `displayName` novo em threads, contratos e propostas (denormalização viva)
 
 ---
 
